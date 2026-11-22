@@ -223,7 +223,6 @@ fn draw_card(
     card_height: f64,
     angle: f64,
     alpha: f64,
-    focused: bool,
 ) {
     cr.save().ok();
     cr.translate(center_x, center_y);
@@ -327,7 +326,6 @@ fn draw_gallery(model: &mut Model, cr: &Context, width: i32, height: i32) {
             card_height,
             angle,
             alpha,
-            selected,
         );
 
         if distance <= 1.15 {
