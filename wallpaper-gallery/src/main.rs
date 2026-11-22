@@ -250,6 +250,41 @@ fn draw_card(
     cr.restore().ok();
 }
 
+fn wallpaper_labels(path: &Path) -> (String, String) {
+    const CHARACTERS: [(&str, &str); 5] = [
+        ("ichika_nakano", "Ichika Nakano"),
+        ("nino_nakano", "Nino Nakano"),
+        ("miku_nakano", "Miku Nakano"),
+        ("yotsuba_nakano", "Yotsuba Nakano"),
+        ("itsuki_nakano", "Itsuki Nakano"),
+    ];
+
+    let stem = path
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+    let matched: Vec<&str> = CHARACTERS
+        .iter()
+        .filter_map(|(slug, label)| stem.contains(slug).then_some(*label))
+        .collect();
+
+    match matched.as_slice() {
+        [character] => (
+            (*character).to_string(),
+            "The Quintessential Quintuplets".to_string(),
+        ),
+        [] => (
+            "The Quintessential Quintuplets".to_string(),
+            "Wallpaper".to_string(),
+        ),
+        _ => (
+            "The Quintessential Quintuplets".to_string(),
+            "Group artwork".to_string(),
+        ),
+    }
+}
+
 fn draw_gallery(model: &mut Model, cr: &Context, width: i32, height: i32) {
     let width = width as f64;
     let height = height as f64;
@@ -313,16 +348,11 @@ fn draw_gallery(model: &mut Model, cr: &Context, width: i32, height: i32) {
 
     let selected_index = (model.position.round() as isize).rem_euclid(count) as usize;
     let wallpaper = &model.wallpapers[selected_index];
-    let label = wallpaper
-        .path
-        .file_stem()
-        .and_then(|value| value.to_str())
-        .unwrap_or("Wallpaper")
-        .replace("_", " ").replace("-", " ");
+    let (title, subtitle) = wallpaper_labels(&wallpaper.path);
 
     draw_text(
         cr,
-        &label,
+        &title,
         0.0,
         height * 0.79,
         19.0,
@@ -333,7 +363,7 @@ fn draw_gallery(model: &mut Model, cr: &Context, width: i32, height: i32) {
     );
     draw_text(
         cr,
-        wallpaper.path.file_name().and_then(|v| v.to_str()).unwrap_or(""),
+        &subtitle,
         0.0,
         height * 0.79 + 28.0,
         10.0,
