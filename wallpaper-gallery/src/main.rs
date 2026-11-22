@@ -588,6 +588,7 @@ fn build_window(
         animation_started: Instant::now(),
         animation_generation: 0,
         hit_boxes: Vec::new(),
+        load_tx,
     }));
 
     let area = DrawingArea::new();
