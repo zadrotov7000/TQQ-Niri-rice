@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import sys
+import cairo
 from collections import OrderedDict
 from pathlib import Path
 
@@ -114,6 +115,8 @@ class WallpaperGallery(Gtk.Window):
         layout.set_text(text, -1)
         if align:
             layout.set_alignment(Pango.Alignment.CENTER)
+            text_width, _text_height = layout.get_pixel_size()
+            x = (self.area.get_allocation().width - text_width) / 2
         cr.move_to(x, y)
         set_source_rgba(cr, color)
         PangoCairo.show_layout(cr, layout)
@@ -156,7 +159,7 @@ class WallpaperGallery(Gtk.Window):
         cr.paint()
 
         # Quiet ambient glow behind the selected cover.
-        pattern = __import__("cairo").RadialGradient(w * 0.5, h * 0.48, 10, w * 0.5, h * 0.48, w * 0.48)
+        pattern = cairo.RadialGradient(w * 0.5, h * 0.48, 10, w * 0.5, h * 0.48, w * 0.48)
         pattern.add_color_stop_rgba(0, 0.36, 0.20, 0.48, 0.20)
         pattern.add_color_stop_rgba(1, 0.055, 0.055, 0.075, 0)
         cr.set_source(pattern)
