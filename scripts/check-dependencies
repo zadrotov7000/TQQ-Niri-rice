@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 set -u
 
-required=(niri waybar swaync swaync-client fuzzel matugen wpctl python3 pgrep pkill)
+required=(niri waybar swaync swaync-client fuzzel matugen wpctl python3 cargo rustc pkg-config pgrep pkill)
 missing=()
 for command_name in "${required[@]}"; do
     command -v "$command_name" >/dev/null 2>&1 || missing+=("$command_name")
 done
-if command -v python3 >/dev/null 2>&1 \
-    && ! python3 -c 'import gi, cairo; gi.require_version("Gtk", "3.0"); gi.require_version("GdkPixbuf", "2.0"); gi.require_version("PangoCairo", "1.0"); gi.require_foreign("cairo"); from gi.repository import Gtk, GdkPixbuf, PangoCairo' >/dev/null 2>&1; then
-    missing+=("Python GTK 3 + PyGObject Cairo bridge")
+if ! pkg-config --exists gtk4; then
+    missing+=("GTK4 development files (gtk4 pkg-config module)")
 fi
 if { ! command -v awww >/dev/null 2>&1 || ! command -v awww-daemon >/dev/null 2>&1; } \
     && ! command -v swaybg >/dev/null 2>&1; then
@@ -25,17 +24,17 @@ if [[ -r /etc/os-release ]]; then
     . /etc/os-release
     case "${ID:-}" in
         debian|ubuntu|linuxmint|pop)
-            echo "Debian-family packages: waybar sway-notification-center fuzzel python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 pipewire-bin wireplumber swaybg fonts-font-awesome fonts-jetbrains-mono"
+            echo "Debian-family packages: waybar sway-notification-center fuzzel cargo rustc pkg-config libgtk-4-dev pipewire-bin wireplumber swaybg fonts-font-awesome fonts-jetbrains-mono"
             echo "Matugen and awww may need their upstream release/package for your Debian version."
             ;;
         arch|endeavouros|manjaro)
-            echo "Arch packages: waybar swaync fuzzel python-gobject gtk3 matugen awww pipewire wireplumber"
+            echo "Arch packages: waybar swaync fuzzel rust cargo pkgconf gtk4 matugen awww pipewire wireplumber"
             ;;
         fedora)
-            echo "Fedora packages: waybar SwayNotificationCenter fuzzel python3-gobject gtk3 matugen awww pipewire wireplumber"
+            echo "Fedora packages: waybar SwayNotificationCenter fuzzel cargo rust gtk4-devel pkgconf-pkg-config matugen awww pipewire wireplumber"
             ;;
         opensuse*|opensuse-tumbleweed|opensuse-leap)
-            echo "openSUSE package names vary by release; search for Waybar, SwayNotificationCenter, Fuzzel, Python GTK 3 and PyGObject Cairo bindings, Matugen, awww and WirePlumber."
+            echo "openSUSE package names vary by release; search for Waybar, SwayNotificationCenter, Fuzzel, Rust/Cargo, GTK4 development files, Matugen, awww and WirePlumber."
             ;;
         *)
             echo "Install equivalent packages for your distribution: Waybar, SwayNC, Fuzzel, Python GTK 3 and PyGObject Cairo bindings, Matugen, PipeWire/WirePlumber and awww or swaybg."
