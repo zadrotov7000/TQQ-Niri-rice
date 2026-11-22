@@ -642,7 +642,9 @@ fn main() {
         );
     });
 
-    app.run();
+    // The directory and state-file arguments are parsed above. Do not pass them
+    // to GApplication: it would treat them as files to open and reject them.
+    app.run_with_args(&[args[0].as_str()]);
 
     let selected_path = selected.borrow().clone();
     if let Some(path) = selected_path {
