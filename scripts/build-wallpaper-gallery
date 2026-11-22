@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+DESTINATION="${1:-$HOME/.local/bin/tqq-wallpaper-gallery}"
+TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/wallpaper-gallery/target}"
+
+if ! command -v cargo >/dev/null 2>&1; then
+    echo "Rust/Cargo is required to build the TQQ wallpaper gallery." >&2
+    exit 1
+fi
+if ! pkg-config --exists gtk4; then
+    echo "GTK4 development files are missing. Install libgtk-4-dev (Debian/Ubuntu)." >&2
+    exit 1
+fi
+
+echo "Building the native Rust wallpaper gallery (single build job)..."
+CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-1}" \
+CARGO_TARGET_DIR="$TARGET_DIR" \
+cargo build --release --manifest-path "$ROOT/wallpaper-gallery/Cargo.toml"
+
+install -D -m 0755 "$TARGET_DIR/release/tqq-wallpaper-gallery" "$DESTINATION"
+echo "Installed native gallery: $DESTINATION"
