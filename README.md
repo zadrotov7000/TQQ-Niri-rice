@@ -12,9 +12,9 @@ Actual performance depends on the hardware, graphics drivers, display resolution
 
 - **Island Waybar:** transparent bar with floating capsules for workspaces, clock, notifications, network, audio, battery, and tray.
 - **SwayNC quick settings:** volume and brightness sliders, media controls, Do Not Disturb, a Wi-Fi picker, and notifications. The installer enables brightness only when it finds a backlight device.
-- **Wallpaper preview:** a centered floating GTK panel displays each wallpaper and its character names in English; use Left/Right to browse, Enter to apply, and Escape to cancel.
+- **Wallpaper gallery:** a floating GTK3 cover-flow gallery shows a large centered wallpaper with angled preview cards on both sides, a live five-color palette sampled from the selected image, and a dark glass-like interface. Use Left/Right or the mouse wheel to browse, click a side card to select it, click the centered card or press Enter to apply, and press Escape to close.
 - **Fuzzel:** application launcher and plain-text power menu. Reboot and power-off ask for confirmation.
-- **Wallpaper switching:** `Mod+B` (Win+B) opens the preview panel and updates the Matugen palette; `awww` applies the wallpaper with a transition when available, and `swaybg` is the fallback.
+- **Wallpaper switching:** `Mod+B` (Win+B) opens the gallery and updates the Matugen palette; `awww` applies the wallpaper with a transition when available, and `swaybg` is the fallback.
 - **Wallpaper persistence:** the chosen image and palette are restored when Niri starts.
 - **3D Fetch support:** an optional config for [areofyl/fetch](https://github.com/areofyl/fetch), with guarded shell autostart. Its label accent follows the wallpaper palette; existing Fetch/Fastfetch startup is preserved.
 - **Niri config:** the installer backs up the existing config, preserves user settings and keybindings, migrates known Itsuki/Miku leftovers, removes the duplicate Kitty blur rule, and adds TQQ startup, wallpaper, and Wi-Fi bindings.
@@ -54,7 +54,7 @@ The regular installer does not change the display manager or install SDDM. Exist
 
 ### Dependencies
 
-Required programs: JetBrainsMono Nerd Font (for icon glyphs), Niri, Waybar, SwayNC (`swaync` and `swaync-client`), Fuzzel, Matugen, PipeWire/WirePlumber (`wpctl`), Python 3 with GTK 3 PyGObject bindings, and the standard process tools `pgrep`/`pkill`. For wallpaper display, install `awww` and its daemon or `swaybg`. NetworkManager (`nmcli`) enables the Wi-Fi picker; `notify-send` and `brightnessctl` are optional.
+Required programs: JetBrainsMono Nerd Font (for icon glyphs), Niri, Waybar, SwayNC (`swaync` and `swaync-client`), Fuzzel, Matugen, PipeWire/WirePlumber (`wpctl`), Python 3 with GTK 3 PyGObject bindings, and the standard process tools `pgrep`/`pkill`. The gallery uses the existing GTK 3 / PyGObject dependencies. For wallpaper display, install `awww` and its daemon or `swaybg`. NetworkManager (`nmcli`) enables the Wi-Fi picker; `notify-send` and `brightnessctl` are optional.
 
 `scripts/check-dependencies` reports missing commands and package hints. `scripts/install-dependencies` has package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Package names and availability vary by release. When Matugen is unavailable as a package, the installer uses its checksum-verified upstream x86_64 release; other architectures can build it with Rust 1.88 or newer. Niri itself and optional awww transitions may need to be installed separately. The wallpaper switcher falls back to swaybg.
 
@@ -82,7 +82,7 @@ The rice adds wallpaper and Wi-Fi shortcuts to the existing Niri config and leav
 
 | Action | Preferred key |
 | --- | --- |
-| Preview/apply wallpaper and update colors | `Mod+B` (Win+B) |
+| Open wallpaper gallery, apply wallpaper, and update colors | `Mod+B` (Win+B) |
 | Open the TQQ Wi-Fi picker | `Mod+N` (Win+N; fallback `Mod+Shift+N` or `Mod+Ctrl+N`) |
 
 Waybar's audio capsule opens the SwayNC quick-settings panel. Right-clicking the notification capsule toggles Do Not Disturb.
