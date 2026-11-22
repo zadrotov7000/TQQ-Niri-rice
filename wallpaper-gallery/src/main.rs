@@ -266,7 +266,7 @@ fn wallpaper_labels(path: &Path) -> (String, String) {
         .to_ascii_lowercase();
     let matched: Vec<&str> = CHARACTERS
         .iter()
-        .filter_map(|(slug, label)| stem.contains(slug).then_some(*label))
+        .filter_map(|(slug, label)| stem.contains(*slug).then_some(*label))
         .collect();
 
     match matched.as_slice() {
