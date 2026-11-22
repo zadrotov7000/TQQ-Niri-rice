@@ -15,7 +15,7 @@ use gtk::{
     prelude::*,
     Application, ApplicationWindow, DrawingArea,
 };
-use image::{imageops::FilterType, GenericImageView};
+use image::imageops::FilterType;
 
 const APP_ID: &str = "io.github.tqqniri.WallpaperGallery";
 const WINDOW_TITLE: &str = "TQQ Wallpaper Gallery";
@@ -644,7 +644,8 @@ fn main() {
 
     app.run();
 
-    if let Some(path) = selected.borrow().as_ref() {
+    let selected_path = selected.borrow().clone();
+    if let Some(path) = selected_path {
         println!("{}", path.display());
     }
 }
