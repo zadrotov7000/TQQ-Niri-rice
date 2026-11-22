@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+export PATH="$HOME/.cargo/bin:$PATH"
 DESTINATION="${1:-$HOME/.local/bin/tqq-wallpaper-gallery}"
 TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/wallpaper-gallery/target}"
 
