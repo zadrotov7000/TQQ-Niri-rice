@@ -181,7 +181,7 @@ def main() -> int:
         "\n// BEGIN TQQ WALLPAPER WINDOW RULE\n"
         "window-rule {\n"
         '    match title="^TQQ Wallpaper Gallery$"\n'
-        "    open-floating true\n"
+        "    open-fullscreen true\n"
         "    open-focused true\n"
         "    focus-ring { off }\n"
         "    border { off }\n"
