@@ -237,10 +237,6 @@ fn draw_card(
     cr.set_source_rgba(0.0, 0.0, 0.0, 0.46 * alpha);
     cr.fill().ok();
 
-    rounded_rectangle(cr, x - 1.4, y - 1.4, card_width + 2.8, card_height + 2.8, 19.0);
-    source_color(cr, ACCENT, if focused { 0.92 * alpha } else { 0.25 * alpha });
-    cr.fill().ok();
-
     rounded_rectangle(cr, x, y, card_width, card_height, 18.0);
     cr.clip();
     cr.scale(card_width / wallpaper.width, card_height / wallpaper.height);
