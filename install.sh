@@ -52,6 +52,22 @@ fi
 
 mkdir -p "$BACKUP" "$LOCAL_BIN" "$DATA_HOME/tqq-niri-rice/wallpapers"
 
+# Build and install the native Rust wallpaper gallery.
+if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
+    mkdir -p "$BACKUP/local-bin"
+    cp -a "$LOCAL_BIN/tqq-wallpaper-gallery" "$BACKUP/local-bin/tqq-wallpaper-gallery"
+fi
+bash "$ROOT/scripts/build-wallpaper-gallery" "$LOCAL_BIN/tqq-wallpaper-gallery"
+
+# Retire the previous Python gallery modules after preserving a backup.
+for legacy_script in wallpaper-picker.py wallpaper_gallery_ui.py; do
+    if [[ -e "$LOCAL_BIN/$legacy_script" ]]; then
+        mkdir -p "$BACKUP/local-bin"
+        cp -a "$LOCAL_BIN/$legacy_script" "$BACKUP/local-bin/$legacy_script"
+        rm -f -- "$LOCAL_BIN/$legacy_script"
+    fi
+done
+
 backup_config_dir() {
     local name="$1"
     if [[ -d "$CONFIG_HOME/$name" ]]; then
@@ -87,7 +103,7 @@ fi
 
 cp -an "$ROOT/wallpapers/." "$DATA_HOME/tqq-niri-rice/wallpapers/"
 
-for script_name in select-wallpaper wallpaper-picker.py wallpaper_gallery_ui.py power-menu configure-fetch-autostart check-dependencies install-dependencies install-sddm-theme wifi-menu.py configure-swaync.py; do
+for script_name in select-wallpaper power-menu configure-fetch-autostart check-dependencies install-dependencies install-sddm-theme wifi-menu.py configure-swaync.py; do
     if [[ -e "$LOCAL_BIN/$script_name" ]]; then
         mkdir -p "$BACKUP/local-bin"
         cp -a "$LOCAL_BIN/$script_name" "$BACKUP/local-bin/$script_name"
