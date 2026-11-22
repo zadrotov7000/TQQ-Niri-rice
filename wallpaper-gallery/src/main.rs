@@ -4,6 +4,8 @@ use std::{
     fs,
     path::{Path, PathBuf},
     rc::Rc,
+    sync::mpsc::{self, Receiver, Sender, TryRecvError},
+    thread,
     time::{Duration, Instant},
 };
 
@@ -32,9 +34,18 @@ const ACCENT: Color = Color(0.78, 0.55, 0.96);
 
 struct Wallpaper {
     path: PathBuf,
-    surface: ImageSurface,
+    surface: Option<ImageSurface>,
     width: f64,
     height: f64,
+    palette: [Color; 5],
+    loading: bool,
+    failed: bool,
+}
+
+struct DecodedWallpaper {
+    width: i32,
+    height: i32,
+    pixels: Vec<u8>,
     palette: [Color; 5],
 }
 
@@ -56,6 +67,7 @@ struct Model {
     animation_started: Instant,
     animation_generation: u64,
     hit_boxes: Vec<HitBox>,
+    load_tx: Sender<usize>,
 }
 
 fn collect_images(directory: &Path, output: &mut Vec<PathBuf>) -> std::io::Result<()> {
@@ -78,14 +90,15 @@ fn collect_images(directory: &Path, output: &mut Vec<PathBuf>) -> std::io::Resul
     Ok(())
 }
 
-fn image_surface(path: &Path) -> Result<(ImageSurface, f64, f64, [Color; 5]), String> {
+fn decode_image(path: &Path) -> Result<DecodedWallpaper, String> {
     let decoded = image::open(path)
         .map_err(|error| format!("Cannot decode {}: {error}", path.display()))?;
     let resized = decoded.resize(720, 480, FilterType::Triangle).to_rgba8();
     let (width, height) = resized.dimensions();
     let mut cairo_data = vec![0_u8; (width * height * 4) as usize];
 
-    // Cairo ARgb32 is premultiplied and stored as BGRA on little-endian systems.
+    // Decode and resize off the GTK thread. Cairo surfaces are created later
+    // on the GTK thread because they are not safe to transfer between threads.
     for (source, target) in resized
         .as_raw()
         .chunks_exact(4)
@@ -97,16 +110,6 @@ fn image_surface(path: &Path) -> Result<(ImageSurface, f64, f64, [Color; 5]), St
         target[2] = ((source[0] as u16 * alpha + 127) / 255) as u8;
         target[3] = source[3];
     }
-
-    let stride = width as i32 * 4;
-    let surface = ImageSurface::create_for_data(
-        cairo_data,
-        Format::ARgb32,
-        width as i32,
-        height as i32,
-        stride,
-    )
-    .map_err(|error| format!("Cannot create image surface: {error}"))?;
 
     let mut palette = [ACCENT; 5];
     let fractions = [0.12, 0.30, 0.50, 0.70, 0.88];
@@ -121,22 +124,95 @@ fn image_surface(path: &Path) -> Result<(ImageSurface, f64, f64, [Color; 5]), St
         );
     }
 
-    Ok((surface, width as f64, height as f64, palette))
+    Ok(DecodedWallpaper {
+        width: width as i32,
+        height: height as i32,
+        pixels: cairo_data,
+        palette,
+    })
 }
 
-fn load_wallpapers(paths: &[PathBuf]) -> Result<Vec<Wallpaper>, String> {
-    let mut wallpapers = Vec::with_capacity(paths.len());
-    for path in paths {
-        let (surface, width, height, palette) = image_surface(path)?;
-        wallpapers.push(Wallpaper {
-            path: path.clone(),
-            surface,
-            width,
-            height,
-            palette,
-        });
-    }
-    Ok(wallpapers)
+fn spawn_image_loader(
+    paths: Vec<PathBuf>,
+) -> (Sender<usize>, Receiver<(usize, Result<DecodedWallpaper, String>)>) {
+    let (request_tx, request_rx) = mpsc::channel::<usize>();
+    let (result_tx, result_rx) = mpsc::channel();
+
+    thread::Builder::new()
+        .name("tqq-wallpaper-loader".to_string())
+        .spawn(move || {
+            while let Ok(index) = request_rx.recv() {
+                let Some(path) = paths.get(index) else {
+                    continue;
+                };
+                let result = decode_image(path);
+                if result_tx.send((index, result)).is_err() {
+                    break;
+                }
+            }
+        })
+        .expect("failed to start wallpaper image loader thread");
+
+    (request_tx, result_rx)
+}
+
+fn attach_image_loader(
+    model: Rc<RefCell<Model>>,
+    area: DrawingArea,
+    receiver: Receiver<(usize, Result<DecodedWallpaper, String>)>,
+) {
+    glib::timeout_add_local(Duration::from_millis(8), move || {
+        let mut changed = false;
+
+        loop {
+            match receiver.try_recv() {
+                Ok((index, result)) => {
+                    let mut state = model.borrow_mut();
+                    if let Some(wallpaper) = state.wallpapers.get_mut(index) {
+                        wallpaper.loading = false;
+                        match result {
+                            Ok(decoded) => {
+                                let stride = decoded.width * 4;
+                                match ImageSurface::create_for_data(
+                                    decoded.pixels,
+                                    Format::ARgb32,
+                                    decoded.width,
+                                    decoded.height,
+                                    stride,
+                                ) {
+                                    Ok(surface) => {
+                                        wallpaper.width = decoded.width as f64;
+                                        wallpaper.height = decoded.height as f64;
+                                        wallpaper.palette = decoded.palette;
+                                        wallpaper.surface = Some(surface);
+                                    }
+                                    Err(error) => {
+                                        wallpaper.failed = true;
+                                        eprintln!(
+                                            "Cannot create wallpaper surface for {}: {error}",
+                                            wallpaper.path.display()
+                                        );
+                                    }
+                                }
+                            }
+                            Err(error) => {
+                                wallpaper.failed = true;
+                                eprintln!("{error}");
+                            }
+                        }
+                    }
+                    changed = true;
+                }
+                Err(TryRecvError::Empty) => break,
+                Err(TryRecvError::Disconnected) => return glib::ControlFlow::Break,
+            }
+        }
+
+        if changed {
+            area.queue_draw();
+        }
+        glib::ControlFlow::Continue
+    });
 }
 
 fn rounded_rectangle(cr: &Context, x: f64, y: f64, width: f64, height: f64, radius: f64) {
@@ -238,11 +314,16 @@ fn draw_card(
     cr.fill().ok();
 
     rounded_rectangle(cr, x, y, card_width, card_height, 18.0);
-    cr.clip();
-    cr.scale(card_width / wallpaper.width, card_height / wallpaper.height);
-    cr.set_source_surface(&wallpaper.surface, -wallpaper.width / 2.0, -wallpaper.height / 2.0)
-        .ok();
-    cr.paint_with_alpha(alpha).ok();
+    if let Some(surface) = wallpaper.surface.as_ref() {
+        cr.clip();
+        cr.scale(card_width / wallpaper.width, card_height / wallpaper.height);
+        cr.set_source_surface(surface, -wallpaper.width / 2.0, -wallpaper.height / 2.0)
+            .ok();
+        cr.paint_with_alpha(alpha).ok();
+    } else {
+        source_color(cr, Color(0.12, 0.10, 0.16), 0.86 * alpha);
+        cr.fill().ok();
+    }
     cr.restore().ok();
 }
 
@@ -297,6 +378,31 @@ fn draw_gallery(model: &mut Model, cr: &Context, width: i32, height: i32) {
 
     let count = model.wallpapers.len() as isize;
     let nearest = model.position.round() as isize;
+    let selected_index = nearest.rem_euclid(count) as usize;
+
+    // Request the selected wallpaper first, then preload nearby cards. Each
+    // image is requested only once and decoded on the worker thread.
+    for radius in 0..=3 {
+        let candidates = if radius == 0 {
+            [selected_index, selected_index]
+        } else {
+            [
+                (selected_index + radius as usize) % model.wallpapers.len(),
+                (selected_index + model.wallpapers.len() - radius as usize)
+                    % model.wallpapers.len(),
+            ]
+        };
+        for index in candidates {
+            let wallpaper = &mut model.wallpapers[index];
+            if wallpaper.surface.is_none() && !wallpaper.loading && !wallpaper.failed {
+                wallpaper.loading = model.load_tx.send(index).is_ok();
+                if !wallpaper.loading {
+                    wallpaper.failed = true;
+                }
+            }
+        }
+    }
+
     let center_x = width * 0.5;
     let center_y = height * 0.46;
     let base_width = 590.0_f64.min(width * 0.49);
@@ -341,7 +447,6 @@ fn draw_gallery(model: &mut Model, cr: &Context, width: i32, height: i32) {
         }
     }
 
-    let selected_index = (model.position.round() as isize).rem_euclid(count) as usize;
     let wallpaper = &model.wallpapers[selected_index];
     let (title, subtitle) = wallpaper_labels(&wallpaper.path);
 
@@ -452,14 +557,28 @@ fn shortest_target(current_target: f64, index: usize, count: usize) -> f64 {
 
 fn build_window(
     app: &Application,
-    wallpapers: Vec<Wallpaper>,
+    wallpaper_paths: Vec<PathBuf>,
     current: Option<PathBuf>,
     selected: Rc<RefCell<Option<PathBuf>>>,
 ) {
     let initial_index = current
         .as_ref()
-        .and_then(|path| wallpapers.iter().position(|wallpaper| &wallpaper.path == path))
+        .and_then(|path| wallpaper_paths.iter().position(|wallpaper| wallpaper == path))
         .unwrap_or(0);
+
+    let (load_tx, load_rx) = spawn_image_loader(wallpaper_paths.clone());
+    let wallpapers = wallpaper_paths
+        .into_iter()
+        .map(|path| Wallpaper {
+            path,
+            surface: None,
+            width: 720.0,
+            height: 480.0,
+            palette: [ACCENT; 5],
+            loading: false,
+            failed: false,
+        })
+        .collect();
 
     let model = Rc::new(RefCell::new(Model {
         wallpapers,
@@ -482,6 +601,7 @@ fn build_window(
     area.set_draw_func(move |_area, cr, width, height| {
         draw_gallery(&mut draw_model.borrow_mut(), cr, width, height);
     });
+    attach_image_loader(Rc::clone(&model), area.clone(), load_rx);
 
     let window = ApplicationWindow::builder()
         .application(app)
@@ -657,14 +777,6 @@ fn main() {
         std::process::exit(1);
     }
 
-    let wallpapers = match load_wallpapers(&paths) {
-        Ok(images) => images,
-        Err(error) => {
-            eprintln!("{error}");
-            std::process::exit(1);
-        }
-    };
-
     let current = fs::read_to_string(&state_file)
         .ok()
         .map(|value| PathBuf::from(value.trim()));
@@ -676,22 +788,12 @@ fn main() {
 
     let selected: Rc<RefCell<Option<PathBuf>>> = Rc::new(RefCell::new(None));
     let activate_selected = Rc::clone(&selected);
-    let wallpapers_for_window = wallpapers;
+    let paths_for_window = paths;
 
     app.connect_activate(move |application| {
         build_window(
             application,
-            // GTK Application activates once per process because NON_UNIQUE is set.
-            wallpapers_for_window
-                .iter()
-                .map(|wallpaper| Wallpaper {
-                    path: wallpaper.path.clone(),
-                    surface: wallpaper.surface.clone(),
-                    width: wallpaper.width,
-                    height: wallpaper.height,
-                    palette: wallpaper.palette,
-                })
-                .collect(),
+            paths_for_window.clone(),
             current.clone(),
             Rc::clone(&activate_selected),
         );
