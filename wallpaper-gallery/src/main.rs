@@ -16,6 +16,7 @@ use gtk::{
     Application, ApplicationWindow, DrawingArea,
 };
 use image::imageops::FilterType;
+use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 
 const APP_ID: &str = "io.github.tqqniri.WallpaperGallery";
 const WINDOW_TITLE: &str = "TQQ Wallpaper Gallery";
@@ -473,6 +474,20 @@ fn build_window(
         .default_height(720)
         .decorated(false)
         .build();
+
+    // This is a Wayland layer surface, not an xdg_toplevel managed as an app window.
+    // The overlay layer sits above normal desktop surfaces while transparent pixels
+    // continue to show the wallpaper and panels underneath.
+    window.init_layer_shell();
+    window.set_namespace(Some("tqq-wallpaper-gallery"));
+    window.set_layer(Layer::Overlay);
+    window.set_anchor(Edge::Top, true);
+    window.set_anchor(Edge::Bottom, true);
+    window.set_anchor(Edge::Left, true);
+    window.set_anchor(Edge::Right, true);
+    window.set_exclusive_zone(-1);
+    window.set_keyboard_mode(KeyboardMode::Exclusive);
+
     window.set_css_classes(&["tqq-transparent-wallpaper-gallery"]);
     window.set_child(Some(&area));
 
