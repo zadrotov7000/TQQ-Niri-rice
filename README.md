@@ -28,7 +28,7 @@ The rice supports several Linux distributions. The installer checks its required
 Clone the repository and enter its directory:
 
 ```bash
-git clone https://github.com/a43039646-svg/TQQ-Niri-rice.git
+git clone https://github.com/zadrotov7000/TQQ-Niri-rice.git
 cd TQQ-Niri-rice
 ```
 
