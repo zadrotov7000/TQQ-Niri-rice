@@ -54,7 +54,7 @@ The regular installer does not change the display manager or install SDDM. Exist
 
 ### Dependencies
 
-Required programs: JetBrainsMono Nerd Font (for icon glyphs), Niri, Waybar, SwayNC (`swaync` and `swaync-client`), Fuzzel, Matugen, PipeWire/WirePlumber (`wpctl`), Python 3 with GTK 3 PyGObject and PyCairo bindings, and the standard process tools `pgrep`/`pkill`. The gallery uses the existing GTK 3 / PyGObject dependencies. For wallpaper display, install `awww` and its daemon or `swaybg`. NetworkManager (`nmcli`) enables the Wi-Fi picker; `notify-send` and `brightnessctl` are optional.
+Required programs: JetBrainsMono Nerd Font (for icon glyphs), Niri, Waybar, SwayNC (`swaync` and `swaync-client`), Fuzzel, Matugen, PipeWire/WirePlumber (`wpctl`), Python 3 with GTK 3 PyGObject, PyCairo, and the PyGObject Cairo bridge, and the standard process tools `pgrep`/`pkill`. The gallery presentation is isolated in `scripts/wallpaper_gallery_ui.py`; `scripts/wallpaper-picker.py` only discovers wallpapers, starts the UI, and returns the selected path. The drawing layer requires the PyGObject Cairo bridge (`python3-gi-cairo` on Debian-family systems), not just PyCairo. For wallpaper display, install `awww` and its daemon or `swaybg`. NetworkManager (`nmcli`) enables the Wi-Fi picker; `notify-send` and `brightnessctl` are optional.
 
 `scripts/check-dependencies` reports missing commands and package hints. `scripts/install-dependencies` has package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Package names and availability vary by release. When Matugen is unavailable as a package, the installer uses its checksum-verified upstream x86_64 release; other architectures can build it with Rust 1.88 or newer. Niri itself and optional awww transitions may need to be installed separately. The wallpaper switcher falls back to swaybg.
 
@@ -94,7 +94,7 @@ Waybar's audio capsule opens the SwayNC quick-settings panel. Right-clicking the
 - `config/fuzzel/` — application and power-menu UI with a dynamic palette include.
 - `config/matugen/` — dark wallpaper-derived templates for Waybar, SwayNC, and Fuzzel.
 - `config/fetch/` — 3D Fetch display settings.
-- `scripts/` — wallpaper preview, wallpaper application, power, Wi-Fi, dependency, Fetch autostart, SwayNC hardware detection, and Niri config helpers.
+- `scripts/` — wallpaper picker controller and separate gallery UI renderer, wallpaper application, power, Wi-Fi, dependency, Fetch autostart, SwayNC hardware detection, and Niri config helpers.
 - `wallpapers/` — the TQQ wallpaper collection installed to the rice data directory.
 
 Rofi is not used by this rice. If an existing `~/.config/rofi/` is present, the installer backs it up and removes it so the old Rofi setup is not left alongside Fuzzel.
