@@ -1,0 +1,22 @@
+[package]
+name = "tqq-wallpaper-gallery"
+version = "0.2.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Native Rust wallpaper gallery for TQQ Niri Rice"
+license = "GPL-3.0-or-later"
+
+[[bin]]
+name = "tqq-wallpaper-gallery"
+path = "src/main.rs"
+
+[dependencies]
+gtk = { package = "gtk4", version = "0.9" }
+cairo-rs = "0.20"
+glib = "0.20"
+gio = "0.20"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+
+[profile.release]
+opt-level = 2
+strip = true
