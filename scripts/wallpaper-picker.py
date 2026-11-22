@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from wallpaper_gallery_ui import run_gallery
 
 EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 
@@ -40,6 +39,7 @@ def main() -> int:
             print(f"Cannot read current wallpaper state: {error}", file=sys.stderr)
 
     try:
+        from wallpaper_gallery_ui import run_gallery
         return run_gallery(images, current)
     except (ImportError, RuntimeError) as error:
         print(f"Cannot start TQQ Wallpaper Gallery: {error}", file=sys.stderr)
