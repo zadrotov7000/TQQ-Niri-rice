@@ -55,8 +55,6 @@ class WallpaperGallery(Gtk.Window):
         self.set_size_request(680, 480)
         self.set_app_paintable(True)
         self.connect("key-press-event", self.on_key)
-        self.connect("scroll-event", self.on_scroll)
-        self.connect("button-press-event", self.on_click)
 
         screen = Gdk.Screen.get_default()
         if screen:
@@ -72,7 +70,10 @@ class WallpaperGallery(Gtk.Window):
         self.area = Gtk.DrawingArea()
         self.area.set_can_focus(True)
         self.add(self.area)
+        self.area.add_events(Gdk.EventMask.SCROLL_MASK | Gdk.EventMask.BUTTON_PRESS_MASK)
         self.area.connect("draw", self.draw)
+        self.area.connect("scroll-event", self.on_scroll)
+        self.area.connect("button-press-event", self.on_click)
         self.show_all()
         self.area.grab_focus()
 
