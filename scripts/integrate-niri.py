@@ -82,6 +82,12 @@ def main() -> int:
         text,
     )
 
+    text = re.sub(
+        r"(?ms)^// BEGIN TQQ WALLPAPER LAYER RULE\n.*?^// END TQQ WALLPAPER LAYER RULE[ \\t]*(?:\n|$)",
+        "",
+        text,
+    )
+
     # Migrate known leftovers from earlier Itsuki/Miku-based configs.
     # Keep useful visual settings, but remove stale labels and the duplicate Kitty rule.
     text = re.sub(
@@ -177,26 +183,17 @@ def main() -> int:
         insertion = binds_match.start() if binds_match else len(text)
         text = text[:insertion] + startup_block + text[insertion:]
 
-    window_rule = (
-        "\n// BEGIN TQQ WALLPAPER WINDOW RULE\n"
-        "window-rule {\n"
-        '    match title="^TQQ Wallpaper Gallery$"\n'
-        "    open-maximized-to-edges true\n"
-        "    open-fullscreen false\n"
-        "    open-focused true\n"
-        "    focus-ring {\n"
-        "        off\n"
-        "    }\n"
-        "    border {\n"
-        "        off\n"
-        "    }\n"
-        "    shadow {\n"
-        "        off\n"
-        "    }\n"
-        "}\n"
-        "// END TQQ WALLPAPER WINDOW RULE\n"
+    layer_rule = (
+        "\\n// BEGIN TQQ WALLPAPER LAYER RULE\\n"
+        "layer-rule {\\n"
+        '    match namespace="^tqq-wallpaper-gallery$"\\n'
+        "    shadow {\\n"
+        "        off\\n"
+        "    }\\n"
+        "}\\n"
+        "// END TQQ WALLPAPER LAYER RULE\\n"
     )
-    text = text.rstrip() + "\n" + window_rule
+    text = text.rstrip() + "\\n" + layer_rule
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(text)
