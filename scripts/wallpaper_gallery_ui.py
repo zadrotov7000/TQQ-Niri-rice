@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import math
+import sys
 from collections import OrderedDict
 from pathlib import Path
 from typing import Callable
 
 import gi
+import cairo
 
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
@@ -23,7 +25,6 @@ except ImportError as error:
         "or the equivalent PyGObject Cairo integration package for your distribution."
     ) from error
 
-import cairo
 from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango, PangoCairo
 
 EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -105,7 +106,7 @@ class WallpaperGallery(Gtk.ApplicationWindow):
         try:
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(path), 720, 480, True)
         except GLib.Error as error:
-            print(f"Cannot load {path}: {error}", file=__import__("sys").stderr)
+            print(f"Cannot load {path}: {error}", file=sys.stderr)
             return None
         self.cache[path] = pixbuf
         while len(self.cache) > 13:
