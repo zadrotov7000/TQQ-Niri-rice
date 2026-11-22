@@ -180,7 +180,7 @@ def main() -> int:
     window_rule = (
         "\n// BEGIN TQQ WALLPAPER WINDOW RULE\n"
         "window-rule {\n"
-        '    match title="^Choose a wallpaper$"\n'
+        '    match title="^TQQ Wallpaper Gallery$"\n'
         "    open-floating true\n"
         "    open-focused true\n"
         "}\n"
