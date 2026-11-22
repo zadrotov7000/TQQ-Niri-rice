@@ -15,7 +15,7 @@ use gtk::{
     prelude::*,
     Application, ApplicationWindow, DrawingArea,
 };
-use image::imageops::FilterType;
+use image::{imageops::FilterType, GenericImageView};
 
 const APP_ID: &str = "io.github.tqqniri.WallpaperGallery";
 const WINDOW_TITLE: &str = "TQQ Wallpaper Gallery";
