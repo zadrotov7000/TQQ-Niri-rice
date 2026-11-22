@@ -8,7 +8,7 @@ state_home="${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice"
 state_file="$state_home/current-wallpaper"
 config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 matugen_config="$config_home/matugen/config.toml"
-picker="${WALLPAPER_PICKER:-$HOME/.local/bin/wallpaper-picker.py}"
+picker="${WALLPAPER_PICKER:-$HOME/.local/bin/tqq-wallpaper-gallery}"
 wait_for_components=0
 
 notify() {
@@ -177,6 +177,6 @@ if [[ ! -x "$picker" ]]; then
     notify "Wallpaper preview picker not found: $picker"
     exit 1
 fi
-selected="$(python3 "$picker" "$wallpaper_dir" "$state_file" || true)"
+selected="$("$picker" "$wallpaper_dir" "$state_file" || true)"
 [[ -n "$selected" ]] || exit 0
 set_wallpaper "$selected"
