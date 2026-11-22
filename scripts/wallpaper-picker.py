@@ -53,7 +53,6 @@ class WallpaperGallery(Gtk.ApplicationWindow):
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_default_size(1120, 720)
         self.set_size_request(680, 480)
-        self.set_app_paintable(True)
         self.connect("key-press-event", self.on_key)
 
         screen = Gdk.Screen.get_default()
@@ -69,6 +68,8 @@ class WallpaperGallery(Gtk.ApplicationWindow):
 
         self.area = Gtk.DrawingArea()
         self.area.set_can_focus(True)
+        self.area.set_hexpand(True)
+        self.area.set_vexpand(True)
         self.add(self.area)
         self.area.add_events(Gdk.EventMask.SCROLL_MASK | Gdk.EventMask.BUTTON_PRESS_MASK)
         self.area.connect("draw", self.draw)
