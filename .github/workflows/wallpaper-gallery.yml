@@ -19,12 +19,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    container: debian:trixie
     steps:
       - uses: actions/checkout@v4
       - name: Install GTK4 development files
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev libgtk4-layer-shell-dev pkg-config build-essential
+          apt-get update
+          apt-get install -y libgtk-4-dev libgtk4-layer-shell-dev pkg-config build-essential ca-certificates
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
