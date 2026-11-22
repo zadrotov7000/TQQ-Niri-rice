@@ -8,14 +8,14 @@ use std::{
 };
 
 use cairo::{
-    Context, Filter, FontSlant, FontWeight, Format, ImageSurface, Operator,
+    Context, FontSlant, FontWeight, Format, ImageSurface, Operator,
 };
 use gtk::{
     gdk, gio, glib,
     prelude::*,
     Application, ApplicationWindow, DrawingArea,
 };
-use image::{imageops::FilterType, GenericImageView};
+use image::imageops::FilterType;
 
 const APP_ID: &str = "io.github.tqqniri.WallpaperGallery";
 const WINDOW_TITLE: &str = "TQQ Wallpaper Gallery";
@@ -55,7 +55,6 @@ struct Model {
     animation_started: Instant,
     animation_generation: u64,
     hit_boxes: Vec<HitBox>,
-    selected: Option<PathBuf>,
 }
 
 fn collect_images(directory: &Path, output: &mut Vec<PathBuf>) -> std::io::Result<()> {
@@ -247,9 +246,6 @@ fn draw_card(
     cr.scale(card_width / wallpaper.width, card_height / wallpaper.height);
     cr.set_source_surface(&wallpaper.surface, -wallpaper.width / 2.0, -wallpaper.height / 2.0)
         .ok();
-    if let Some(pattern) = cr.source() {
-        pattern.set_filter(Filter::Bilinear);
-    }
     cr.paint_with_alpha(alpha).ok();
     cr.restore().ok();
 }
@@ -322,7 +318,7 @@ fn draw_gallery(model: &mut Model, cr: &Context, width: i32, height: i32) {
         .file_stem()
         .and_then(|value| value.to_str())
         .unwrap_or("Wallpaper")
-        .replace(['_', '-'], " ");
+        .replace("_", " ").replace("-", " ");
 
     draw_text(
         cr,
@@ -432,7 +428,6 @@ fn build_window(
         animation_started: Instant::now(),
         animation_generation: 0,
         hit_boxes: Vec::new(),
-        selected: None,
     }));
 
     let area = DrawingArea::new();
