@@ -40,7 +40,7 @@ if [[ -r /etc/os-release ]]; then
             echo "openSUSE package names vary by release; search for Waybar, SwayNotificationCenter, Fuzzel, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, awww and WirePlumber."
             ;;
         *)
-            echo "Install equivalent packages for your distribution: Waybar, SwayNC, Fuzzel, Rust/Cargo, GTK4 development files, Matugen, PipeWire/WirePlumber and awww or swaybg."
+            echo "Install equivalent packages for your distribution: Waybar, SwayNC, Fuzzel, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, PipeWire/WirePlumber and awww or swaybg."
             ;;
     esac
 fi
