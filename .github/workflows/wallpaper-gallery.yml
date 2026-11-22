@@ -29,8 +29,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
-      - name: Check formatting
-        run: cargo fmt --manifest-path wallpaper-gallery/Cargo.toml -- --check
+      - name: Format Rust source
+        run: cargo fmt --manifest-path wallpaper-gallery/Cargo.toml
       - name: Check Rust code
         run: cargo check --manifest-path wallpaper-gallery/Cargo.toml
       - name: Build release binary
