@@ -25,7 +25,7 @@ jobs:
       - name: Install GTK4 development files
         run: |
           apt-get update
-          apt-get install -y libgtk-4-dev libgtk4-layer-shell-dev pkg-config build-essential ca-certificates
+          apt-get install -y libgtk-4-dev libgtk4-layer-shell-dev pkg-config build-essential ca-certificates curl
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
