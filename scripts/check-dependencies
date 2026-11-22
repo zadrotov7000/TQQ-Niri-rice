@@ -38,7 +38,7 @@ if [[ -r /etc/os-release ]]; then
             echo "openSUSE package names vary by release; search for Waybar, SwayNotificationCenter, Fuzzel, Python GTK 3 and PyGObject Cairo bindings, Matugen, awww and WirePlumber."
             ;;
         *)
-            echo "Install equivalent packages for your distribution: Waybar, SwayNC, Fuzzel, Python GTK 3 bindings, Matugen, PipeWire/WirePlumber and awww or swaybg."
+            echo "Install equivalent packages for your distribution: Waybar, SwayNC, Fuzzel, Python GTK 3 and PyGObject Cairo bindings, Matugen, PipeWire/WirePlumber and awww or swaybg."
             ;;
     esac
 fi
