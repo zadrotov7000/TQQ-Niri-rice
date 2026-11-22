@@ -40,9 +40,9 @@ def set_source_rgba(cr, color, alpha=1.0):
     cr.set_source_rgba(color[0], color[1], color[2], alpha)
 
 
-class WallpaperGallery(Gtk.Window):
-    def __init__(self, images: list[Path], current: Path | None):
-        super().__init__(title="TQQ Wallpaper Gallery")
+class WallpaperGallery(Gtk.ApplicationWindow):
+    def __init__(self, application: Gtk.Application, images: list[Path], current: Path | None):
+        super().__init__(application=application, title="TQQ Wallpaper Gallery")
         self.images = images
         self.index = next((i for i, image in enumerate(images) if image == current), 0)
         self.cache: OrderedDict[Path, GdkPixbuf.Pixbuf] = OrderedDict()
@@ -278,7 +278,7 @@ def main() -> int:
     app = Gtk.Application(application_id=APP_ID, flags=Gio.ApplicationFlags.NON_UNIQUE)
 
     def activate(_app):
-        window = WallpaperGallery(images, current)
+        window = WallpaperGallery(_app, images, current)
         window.connect("destroy", lambda *_: Gtk.main_quit() if Gtk.main_level() else None)
 
     app.connect("activate", activate)
