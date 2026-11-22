@@ -81,7 +81,7 @@ fn collect_images(directory: &Path, output: &mut Vec<PathBuf>) -> std::io::Resul
 fn image_surface(path: &Path) -> Result<(ImageSurface, f64, f64, [Color; 5]), String> {
     let decoded = image::open(path)
         .map_err(|error| format!("Cannot decode {}: {error}", path.display()))?;
-    let resized = decoded.resize(900, 620, FilterType::Triangle).to_rgba8();
+    let resized = decoded.resize(720, 480, FilterType::Triangle).to_rgba8();
     let (width, height) = resized.dimensions();
     let mut cairo_data = vec![0_u8; (width * height * 4) as usize];
 
@@ -403,8 +403,10 @@ fn animate_to(model: &Rc<RefCell<Model>>, area: &DrawingArea, destination: f64) 
     };
 
     let model = Rc::clone(model);
-    let area = area.clone();
-    glib::timeout_add_local(Duration::from_millis(16), move || {
+    // Drive the animation from GTK's frame clock instead of a 16 ms timer.
+    // The callback runs in sync with the output refresh rate (normally 60 Hz)
+    // and avoids timer jitter / missed repaint scheduling.
+    area.add_tick_callback(move |widget, _frame_clock| {
         let mut state = model.borrow_mut();
         if state.animation_generation != generation {
             return glib::ControlFlow::Break;
@@ -416,12 +418,11 @@ fn animate_to(model: &Rc<RefCell<Model>>, area: &DrawingArea, destination: f64) 
         state.position =
             state.animation_from + (state.target - state.animation_from) * eased;
 
+        widget.queue_draw();
         if progress >= 1.0 {
             state.position = state.target;
-            area.queue_draw();
             glib::ControlFlow::Break
         } else {
-            area.queue_draw();
             glib::ControlFlow::Continue
         }
     });
