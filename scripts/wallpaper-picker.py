@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""A small GTK wallpaper preview picker controlled by the arrow keys."""
+"""Lightweight GTK3 cover-flow wallpaper gallery for TQQ Niri Rice."""
 from __future__ import annotations
 
+import math
 import sys
+from collections import OrderedDict
 from pathlib import Path
 
 import gi
@@ -10,136 +12,208 @@ import gi
 gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
 gi.require_version("GdkPixbuf", "2.0")
-from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango
-
+from gi.repository import Gdk, GdkPixbuf, Gio, GLib, Gtk, Pango, PangoCairo
 
 EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
-APP_ID = "io.github.tqqniri.WallpaperPicker"
-CHARACTERS = (
-    ("ichika", "Ichika"),
-    ("nino", "Nino"),
-    ("miku", "Miku"),
-    ("yotsuba", "Yotsuba"),
-    ("itsuki", "Itsuki"),
-)
+APP_ID = "io.github.tqqniri.WallpaperGallery"
+BG = (0.055, 0.055, 0.075)
+FG = (0.95, 0.94, 0.98)
+ACCENT = (0.78, 0.55, 0.96)
 
 
-def wallpaper_label(image: Path) -> str:
-    stem = image.stem.casefold()
-    names = [label for token, label in CHARACTERS if token in stem]
-    if names:
-        return " · ".join(names)
-    return image.stem.replace("_", " ").replace("-", " ").title()
+def label_for(path: Path) -> str:
+    return path.stem.replace("_", " ").replace("-", " ").strip().title()
 
 
-class WallpaperPicker(Gtk.ApplicationWindow):
-    def __init__(self, application: Gtk.Application, images: list[Path], current: Path | None) -> None:
-        super().__init__(application=application, title="Choose a wallpaper")
+def rounded_rectangle(cr, x, y, width, height, radius):
+    radius = min(radius, width / 2, height / 2)
+    cr.new_sub_path()
+    cr.arc(x + width - radius, y + radius, radius, -math.pi / 2, 0)
+    cr.arc(x + width - radius, y + height - radius, radius, 0, math.pi / 2)
+    cr.arc(x + radius, y + height - radius, radius, math.pi / 2, math.pi)
+    cr.arc(x + radius, y + radius, radius, math.pi, math.pi * 1.5)
+    cr.close_path()
+
+
+def set_source_rgba(cr, color, alpha=1.0):
+    cr.set_source_rgba(color[0], color[1], color[2], alpha)
+
+
+class WallpaperGallery(Gtk.Window):
+    def __init__(self, images: list[Path], current: Path | None):
+        super().__init__(title="TQQ Wallpaper Gallery")
         self.images = images
         self.index = next((i for i, image in enumerate(images) if image == current), 0)
+        self.cache: OrderedDict[Path, GdkPixbuf.Pixbuf] = OrderedDict()
+        self.hit_boxes = []
+        self.palette = []
         self.set_decorated(False)
         self.set_resizable(True)
-        self.set_modal(True)
-        self.set_border_width(18)
+        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_default_size(1120, 720)
+        self.set_size_request(680, 480)
+        self.set_app_paintable(True)
+        self.connect("key-press-event", self.on_key)
+        self.connect("scroll-event", self.on_scroll)
+        self.connect("button-press-event", self.on_click)
 
         screen = Gdk.Screen.get_default()
         if screen:
-            monitor = screen.get_monitor_at_point(0, 0)
-            geometry = screen.get_monitor_geometry(monitor)
-            self.preview_width = min(980, int(geometry.width * 0.72))
-            self.preview_height = min(560, int(geometry.height * 0.62))
-            self.set_default_size(min(1120, int(geometry.width * 0.84)), min(760, int(geometry.height * 0.84)))
-        else:
-            self.preview_width = 900
-            self.preview_height = 520
-            self.set_default_size(1000, 700)
-
-        provider = Gtk.CssProvider()
-        provider.load_from_data(b"""
-            window { background-color: #171821; color: #f4f1f7; }
-            label { color: #f4f1f7; }
-            label.title { font-size: 18px; font-weight: 700; }
-            button { background-image: none; background-color: #292b38; color: #f4f1f7;
-                     border: 1px solid #49465b; border-radius: 14px; padding: 10px 16px; }
-            button:hover { background-color: #393347; }
-        """)
-        if screen:
+            provider = Gtk.CssProvider()
+            provider.load_from_data(b"""
+                window { background: #101018; color: #f2eff8; }
+                label { color: #f2eff8; }
+            """)
             Gtk.StyleContext.add_provider_for_screen(
                 screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
             )
 
-        layout = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
-        self.add(layout)
-
-        header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        layout.pack_start(header, False, False, 0)
-        title = Gtk.Label(label="Choose a wallpaper")
-        title.set_xalign(0)
-        title.get_style_context().add_class("title")
-        header.pack_start(title, True, True, 0)
-        self.counter = Gtk.Label()
-        header.pack_end(self.counter, False, False, 0)
-
-        preview_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        layout.pack_start(preview_row, True, True, 0)
-
-        previous = Gtk.Button(label="‹")
-        previous.set_size_request(64, -1)
-        previous.connect("clicked", lambda *_: self.step(-1))
-        preview_row.pack_start(previous, False, False, 0)
-
-        frame = Gtk.Frame()
-        frame.set_shadow_type(Gtk.ShadowType.NONE)
-        preview_row.pack_start(frame, True, True, 0)
-        self.preview = Gtk.Image()
-        self.preview.set_halign(Gtk.Align.CENTER)
-        self.preview.set_valign(Gtk.Align.CENTER)
-        frame.add(self.preview)
-
-        following = Gtk.Button(label="›")
-        following.set_size_request(64, -1)
-        following.connect("clicked", lambda *_: self.step(1))
-        preview_row.pack_end(following, False, False, 0)
-
-        self.filename = Gtk.Label()
-        self.filename.get_style_context().add_class("title")
-        self.filename.set_ellipsize(Pango.EllipsizeMode.END)
-        self.filename.set_xalign(0.5)
-        layout.pack_start(self.filename, False, False, 0)
-
-        footer = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        layout.pack_end(footer, False, False, 0)
-        hint = Gtk.Label(label="← / → Browse     Enter Apply     Esc Cancel")
-        footer.pack_start(hint, True, True, 0)
-        cancel = Gtk.Button(label="Cancel")
-        cancel.connect("clicked", lambda *_: self.get_application().quit())
-        footer.pack_end(cancel, False, False, 0)
-        apply_button = Gtk.Button(label="Use wallpaper")
-        apply_button.connect("clicked", lambda *_: self.apply())
-        footer.pack_end(apply_button, False, False, 0)
-
-        self.connect("key-press-event", self.on_key_press)
+        self.area = Gtk.DrawingArea()
+        self.area.set_can_focus(True)
+        self.add(self.area)
+        self.area.connect("draw", self.draw)
         self.show_all()
-        self.refresh()
+        self.area.grab_focus()
 
-    def step(self, amount: int) -> None:
-        self.index = (self.index + amount) % len(self.images)
-        self.refresh()
-
-    def refresh(self) -> None:
-        image = self.images[self.index]
+    def get_pixbuf(self, path: Path):
+        if path in self.cache:
+            self.cache.move_to_end(path)
+            return self.cache[path]
         try:
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
-                str(image), self.preview_width, self.preview_height, True
-            )
-            self.preview.set_from_pixbuf(pixbuf)
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(str(path), 720, 480, True)
         except GLib.Error as error:
-            print(f"Cannot preview {image}: {error}", file=sys.stderr)
-            self.preview.clear()
-        self.filename.set_text(wallpaper_label(image))
-        self.counter.set_text(f"{self.index + 1} / {len(self.images)}")
+            print(f"Cannot load {path}: {error}", file=sys.stderr)
+            return None
+        self.cache[path] = pixbuf
+        while len(self.cache) > 13:
+            self.cache.popitem(last=False)
+        return pixbuf
 
-    def on_key_press(self, _widget: Gtk.Widget, event: Gdk.EventKey) -> bool:
+    def get_palette(self, pixbuf):
+        if pixbuf is None:
+            return [ACCENT] * 5
+        width, height = pixbuf.get_width(), pixbuf.get_height()
+        pixels = pixbuf.get_pixels()
+        channels, stride = pixbuf.get_n_channels(), pixbuf.get_rowstride()
+        colors = []
+        for fraction in (0.12, 0.30, 0.50, 0.70, 0.88):
+            x, y = int(width * fraction), int(height * 0.48)
+            offset = y * stride + x * channels
+            rgb = tuple(pixels[offset + i] / 255 for i in range(3))
+            # Keep the palette vivid enough to read against the dark gallery.
+            colors.append(tuple(0.18 + component * 0.82 for component in rgb))
+        return colors
+
+    def draw_text(self, cr, text, x, y, size, color=FG, weight=Pango.Weight.NORMAL, align=0):
+        layout = PangoCairo.create_layout(cr)
+        desc = Pango.FontDescription()
+        desc.set_family("JetBrainsMono Nerd Font")
+        desc.set_size(int(size * Pango.SCALE))
+        desc.set_weight(weight)
+        layout.set_font_description(desc)
+        layout.set_text(text, -1)
+        if align:
+            layout.set_alignment(Pango.Alignment.CENTER)
+        cr.move_to(x, y)
+        set_source_rgba(cr, color)
+        PangoCairo.show_layout(cr, layout)
+
+    def draw_card(self, cr, path, center_x, center_y, width, height, angle, alpha, selected):
+        pixbuf = self.get_pixbuf(path)
+        cr.save()
+        cr.translate(center_x, center_y)
+        cr.rotate(angle)
+        cr.scale(1.0 if selected else 0.96, 1.0 if selected else 0.96)
+        x, y = -width / 2, -height / 2
+
+        # Soft card shadow and a subtle violet edge.
+        rounded_rectangle(cr, x - 3, y + 12, width + 6, height + 8, 19)
+        cr.set_source_rgba(0, 0, 0, 0.52 * alpha)
+        cr.fill()
+        rounded_rectangle(cr, x - 1, y - 1, width + 2, height + 2, 19)
+        cr.set_source_rgba(ACCENT[0], ACCENT[1], ACCENT[2], (0.9 if selected else 0.22) * alpha)
+        cr.fill()
+
+        rounded_rectangle(cr, x, y, width, height, 18)
+        cr.clip()
+        if pixbuf:
+            pw, ph = pixbuf.get_width(), pixbuf.get_height()
+            scale = max(width / pw, height / ph)
+            dw, dh = pw * scale, ph * scale
+            cr.translate(-dw / 2, -dh / 2)
+            cr.scale(scale, scale)
+            Gdk.cairo_set_source_pixbuf(cr, pixbuf, 0, 0)
+            cr.paint_with_alpha(alpha)
+        else:
+            cr.set_source_rgb(0.16, 0.15, 0.20)
+            cr.paint()
+        cr.restore()
+
+    def draw(self, _area, cr):
+        allocation = self.area.get_allocation()
+        w, h = allocation.width, allocation.height
+        cr.set_source_rgb(*BG)
+        cr.paint()
+
+        # Quiet ambient glow behind the selected cover.
+        pattern = __import__("cairo").RadialGradient(w * 0.5, h * 0.48, 10, w * 0.5, h * 0.48, w * 0.48)
+        pattern.add_color_stop_rgba(0, 0.36, 0.20, 0.48, 0.20)
+        pattern.add_color_stop_rgba(1, 0.055, 0.055, 0.075, 0)
+        cr.set_source(pattern)
+        cr.paint()
+
+        self.draw_text(cr, "TQQ  /  WALLPAPER GALLERY", 42, 30, 13, ACCENT, Pango.Weight.BOLD)
+        self.draw_text(cr, "Choose your next desktop atmosphere", 42, 55, 11, (0.62, 0.60, 0.69))
+        self.draw_text(cr, f"{self.index + 1:02d}  /  {len(self.images):02d}", w - 118, 36, 12, (0.72, 0.70, 0.78))
+
+        center_y = h * 0.49
+        center_x = w * 0.5
+        base_w = min(560, w * 0.48)
+        base_h = min(350, h * 0.49)
+        self.hit_boxes = []
+
+        # Draw distant cards first so the selected wallpaper stays on top.
+        offsets = list(range(-3, 4))
+        offsets.sort(key=lambda offset: abs(offset), reverse=True)
+        for offset in offsets:
+            idx = (self.index + offset) % len(self.images)
+            if len(self.images) > 1 and abs(offset) >= len(self.images):
+                continue
+            distance = abs(offset)
+            card_w = base_w * (1.0 if offset == 0 else max(0.55, 0.78 - distance * 0.035))
+            card_h = base_h * (1.0 if offset == 0 else max(0.62, 0.82 - distance * 0.025))
+            spacing = min(205, w * 0.19)
+            x = center_x + offset * spacing
+            angle = 0 if offset == 0 else (-0.24 if offset < 0 else 0.24)
+            alpha = 1.0 if offset == 0 else max(0.55, 0.94 - distance * 0.12)
+            self.draw_card(cr, self.images[idx], x, center_y, card_w, card_h, angle, alpha, offset == 0)
+            if offset == 0:
+                self.hit_boxes.append((x - card_w / 2, center_y - card_h / 2, card_w, card_h, idx))
+            elif abs(offset) == 1:
+                self.hit_boxes.append((x - card_w / 2, center_y - card_h / 2, card_w, card_h, idx))
+
+        current = self.images[self.index]
+        self.draw_text(cr, label_for(current), 0, h * 0.79, 19, FG, Pango.Weight.BOLD, align=1)
+        self.draw_text(cr, current.name, 0, h * 0.79 + 30, 10, (0.62, 0.60, 0.69), align=1)
+
+        active_pixbuf = self.get_pixbuf(current)
+        self.palette = self.get_palette(active_pixbuf)
+        swatch_size, gap = 18, 12
+        total = len(self.palette) * swatch_size + (len(self.palette) - 1) * gap
+        start = (w - total) / 2
+        for i, color in enumerate(self.palette):
+            rounded_rectangle(cr, start + i * (swatch_size + gap), h * 0.87, swatch_size, swatch_size, 6)
+            set_source_rgba(cr, color)
+            cr.fill()
+
+        self.draw_text(cr, "← / →  browse     scroll  browse     enter  apply     esc  close", 0, h - 35, 10, (0.58, 0.56, 0.65), align=1)
+        return False
+
+    def step(self, amount):
+        self.index = (self.index + amount) % len(self.images)
+        self.area.queue_draw()
+
+    def on_key(self, _widget, event):
         if event.keyval in (Gdk.KEY_Left, Gdk.KEY_h):
             self.step(-1)
         elif event.keyval in (Gdk.KEY_Right, Gdk.KEY_l):
@@ -147,22 +221,48 @@ class WallpaperPicker(Gtk.ApplicationWindow):
         elif event.keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
             self.apply()
         elif event.keyval == Gdk.KEY_Escape:
-            self.get_application().quit()
+            self.destroy()
+        elif event.keyval == Gdk.KEY_Home:
+            self.index = 0
+            self.area.queue_draw()
         else:
             return False
         return True
 
-    def apply(self) -> None:
+    def on_scroll(self, _widget, event):
+        if event.direction == Gdk.ScrollDirection.UP:
+            self.step(-1)
+        elif event.direction == Gdk.ScrollDirection.DOWN:
+            self.step(1)
+        elif event.direction == Gdk.ScrollDirection.SMOOTH:
+            _dx, dy = event.get_scroll_deltas()[1:]
+            if abs(dy) > 0.15:
+                self.step(1 if dy > 0 else -1)
+        return True
+
+    def on_click(self, _widget, event):
+        if event.button == 1:
+            for x, y, width, height, idx in reversed(self.hit_boxes):
+                if x <= event.x <= x + width and y <= event.y <= y + height:
+                    if idx == self.index:
+                        self.apply()
+                    else:
+                        self.index = idx
+                        self.area.queue_draw()
+                    return True
+        return False
+
+    def apply(self):
         print(self.images[self.index], flush=True)
-        self.get_application().quit()
+        self.destroy()
 
 
 def main() -> int:
     if len(sys.argv) != 3:
         print(f"Usage: {sys.argv[0]} WALLPAPER_DIR CURRENT_WALLPAPER_FILE", file=sys.stderr)
         return 2
-    wallpaper_dir = Path(sys.argv[1])
-    state_file = Path(sys.argv[2])
+    wallpaper_dir = Path(sys.argv[1]).expanduser()
+    state_file = Path(sys.argv[2]).expanduser()
     images = sorted(
         (path for path in wallpaper_dir.rglob("*") if path.is_file() and path.suffix.lower() in EXTENSIONS),
         key=lambda path: path.name.casefold(),
@@ -170,18 +270,15 @@ def main() -> int:
     if not images:
         print(f"No wallpaper images found in {wallpaper_dir}", file=sys.stderr)
         return 1
-    current = Path(state_file.read_text().strip()) if state_file.is_file() else None
-    application = Gtk.Application(
-        application_id=APP_ID,
-        flags=Gio.ApplicationFlags.NON_UNIQUE,
-    )
+    current = Path(state_file.read_text().strip()).expanduser() if state_file.is_file() else None
+    app = Gtk.Application(application_id=APP_ID, flags=Gio.ApplicationFlags.NON_UNIQUE)
 
-    def on_activate(app: Gtk.Application) -> None:
-        window = WallpaperPicker(app, images, current)
-        window.connect("destroy", lambda *_: app.quit())
+    def activate(_app):
+        window = WallpaperGallery(images, current)
+        window.connect("destroy", lambda *_: Gtk.main_quit() if Gtk.main_level() else None)
 
-    application.connect("activate", on_activate)
-    return application.run([])
+    app.connect("activate", activate)
+    return app.run([])
 
 
 if __name__ == "__main__":
