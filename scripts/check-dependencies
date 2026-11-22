@@ -7,8 +7,8 @@ for command_name in "${required[@]}"; do
     command -v "$command_name" >/dev/null 2>&1 || missing+=("$command_name")
 done
 if command -v python3 >/dev/null 2>&1 \
-    && ! python3 -c 'import gi; gi.require_version("Gtk", "3.0"); from gi.repository import Gtk, GdkPixbuf' >/dev/null 2>&1; then
-    missing+=("Python GTK 3 bindings (PyGObject)")
+    && ! python3 -c 'import gi, cairo; gi.require_version("Gtk", "3.0"); gi.require_version("GdkPixbuf", "2.0"); gi.require_version("PangoCairo", "1.0"); gi.require_foreign("cairo"); from gi.repository import Gtk, GdkPixbuf, PangoCairo' >/dev/null 2>&1; then
+    missing+=("Python GTK 3 + PyGObject Cairo bridge")
 fi
 if { ! command -v awww >/dev/null 2>&1 || ! command -v awww-daemon >/dev/null 2>&1; } \
     && ! command -v swaybg >/dev/null 2>&1; then
@@ -25,7 +25,7 @@ if [[ -r /etc/os-release ]]; then
     . /etc/os-release
     case "${ID:-}" in
         debian|ubuntu|linuxmint|pop)
-            echo "Debian-family packages: waybar sway-notification-center fuzzel python3-gi gir1.2-gtk-3.0 pipewire-bin wireplumber swaybg fonts-font-awesome fonts-jetbrains-mono"
+            echo "Debian-family packages: waybar sway-notification-center fuzzel python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 pipewire-bin wireplumber swaybg fonts-font-awesome fonts-jetbrains-mono"
             echo "Matugen and awww may need their upstream release/package for your Debian version."
             ;;
         arch|endeavouros|manjaro)
@@ -35,7 +35,7 @@ if [[ -r /etc/os-release ]]; then
             echo "Fedora packages: waybar SwayNotificationCenter fuzzel python3-gobject gtk3 matugen awww pipewire wireplumber"
             ;;
         opensuse*|opensuse-tumbleweed|opensuse-leap)
-            echo "openSUSE package names vary by release; search for Waybar, SwayNotificationCenter, Fuzzel, Python GTK 3 bindings, Matugen, awww and WirePlumber."
+            echo "openSUSE package names vary by release; search for Waybar, SwayNotificationCenter, Fuzzel, Python GTK 3 and PyGObject Cairo bindings, Matugen, awww and WirePlumber."
             ;;
         *)
             echo "Install equivalent packages for your distribution: Waybar, SwayNC, Fuzzel, Python GTK 3 bindings, Matugen, PipeWire/WirePlumber and awww or swaybg."
