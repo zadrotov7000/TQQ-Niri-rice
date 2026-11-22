@@ -1,5 +1,5 @@
 use std::{
-    cell::RefCell,
+    cell::{Cell, RefCell},
     env,
     fs,
     path::{Path, PathBuf},
@@ -403,10 +403,25 @@ fn animate_to(model: &Rc<RefCell<Model>>, area: &DrawingArea, destination: f64) 
     };
 
     let model = Rc::clone(model);
-    // Drive the animation from GTK's frame clock instead of a 16 ms timer.
-    // The callback runs in sync with the output refresh rate (normally 60 Hz)
-    // and avoids timer jitter / missed repaint scheduling.
-    area.add_tick_callback(move |widget, _frame_clock| {
+    let last_frame_time = Cell::new(0_i64);
+    let frame_time_remainder = Cell::new(0_i64);
+
+    // Use GTK's presentation clock, not a free-running timer. Render at a
+    // maximum of 60 FPS while keeping cadence aligned with the monitor's
+    // refresh (including 75/120/144 Hz displays).
+    area.add_tick_callback(move |widget, frame_clock| {
+        let now = frame_clock.frame_time();
+        let previous = last_frame_time.replace(now);
+        if previous != 0 {
+            let elapsed_frame_time = (now - previous).max(0);
+            let accumulated = frame_time_remainder.get() + elapsed_frame_time;
+            if accumulated < 16_666 {
+                frame_time_remainder.set(accumulated);
+                return glib::ControlFlow::Continue;
+            }
+            frame_time_remainder.set(accumulated % 16_666);
+        }
+
         let mut state = model.borrow_mut();
         if state.animation_generation != generation {
             return glib::ControlFlow::Break;
