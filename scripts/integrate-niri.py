@@ -83,7 +83,7 @@ def main() -> int:
     )
 
     text = re.sub(
-        r"(?ms)^// BEGIN TQQ WALLPAPER LAYER RULE\n.*?^// END TQQ WALLPAPER LAYER RULE[ \\t]*(?:\n|$)",
+        r"(?ms)^// BEGIN TQQ WALLPAPER LAYER RULE\n.*?^// END TQQ WALLPAPER LAYER RULE[ \t]*(?:\n|$)",
         "",
         text,
     )
