@@ -184,16 +184,16 @@ def main() -> int:
         text = text[:insertion] + startup_block + text[insertion:]
 
     layer_rule = (
-        "\\n// BEGIN TQQ WALLPAPER LAYER RULE\\n"
-        "layer-rule {\\n"
-        '    match namespace="^tqq-wallpaper-gallery$"\\n'
-        "    shadow {\\n"
-        "        off\\n"
-        "    }\\n"
-        "}\\n"
-        "// END TQQ WALLPAPER LAYER RULE\\n"
+        "\n// BEGIN TQQ WALLPAPER LAYER RULE\n"
+        "layer-rule {\n"
+        '    match namespace="^tqq-wallpaper-gallery$"\n'
+        "    shadow {\n"
+        "        off\n"
+        "    }\n"
+        "}\n"
+        "// END TQQ WALLPAPER LAYER RULE\n"
     )
-    text = text.rstrip() + "\\n" + layer_rule
+    text = text.rstrip() + "\n" + layer_rule
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(text)
