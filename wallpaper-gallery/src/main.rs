@@ -479,7 +479,7 @@ fn build_window(
     // The overlay layer sits above normal desktop surfaces while transparent pixels
     // continue to show the wallpaper and panels underneath.
     window.init_layer_shell();
-    window.set_namespace(Some("tqq-wallpaper-gallery"));
+    window.set_namespace("tqq-wallpaper-gallery");
     window.set_layer(Layer::Overlay);
     window.set_anchor(Edge::Top, true);
     window.set_anchor(Edge::Bottom, true);
