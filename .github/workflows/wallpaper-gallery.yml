@@ -1,0 +1,37 @@
+name: Rust wallpaper gallery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "wallpaper-gallery/**"
+      - "scripts/build-wallpaper-gallery"
+      - "scripts/check-dependencies"
+      - "scripts/install-dependencies"
+      - "install.sh"
+      - "scripts/select-wallpaper"
+      - ".github/workflows/wallpaper-gallery.yml"
+  pull_request:
+    paths:
+      - "wallpaper-gallery/**"
+      - ".github/workflows/wallpaper-gallery.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GTK4 development files
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev pkg-config build-essential
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Check formatting
+        run: cargo fmt --manifest-path wallpaper-gallery/Cargo.toml -- --check
+      - name: Check Rust code
+        run: cargo check --manifest-path wallpaper-gallery/Cargo.toml
+      - name: Build release binary
+        run: cargo build --release --manifest-path wallpaper-gallery/Cargo.toml
