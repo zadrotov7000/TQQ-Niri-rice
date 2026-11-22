@@ -183,9 +183,15 @@ def main() -> int:
         '    match title="^TQQ Wallpaper Gallery$"\n'
         "    open-fullscreen true\n"
         "    open-focused true\n"
-        "    focus-ring { off }\n"
-        "    border { off }\n"
-        "    shadow { off }\n"
+        "    focus-ring {\n"
+        "        off\n"
+        "    }\n"
+        "    border {\n"
+        "        off\n"
+        "    }\n"
+        "    shadow {\n"
+        "        off\n"
+        "    }\n"
         "}\n"
         "// END TQQ WALLPAPER WINDOW RULE\n"
     )
