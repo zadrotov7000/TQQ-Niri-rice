@@ -19,6 +19,14 @@ Usage: ./install.sh [--install-deps | --skip-deps]
 USAGE
 }
 
+# Validate shell entry points before running dependency checks or changing packages.
+for script in "$ROOT/install.sh" "$ROOT/scripts/check-dependencies" "$ROOT/scripts/install-dependencies" "$ROOT/scripts/build-wallpaper-gallery" "$ROOT/scripts/build-squishy-shaders"; do
+    if ! bash -n "$script"; then
+        echo "Shell syntax validation failed: $script" >&2
+        exit 1
+    fi
+done
+
 for arg in "$@"; do
     case "$arg" in
         --install-deps) INSTALL_DEPS=1 ;;
@@ -283,8 +291,10 @@ fi
 echo "TQQ Niri rice installed. Dashboard: $LOCAL_BIN/tqq-dashboard (Super+Shift+Space). Backup: $BACKUP"
 echo "Run $LOCAL_BIN/check-dependencies to see whether required commands are available."
 \033'/}"
+        # Accept the first typed character so stray terminal arrow-key escape bytes do not cancel "y".
+        answer="${answer:0:1}"
         case "$answer" in
-            y|Y|yes|YES) "$ROOT/scripts/install-dependencies" ;;
+            y|Y) "$ROOT/scripts/install-dependencies" ;;
             *) echo "Dependency installation skipped. Run $ROOT/scripts/install-dependencies or install.sh --install-deps later." ;;
         esac
     else

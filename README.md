@@ -29,7 +29,7 @@ cd TQQ-Niri-rice
 
 The installer checks dependencies and asks whether to install missing packages. Use `./install.sh --install-deps` to install them explicitly or `./install.sh --skip-deps` to skip the prompt.
 
-Before replacing configs, TQQ stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. During migration, old Fuzzel and GTKLock config folders and helper scripts are backed up and retired. The installer also removes installed Fuzzel and GTKLock packages through the detected system package manager (`apt`, `pacman`, `dnf`, or `zypper`); it does not run `autoremove` or remove unrelated packages. The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
+Before replacing configs, TQQ stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. During migration, old Fuzzel and GTKLock config folders and helper scripts are backed up and retired. The installer simulates removal of installed Fuzzel and GTKLock packages first. It removes a legacy package only when the package manager confirms that no other packages (especially Niri) would be removed; otherwise it leaves that package installed and prints a warning. It never runs `autoremove`. The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
 
 ## Dependencies
 
