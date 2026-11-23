@@ -22,6 +22,7 @@ PanelWindow {
     property string bluetoothInfo: "Checking Bluetooth…"
     property string mediaInfo: "No active player"
     property string audioInfo: "Audio status unavailable"
+    property real volumeLevel: 0.5
     property var monthCursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
     property int selectedDay: new Date().getDate()
     property var calendarCells: buildCalendar()
@@ -103,6 +104,7 @@ PanelWindow {
         stdout: StdioCollector {
             onStreamFinished: {
                 const match = text.match(/Volume:\\s*([0-9.]+)/);
+                if (match) root.volumeLevel = Math.max(0, Math.min(1, Number(match[1])));
                 root.audioInfo = match ? "Output volume · " + Math.round(Number(match[1]) * 100) + "%" : text.trim();
             }
         }
@@ -283,14 +285,17 @@ PanelWindow {
                             Layout.fillWidth: true
                             from: 0
                             to: 1
-                            value: 0.5
-                            onMoved: Quickshell.execDetached(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", value.toFixed(2)])
+                            value: root.volumeLevel
+                            onMoved: {
+                                root.volumeLevel = value;
+                                Quickshell.execDetached(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", value.toFixed(2)]);
+                            }
                         }
                         Text { text: root.networkInfo + "   /   " + root.bluetoothInfo; color: "#c9bbc6"; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                         RowLayout {
                             Layout.fillWidth: true
                             Button { text: "Audio"; onClicked: Quickshell.execDetached(["pavucontrol"]) }
-                            Button { text: "Network"; onClicked: Quickshell.execDetached(["nmtui"]) }
+                            Button { text: "Network"; onClicked: Quickshell.execDetached(["nm-connection-editor"]) }
                             Button { text: "Bluetooth"; onClicked: Quickshell.execDetached(["blueman-manager"]) }
                         }
                     }
