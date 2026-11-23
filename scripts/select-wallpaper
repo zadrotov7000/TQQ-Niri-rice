@@ -177,6 +177,54 @@ if [[ ! -x "$picker" ]]; then
     notify "Wallpaper preview picker not found: $picker"
     exit 1
 fi
-selected="$("$picker" "$wallpaper_dir" "$state_file" || true)"
+# Escape is handled by the GTK picker itself. Mod+B now toggles that one picker.
+# The lock prevents repeated presses from creating duplicate overlay windows.
+if ! command -v flock >/dev/null 2>&1; then
+    echo "Install util-linux (flock) for TQQ wallpaper toggle." >&2
+    exit 1
+fi
+mkdir -p "$state_home"
+exec 9>"$state_home/gallery-toggle.lock"
+gallery_pid_file="$state_home/gallery-toggle.pid"
+if ! flock -n 9; then
+    # Another invocation is opening or waiting for the picker; ask it to close.
+    for attempt in {1..30}; do
+        owner=""
+        if [[ -r "$gallery_pid_file" ]]; then
+            IFS= read -r owner < "$gallery_pid_file" || true
+        fi
+        if [[ "$owner" =~ ^[0-9]+$ ]] && kill -0 "$owner" 2>/dev/null; then
+            kill -USR1 "$owner" 2>/dev/null || true
+            break
+        fi
+        sleep 0.025
+    done
+    exit 0
+fi
+
+gallery_closing=0
+gallery_pid=0
+close_gallery() {
+    gallery_closing=1
+    if (( gallery_pid > 0 )); then
+        kill -TERM "$gallery_pid" 2>/dev/null || true
+    fi
+}
+trap close_gallery USR1
+printf '%s\n' "$" > "$gallery_pid_file"
+selection_file="$(mktemp "$state_home/.gallery-result.XXXXXXXX")"
+"$picker" "$wallpaper_dir" "$state_file" > "$selection_file" 9>&- &
+gallery_pid=$!
+if (( gallery_closing )); then
+    kill -TERM "$gallery_pid" 2>/dev/null || true
+fi
+wait "$gallery_pid" || true
+trap - USR1
+selected="$(cat "$selection_file")"
+rm -f -- "$selection_file" "$gallery_pid_file"
+flock -u 9
+exec 9>&-
+# Close via Mod+B or Escape does not select/apply a wallpaper.
+if (( gallery_closing )); then exit 0; fi
 [[ -n "$selected" ]] || exit 0
 set_wallpaper "$selected"

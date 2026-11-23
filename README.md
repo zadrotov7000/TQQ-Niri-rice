@@ -4,13 +4,13 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 
 ## Included
 
-- **Control Center:** the animated Quickshell dashboard with calendar, clock, weather, media, network, system information, volume and brightness controls. The power menu is in its top-right corner beside the close button.
+- **Control Center:** the animated Quickshell dashboard with calendar, clock, weather, media, network, system information, volume and brightness controls. Its Niri shortcut (usually Mod+Shift+Space) and the Waybar clock **toggle** the panel: press again to close with the existing animation; Escape and the X button also close it. The power menu is in its top-right corner beside the close button.
 - **Application launcher:** the Waybar magnifying-glass button opens the Quickshell application search. The panel expands from a compact box under the launcher icon. The installer assigns `Mod+D` when free and chooses a documented fallback if it is already used.
 - **Wi-Fi panel:** `Mod+N` (or the installer's free fallback) opens a Quickshell network panel. It scans NetworkManager, shows signal strength and security, prompts for a password when needed, and connects through NetworkManager.
 - **Lock screen:** Quickshell uses the native Wayland `WlSessionLock` protocol and PAM authentication, with the current wallpaper blurred behind the clock/date and a password form revealed by Enter. The lock remains held by the compositor if Quickshell exits unexpectedly.
 - **Radial window switcher:** `Alt+Tab` opens a circular window selector. Repeated `Alt+Tab` moves forward; `Alt+Shift+Tab` moves backward. The highlighted window is focused when the switcher times out, and Escape cancels.
 - **Squishy Physics:** a free `Mod+F`-family shortcut opens an interactive wallpaper overlay. Draw a lasso with the left mouse button, then hold the right mouse button and drag inside the selected area. The selected patch is rendered on a 128×72 GPU mesh and follows the pointer with a damped spring response, elastic tension ripple, and spring-back on release. Canvas is used only to rasterize the lasso mask and draw its outline; image deformation is rendered by Qt Quick `ShaderEffect` shaders. This is the native Qt graphics pipeline (OpenGL/Vulkan and other Qt RHI backends), not an embedded browser/WebGL2 context. Backspace clears the selection and Escape closes the overlay.
-- **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens above the desktop. Browse with Left/Right or the mouse wheel, click a side card to move, click the centered card or press Enter to apply, and press Escape to close.
+- **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens above the desktop. **Mod+B toggles** the gallery: first press opens, second closes, without spawning extra copies. Escape closes it too. Browse with Left/Right or the mouse wheel, click a side card to move, and press Enter to apply.
 - **Wallpaper transition:** the repository uses `awww` when available. Wallpaper changes use a circular center-out reveal; `swaybg` remains the fallback. Wallpaper changes regenerate Matugen colors and do not reload the Niri config.
 - **Wallpaper persistence:** the selected image is restored when Niri starts.
 - **Waybar Island:** compact dark pills with smooth borders cycling through the wallpaper-derived Matugen `primary`, `secondary` and `tertiary` colors (Waybar only). The launcher, clock, network, volume, disk and notification icons use Font Awesome 4 glyphs, provided by Debian's `fonts-font-awesome` package, with Nerd Fonts as optional fallback. NetworkManager and Blueman applets start with Niri when present. Clicking Waybar's Wi-Fi icon opens TQQ Wi-Fi.
@@ -82,6 +82,24 @@ This compiles a small, **dependency-free Rust** color generator to `~/.local/bin
 Appearance: a 3px primary-to-tertiary gradient for focused windows, subtle secondary borders on others, 14px rounded/clipped corners, soft drop shadows and native GPU-accelerated Niri opening/closing/movement animations. The Rust program is **not** a background daemon; it runs once after each TQQ wallpaper change to regenerate colors. Niri watches the included file and reloads it automatically. This is not a continuously rotating RGB border; there is no per-frame Rust process.
 
 To disable it without losing your backups, remove only the block between `// BEGIN TQQ WINDOWFX` and `// END TQQ WINDOWFX` in your Niri config. No packages are uninstalled.
+
+## Update hotkey toggles without rebuilding Rust
+
+The existing Niri binds are preserved. The `select-wallpaper` Bash launcher holds a `flock` lock while one picker is open; a second Mod+B closes that picker without applying a wallpaper. The gallery already responds to Escape. The Control Center uses an `IpcHandler` from Quickshell.Io: calling its launcher again closes the current panel gracefully via its existing animation. Escape and the close button still work.
+
+```bash
+cd ~/TQQ-Niri-rice
+git pull --ff-only
+mkdir -p ~/.local/bin ~/.config/quickshell/tqq-dashboard
+cp -p ~/.local/bin/select-wallpaper ~/.local/bin/select-wallpaper.bak 2>/dev/null || true
+cp -p ~/.local/bin/tqq-dashboard ~/.local/bin/tqq-dashboard.bak 2>/dev/null || true
+cp -p ~/.config/quickshell/tqq-dashboard/shell.qml ~/.config/quickshell/tqq-dashboard/shell.qml.bak 2>/dev/null || true
+install -m 0755 scripts/select-wallpaper ~/.local/bin/select-wallpaper
+install -m 0755 scripts/tqq-dashboard ~/.local/bin/tqq-dashboard
+install -m 0644 quickshell/tqq-dashboard/shell.qml ~/.config/quickshell/tqq-dashboard/shell.qml
+```
+
+Close any old dashboard window with Escape before testing the updated shortcut. The launchers require `flock` (util-linux; installed on normal Debian). Neither tool changes your Niri config, and the Rust wallpaper gallery does not need recompiling.
 
 ## Keybindings
 

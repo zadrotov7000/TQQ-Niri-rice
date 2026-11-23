@@ -4,4 +4,33 @@ if ! command -v quickshell >/dev/null 2>&1; then
     echo "Quickshell is not installed. Run TQQ install.sh --install-deps first." >&2
     exit 1
 fi
-exec quickshell --no-duplicate --config tqq-dashboard
+if ! command -v flock >/dev/null 2>&1; then
+    echo "Install util-linux (flock) for the dashboard toggle." >&2
+    exit 1
+fi
+
+# Serialize rapid hotkey/Waybar clicks while Quickshell starts.
+state_dir="${XDG_RUNTIME_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}}/tqq-niri-rice"
+mkdir -p "$state_dir"
+exec 9>"$state_dir/dashboard-toggle.lock"
+flock -x 9
+
+# Close the existing panel through QML, preserving its exit animation.
+if quickshell --config tqq-dashboard ipc call tqqControlCenter close >/dev/null 2>&1; then
+    exit 0
+fi
+
+# Start one instance and hold the lock only until its IPC handler is ready.
+quickshell --no-duplicate --config tqq-dashboard </dev/null >>"$state_dir/dashboard.log" 2>&1 9>&- &
+dash_pid=$!
+for attempt in {1..80}; do
+    if quickshell --config tqq-dashboard ipc call tqqControlCenter ready >/dev/null 2>&1; then
+        exit 0
+    fi
+    if ! kill -0 "$dash_pid" 2>/dev/null; then
+        break
+    fi
+    sleep 0.10
+done
+echo "TQQ dashboard IPC did not start. See $state_dir/dashboard.log" >&2
+exit 1

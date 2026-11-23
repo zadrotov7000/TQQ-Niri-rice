@@ -86,6 +86,13 @@ PanelWindow {
         closeAnimation.start();
     }
 
+    // Win+Shift+Space and the Waybar clock call the same animated close.
+    IpcHandler {
+        target: "tqqControlCenter"
+        function close(): void { root.closePanel(); }
+        function ready(): bool { return true; }
+    }
+
     Component.onCompleted: {
         paletteProcess.running = true;
         regionProcess.running = true;
