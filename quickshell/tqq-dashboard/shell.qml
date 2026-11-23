@@ -421,7 +421,7 @@ PanelWindow {
                     color: root.surface
                     Layout.preferredWidth: 44
                     Layout.preferredHeight: 36
-                    Text { anchors.centerIn: parent; text: "TQQ"; color: root.accent; font.bold: true; font.pixelSize: 12 }
+                    Text { anchors.centerIn: parent; text: "⌘"; color: root.accent; font.bold: true; font.pixelSize: 19 }
                 }
                 Text { text: root.mediaInfo; color: root.fg; font.pixelSize: 12; elide: Text.ElideRight; Layout.maximumWidth: 250 }
                 Item { Layout.fillWidth: true }
@@ -801,7 +801,7 @@ PanelWindow {
 
             RowLayout {
                 Layout.fillWidth: true
-                Text { text: "TQQ  /  CONTROL CENTER"; color: root.muted; font.pixelSize: 9; font.letterSpacing: 1 }
+                Text { text: "CONTROL CENTER"; color: root.muted; font.pixelSize: 9; font.letterSpacing: 1 }
                 Item { Layout.fillWidth: true }
                 Text { text: "ESC TO CLOSE"; color: root.muted; font.pixelSize: 9 }
             }

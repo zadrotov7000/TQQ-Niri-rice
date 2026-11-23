@@ -27,6 +27,15 @@ PanelWindow {
     property bool closing: false
     property var selectedEntry: null
 
+    // Resolve .desktop Icon names in the current icon theme.
+    // When missing, return an empty path rather than an invalid icon square.
+    function appIconSource(icon) {
+        if (!icon || typeof icon !== "string") return "";
+        if (icon.startsWith("file:")) return icon;
+        if (icon.startsWith("/")) return "file://" + icon;
+        return Quickshell.iconPath(icon, true);
+    }
+
     function closeLauncher() {
         if (closing) return;
         closing = true;
@@ -124,8 +133,7 @@ PanelWindow {
 
                 RowLayout {
                     Layout.fillWidth: true
-                    Text { text: "TQQ"; color: root.accent; font.pixelSize: 13; font.bold: true; font.letterSpacing: 1.5 }
-                    Text { text: "APPLICATION LAUNCHER"; color: root.muted; font.pixelSize: 10; font.letterSpacing: 1.2 }
+                    Text { text: "APPLICATION LAUNCHER"; color: root.accent; font.pixelSize: 11; font.bold: true; font.letterSpacing: 1.2 }
                     Item { Layout.fillWidth: true }
                     Text { text: "ESC"; color: root.muted; font.pixelSize: 10 }
                 }
@@ -196,11 +204,31 @@ PanelWindow {
                             anchors.rightMargin: 13
                             spacing: 12
                             Rectangle {
-                                Layout.preferredWidth: 34
-                                Layout.preferredHeight: 34
-                                radius: 9
+                                Layout.preferredWidth: 38
+                                Layout.preferredHeight: 38
+                                radius: 11
                                 color: root.surface
-                                Text { anchors.centerIn: parent; text: (entry.name || "?").substring(0, 1).toUpperCase(); color: root.accent; font.pixelSize: 15; font.bold: true }
+                                Image {
+                                    id: appIcon
+                                    anchors.centerIn: parent
+                                    width: 29
+                                    height: 29
+                                    source: root.appIconSource(entry.icon)
+                                    sourceSize.width: 58
+                                    sourceSize.height: 58
+                                    fillMode: Image.PreserveAspectFit
+                                    asynchronous: true
+                                    smooth: true
+                                    visible: status === Image.Ready
+                                }
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: appIcon.status !== Image.Ready
+                                    text: (entry.name || "?").substring(0, 1).toUpperCase()
+                                    color: root.accent
+                                    font.pixelSize: 15
+                                    font.bold: true
+                                }
                             }
                             ColumnLayout {
                                 Layout.fillWidth: true

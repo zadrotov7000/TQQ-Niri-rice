@@ -5,7 +5,7 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 ## Included
 
 - **Control Center:** the animated Quickshell dashboard with calendar, clock, weather, media, network, system information, volume and brightness controls. Its Niri shortcut (usually Mod+Shift+Space) and the Waybar clock **toggle** the panel: press again to close with the existing animation; Escape and the X button also close it. The power menu is in its top-right corner beside the close button.
-- **Application launcher:** the Waybar magnifying-glass button opens the Quickshell application search. The panel expands from a compact box under the launcher icon. The installer assigns `Mod+D` when free and chooses a documented fallback if it is already used.
+- **Application launcher:** the Waybar magnifying-glass button opens the Quickshell application search. Results use application icons from their desktop entries and the active icon theme; entries with missing icons fall back to a letter. The panel expands from a compact box under the launcher icon. The installer assigns `Mod+D` when free and chooses a documented fallback if it is already used.
 - **Wi-Fi panel:** `Mod+N` (or the installer's free fallback) opens a Quickshell network panel. It scans NetworkManager, shows signal strength and security, prompts for a password when needed, and connects through NetworkManager.
 - **Lock screen:** Quickshell uses the native Wayland `WlSessionLock` protocol and PAM authentication, with the current wallpaper blurred behind the clock/date and a password form revealed by Enter. The lock remains held by the compositor if Quickshell exits unexpectedly.
 - **Radial window switcher:** `Alt+Tab` opens a circular window selector. Repeated `Alt+Tab` moves forward; `Alt+Shift+Tab` moves backward. The highlighted window is focused when the switcher times out, and Escape cancels.
@@ -100,6 +100,23 @@ install -m 0644 quickshell/tqq-dashboard/shell.qml ~/.config/quickshell/tqq-dash
 ```
 
 Close any old dashboard window with Escape before testing the updated shortcut. The launchers require `flock` (util-linux; installed on normal Debian). Neither tool changes your Niri config, and the Rust wallpaper gallery does not need recompiling.
+
+## Apply clean panel labels and application icons
+
+The launcher, Control Center and Wi-Fi panel no longer show visible TQQ wordmarks. The launcher renders actual application icons through `DesktopEntry.icon` and `Quickshell.iconPath()`, with a fallback for missing icons.
+
+```bash
+cd ~/TQQ-Niri-rice && git pull --ff-only
+for panel in tqq-launcher tqq-dashboard tqq-wifi; do
+    mkdir -p "$HOME/.config/quickshell/$panel"
+    if [ -f "$HOME/.config/quickshell/$panel/shell.qml" ]; then
+        cp -p "$HOME/.config/quickshell/$panel/shell.qml" "$HOME/.config/quickshell/$panel/shell.qml.before-icons"
+    fi
+    install -m 644 "quickshell/$panel/shell.qml" "$HOME/.config/quickshell/$panel/shell.qml"
+done
+```
+
+Close open panels with Escape, then reopen. No Niri or Rust rebuild is needed.
 
 ## Keybindings
 

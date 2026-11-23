@@ -357,7 +357,7 @@ PanelWindow {
                 ColumnLayout {
                     spacing: 2
                     Text {
-                        text: "TQQ  /  CONNECTIVITY"
+                        text: "CONNECTIVITY"
                         color: root.accent
                         font.pixelSize: 9
                         font.bold: true
