@@ -127,6 +127,20 @@ PYFETCH
         fi
     fi
     pkill -SIGUSR2 -x waybar >/dev/null 2>&1 || true
+
+    # Reload wallpaper-derived terminal themes without restarting shell sessions.
+    # Kitty accepts SIGUSR1; Ghostty supports systemd user reload / SIGUSR2.
+    # Only reload terminals with TQQ theme files installed.
+    if [[ -f "$config_home/kitty/tqq.conf" ]]; then
+        pkill -USR1 -u "$(id -u)" -x kitty >/dev/null 2>&1 || true
+    fi
+    if [[ -f "$config_home/ghostty/tqq.conf" ]]; then
+        if ! (command -v systemctl >/dev/null 2>&1 &&
+              systemctl --user reload app-com.mitchellh.ghostty.service >/dev/null 2>&1); then
+            pkill -USR2 -u "$(id -u)" -x ghostty >/dev/null 2>&1 || true
+        fi
+    fi
+
     # Dunst reads its updated Matugen theme without blocking installation.
     if command -v dunstctl >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
         timeout 2s dunstctl reload >/dev/null 2>&1 || true
