@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Select one of the two supported TQQ terminals without installing packages.
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice"
+LOCAL_BIN="$HOME/.local/bin"
+choice_file="$CONFIG_HOME/tqq-niri-rice/default-terminal"
+requested="${1:---auto}"
+
+case "$requested" in
+    --auto|--kitty|--ghostty) ;;
+    *) echo "Usage: $0 [--auto|--kitty|--ghostty]" >&2; exit 2 ;;
+esac
+
+available=()
+for terminal in kitty ghostty; do
+    if command -v "$terminal" >/dev/null 2>&1; then
+        available+=("$terminal")
+    fi
+done
+if (("${#available[@]}" == 0)); then
+    echo "TQQ: install Kitty or Ghostty to enable Win+Enter." >&2
+    exit 1
+fi
+
+choice=""
+if [[ "$requested" != --auto ]]; then
+    choice="${requested#--}"
+    if ! command -v "$choice" >/dev/null 2>&1; then
+        echo "Selected terminal is not installed: $choice" >&2
+        exit 1
+    fi
+else
+    previous=""
+    if [[ -r "$choice_file" ]]; then
+        IFS= read -r previous < "$choice_file" || true
+    fi
+    if (("${#available[@]}" == 1)); then
+        choice="${available[0]}"
+    elif [[ "$previous" == kitty || "$previous" == ghostty ]] && command -v "$previous" >/dev/null 2>&1; then
+        choice="$previous"
+        echo "Keeping existing default terminal: $choice"
+    elif [[ -t 0 ]]; then
+        printf 'Both Kitty and Ghostty are installed. Select default terminal:\n'
+        printf '  1) Kitty (default)\n  2) Ghostty\n'
+        read -r -p 'Choose [1/2]: ' answer || answer=""
+        case "$answer" in
+            2|ghostty|Ghostty) choice=ghostty ;;
+            1|kitty|Kitty|"") choice=kitty ;;
+            *) echo "Unrecognized option; defaulting to Kitty." >&2; choice=kitty ;;
+        esac
+    else
+        choice=kitty
+        echo "Both installed; no interactive input, defaulting to Kitty."
+    fi
+fi
+
+if [[ -L "$choice_file" ]]; then
+    echo "Refusing to overwrite symlink-managed terminal preference: $choice_file" >&2
+    exit 1
+fi
+if [[ -L "$LOCAL_BIN/tqq-terminal" ]]; then
+    echo "Refusing to overwrite symlink-managed launcher: $LOCAL_BIN/tqq-terminal" >&2
+    exit 1
+fi
+
+mkdir -p "$(dirname "$choice_file")" "$LOCAL_BIN" "$STATE_HOME/backups"
+backup="$STATE_HOME/backups/terminals-$(date +%Y%m%d-%H%M%S)-$$"
+mkdir -p "$backup"
+if [[ -f "$choice_file" ]]; then
+    cp -p -- "$choice_file" "$backup/default-terminal"
+fi
+if [[ -f "$LOCAL_BIN/tqq-terminal" ]]; then
+    cp -p -- "$LOCAL_BIN/tqq-terminal" "$backup/tqq-terminal"
+fi
+
+printf '%s\n' "$choice" > "$choice_file"
+install -m 0755 "$ROOT/scripts/tqq-terminal" "$LOCAL_BIN/tqq-terminal"
+echo "TQQ default terminal: $choice (Win+Enter)."
+echo "Backups: $backup"
