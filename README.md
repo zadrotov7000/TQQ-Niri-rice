@@ -13,7 +13,7 @@ Actual performance depends on the hardware, graphics drivers, display resolution
 - **Optional Waybar theme:** `config/waybar/` contains the Island bar configuration. If Waybar is already installed, TQQ copies the config and starts it with Niri; Waybar is not installed as a dependency.
 - **SwayNC quick settings:** volume and brightness sliders, media controls, Do Not Disturb, a Wi-Fi picker, and notifications. The installer enables brightness only when it finds a backlight device.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens on the Wayland overlay layer; it is not managed as a normal desktop window. The desktop wallpaper stays visible through its transparent background. The gallery appears immediately and decodes the selected wallpaper plus nearby previews in a background worker, caching them for the session. Floating wallpaper cards slide smoothly when browsing, with angled side previews and a live five-color palette sampled from the selected image. Character wallpapers show the character's name instead of the raw filename. Use Left/Right or the mouse wheel to browse, click a side card to move to it, click the centered card or press Enter to apply, and press Escape to close.
-- **Fuzzel:** application launcher styled as a compact dark search panel near the top of the screen, with fuzzy matching. Reboot and power-off ask for confirmation.
+- **Animated TQQ application launcher:** a Quickshell search panel with live application filtering, keyboard navigation, and a soft fade-and-scale entrance/exit. Reboot and power-off still ask for confirmation.
 - **Wallpaper switching:** `Mod+B` (Win+B) opens the gallery and updates the Matugen palette; `awww` applies the wallpaper with a transition when available, and `swaybg` is the fallback.
 - **Wallpaper persistence:** the chosen image and palette are restored when Niri starts.
 - **3D Fetch support:** an optional config for [areofyl/fetch](https://github.com/areofyl/fetch), with guarded shell autostart. Its label accent follows the wallpaper palette; existing Fetch/Fastfetch startup is preserved.
@@ -78,13 +78,13 @@ On other distributions, install the equivalent Git, compiler toolchain, and Make
 
 ## Keybindings
 
-The rice adds wallpaper, Wi-Fi, dashboard, and lock-screen shortcuts to the existing Niri config and leaves the other bindings as they are:
+The rice adds wallpaper, Wi-Fi, dashboard, animated application-launcher, and lock-screen shortcuts to the existing Niri config and leaves the other bindings as they are:
 
 | Action | Preferred key |
 | --- | --- |
 | Open wallpaper gallery, apply wallpaper, and update colors | `Mod+B` (Win+B) |
 | Open the TQQ dashboard | `Mod+Shift+Space` (fallback to another free modified Space binding) |
-| Open the Fuzzel application search | `Mod+D` (Win+D; modified D fallback if occupied) |
+| Open the animated TQQ application search | `Mod+D` (Win+D; modified D fallback if occupied) |
 | Open the TQQ Wi-Fi picker | `Mod+N` (Win+N; fallback `Mod+Shift+N` or `Mod+Ctrl+N`) |
 | Lock the session | `Mod+L` (Win+L; fallback `Mod+Shift+L` if occupied) |
 
@@ -94,7 +94,7 @@ Waybar is optional but auto-starts when present. SwayNC provides notifications a
 
 - `config/waybar/` — optional Island layout and CSS for users who install Waybar themselves.
 - `config/swaync/` — quick-settings widgets, Wi-Fi button, and matching CSS.
-- `config/fuzzel/` — application and power-menu UI with a dynamic palette include.
+- `config/fuzzel/` — retained Fuzzel theme for compatible fallback use; the main app launcher is the animated Quickshell interface.
 - `config/matugen/` — dark wallpaper-derived templates for Waybar, SwayNC, and Fuzzel.
 - `config/fetch/` — 3D Fetch display settings.\n- `config/gtklock/` — GTKLock screen styling and configuration; Matugen updates its accent colors from the active wallpaper.
 - `wallpaper-gallery/` — native Rust/GTK4 wallpaper gallery. `scripts/` — gallery build helper, wallpaper application, power, Wi-Fi, dependency, Fetch autostart, SwayNC hardware detection, and Niri config helpers.
