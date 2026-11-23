@@ -180,7 +180,7 @@ def main() -> int:
         f'    {wallpaper_key} hotkey-overlay-title="TQQ Wallpaper Picker" {{ spawn {wallpaper}; }}\n'
         f'    {wifi_key} hotkey-overlay-title="TQQ Wi-Fi" {{ spawn {wifi_menu}; }}\n'
         f'    {dashboard_key} hotkey-overlay-title="TQQ Dashboard" {{ spawn {dashboard}; }}\n'
-        f'    {launcher_key} hotkey-overlay-title="TQQ App Launcher" {{ spawn "fuzzel"; }}\n'
+        f'    {launcher_key} hotkey-overlay-title="TQQ App Launcher" {{ spawn {json.dumps(str(local_bin / "tqq-launcher"), ensure_ascii=False)}; }}\n'
         f'    {lock_key} hotkey-overlay-title="Lock Screen" {{ spawn {lock_screen}; }}\n'
         "    // END TQQ NIRI BINDS\n"
     )
