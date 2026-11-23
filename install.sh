@@ -80,69 +80,46 @@ for legacy_config in fuzzel gtklock; do
     fi
 done
 
-# Remove the old launcher package itself, not only its config directory.
+# Retire both legacy desktop packages now replaced by Quickshell.
 run_privileged() {
     if ((EUID == 0)); then
         "$@"
     elif command -v sudo >/dev/null 2>&1; then
         sudo "$@"
     else
-        echo "Fuzzel is installed but sudo is unavailable; remove it with your package manager." >&2
+        echo "A legacy package is installed but sudo is unavailable; remove it with your package manager." >&2
         return 1
     fi
 }
 
-remove_legacy_fuzzel_package() {
+remove_legacy_package() {
+    local package="$1"
     if command -v dpkg-query >/dev/null 2>&1 \
-        && [[ "$(dpkg-query -W -f='${db:Status-Status}' fuzzel 2>/dev/null || true)" == "installed" ]]; then
-        echo "Removing legacy Fuzzel package with apt…"
-        run_privileged apt-get remove -y fuzzel
-    elif command -v pacman >/dev/null 2>&1 && pacman -Q fuzzel >/dev/null 2>&1; then
-        echo "Removing legacy Fuzzel package with pacman…"
-        run_privileged pacman -R --noconfirm fuzzel
-    elif command -v rpm >/dev/null 2>&1 && rpm -q fuzzel >/dev/null 2>&1; then
+        && [[ "$(dpkg-query -W -f='${db:Status-Status}' "$package" 2>/dev/null || true)" == "installed" ]]; then
+        echo "Removing legacy $package package with apt…"
+        run_privileged apt-get remove -y "$package"
+    elif command -v pacman >/dev/null 2>&1 && pacman -Q "$package" >/dev/null 2>&1; then
+        echo "Removing legacy $package package with pacman…"
+        run_privileged pacman -R --noconfirm "$package"
+    elif command -v rpm >/dev/null 2>&1 && rpm -q "$package" >/dev/null 2>&1; then
         if command -v dnf >/dev/null 2>&1; then
-            echo "Removing legacy Fuzzel package with dnf…"
-            run_privileged dnf remove -y fuzzel
+            echo "Removing legacy $package package with dnf…"
+            run_privileged dnf remove -y "$package"
         elif command -v zypper >/dev/null 2>&1; then
-            echo "Removing legacy Fuzzel package with zypper…"
-            run_privileged zypper --non-interactive remove fuzzel
+            echo "Removing legacy $package package with zypper…"
+            run_privileged zypper --non-interactive remove "$package"
         else
-            echo "Fuzzel is installed, but no supported package manager was found to remove it." >&2
+            echo "$package is installed, but no supported package manager was found to remove it." >&2
             return 1
         fi
     else
-        echo "Legacy Fuzzel package not installed; Quickshell launcher is already used."
+        echo "Legacy $package package not installed."
     fi
 }
 
-remove_legacy_fuzzel_package
+remove_legacy_package fuzzel
+remove_legacy_package gtklock
 
-# Copy only config directories that actually exist in the repository. Quickshell
-# lives at the repository root (./quickshell), not under ./config/quickshell.
-for config_name in matugen swaync fetch waybar; do
-    source_dir="$ROOT/config/$config_name"
-    [[ -d "$source_dir" ]] || continue
-    backup_config_dir "$config_name"
-    mkdir -p "$CONFIG_HOME/$config_name"
-    cp -a "$source_dir/." "$CONFIG_HOME/$config_name/"
-done
-
-if [[ -d "$ROOT/quickshell" ]]; then
-    backup_config_dir quickshell
-    mkdir -p "$CONFIG_HOME/quickshell"
-    cp -a "$ROOT/quickshell/." "$CONFIG_HOME/quickshell/"
-fi
-
-# Install the Qt Shader Baker output beside the Squishy QML file.
-install -D -m 0644 "$SQUISHY_SHADER_BUILD/squishy.vert.qsb" "$CONFIG_HOME/quickshell/tqq-squishy/squishy.vert.qsb"
-install -D -m 0644 "$SQUISHY_SHADER_BUILD/squishy.frag.qsb" "$CONFIG_HOME/quickshell/tqq-squishy/squishy.frag.qsb"
-
-# Rofi was used by an earlier setup; retain a backup, then remove the old config.
-if [[ -d "$CONFIG_HOME/rofi" ]]; then
-    backup_config_dir rofi
-    rm -rf -- "$CONFIG_HOME/rofi"
-fi
 
 if [[ "$CONFIG_HOME" != "$HOME/.config" ]]; then
     python3 - "$CONFIG_HOME" "$CONFIG_HOME/matugen/config.toml" <<'PYXDG'
