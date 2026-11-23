@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-action="\${1:-next}"
+action="${1:-next}"
 case "$action" in
     next|previous|close) ;;
     *) echo "Usage: tqq-switcher [next|previous|close]" >&2; exit 2 ;;
