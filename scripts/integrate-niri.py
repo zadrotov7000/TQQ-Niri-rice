@@ -132,6 +132,14 @@ def main() -> int:
         text,
     )
 
+    # Niri's stock Mod+D calls Fuzzel. Replace ONLY that known stock launcher
+    # binding with TQQ; other user-defined Mod+D actions stay intact.
+    text = re.sub(
+        r'(?m)^[ \t]*(?:Mod|Super)\+D[^\n{}]*\{\s*spawn\s+"fuzzel";\s*\}[ \t]*(?:\n|$)',
+        "",
+        text,
+    )
+
     # Remove stale dashboard launch binds left behind by older TQQ releases.
     # The managed TQQ block below will add exactly one current dashboard binding.
     text = re.sub(
@@ -192,7 +200,6 @@ def main() -> int:
             r"(?m)^[ \t]*([A-Za-z0-9_+.-]+)[ \t]*(?:[^\n{}]*)\{",
             binds_body,
         )
-        if "+" in match.group(1)
     }
 
     def choose(candidates: list[str]) -> str:
@@ -204,7 +211,7 @@ def main() -> int:
 
     # Reserve Win+B for wallpaper selection. Never fall back to Win+Space: that is a common input/language-switch shortcut.
     # The launcher uses Win+D, then modified D combinations only.
-    wallpaper_key = choose(["Mod+B"])
+    wallpaper_key = choose(["Mod+B", "Mod+Shift+B", "Mod+Alt+B", "Mod+Ctrl+B"])
     launcher_key = choose(["Mod+D", "Mod+Shift+D", "Mod+Alt+D", "Mod+Ctrl+D"])
 
     wallpaper = json.dumps(str(local_bin / "select-wallpaper"), ensure_ascii=False)
@@ -215,6 +222,39 @@ def main() -> int:
     dashboard = json.dumps(str(local_bin / "tqq-dashboard"), ensure_ascii=False)
     lock_key = choose(["Mod+L", "Mod+Shift+L", "Mod+Ctrl+L", "Mod+Alt+L", "Mod+Ctrl+Shift+L", "Mod+Alt+Shift+L"])
     lock_screen = json.dumps(str(local_bin / "tqq-lock-screen"), ensure_ascii=False)
+
+    # Niri does not supply default keybindings once a binds block is customized.
+    # Restore native screenshot actions only if the user has not bound those keys.
+    screenshot_lines = []
+    screenshot_actions = (
+        ("Print", "screenshot", "Select Screenshot Area"),
+        ("Ctrl+Print", "screenshot-screen", "Screenshot Screen"),
+        ("Alt+Print", "screenshot-window", "Screenshot Window"),
+    )
+    for key, action, title in screenshot_actions:
+        normalized = normalize_key(key)
+        if normalized not in used:
+            used.add(normalized)
+            screenshot_lines.append(
+                f'    {key} hotkey-overlay-title="{title}" {{ {action}; }}\n'
+            )
+
+    # Useful when a laptop needs Fn+Print or has an awkward Print key.
+    # Do not override an existing shortcut used by other applications.
+    screenshot_key = next(
+        (
+            candidate
+            for candidate in ("Mod+Shift+S", "Mod+Alt+S", "Mod+Ctrl+S")
+            if normalize_key(candidate) not in used
+        ),
+        None,
+    )
+    if screenshot_key:
+        used.add(normalize_key(screenshot_key))
+        screenshot_lines.append(
+            f'    {screenshot_key} hotkey-overlay-title="TQQ Screenshot" {{ screenshot; }}\n'
+        )
+
     managed_binds = (
         "\n    // BEGIN TQQ NIRI BINDS\n"
         f'    {wallpaper_key} hotkey-overlay-title="TQQ Wallpaper Picker" {{ spawn {wallpaper}; }}\n'
@@ -225,7 +265,8 @@ def main() -> int:
         f'    {dashboard_key} hotkey-overlay-title="TQQ Dashboard" {{ spawn {dashboard}; }}\n'
         f'    {launcher_key} hotkey-overlay-title="TQQ App Launcher" {{ spawn {json.dumps(str(local_bin / "tqq-launcher"), ensure_ascii=False)}; }}\n'
         f'    {lock_key} hotkey-overlay-title="Lock Screen" {{ spawn {lock_screen}; }}\n'
-        "    // END TQQ NIRI BINDS\n"
+        + "".join(screenshot_lines)
+        + "    // END TQQ NIRI BINDS\n"
     )
     if binds_match:
         text = text[:closing] + managed_binds + text[closing:]
@@ -278,7 +319,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper, Quickshell Wi-Fi, radial Alt+Tab, Squishy Physics ({squishy_key}), dashboard, lock, launcher, and Dunst/Waybar/network applet startup when available."
+        f"and added TQQ wallpaper ({wallpaper_key}), Quickshell Wi-Fi ({wifi_key}), radial Alt+Tab, Squishy Physics ({squishy_key}), dashboard ({dashboard_key}), lock ({lock_key}), launcher ({launcher_key}), screenshots ({screenshot_key or 'Print'}), and Dunst/Waybar/network applet startup when available."
     )
     return 0
 
