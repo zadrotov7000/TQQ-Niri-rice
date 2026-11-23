@@ -1,14 +1,20 @@
 {
   "layer": "top",
   "position": "top",
-  "height": 42,
-  "margin-top": 8,
-  "margin-left": 12,
-  "margin-right": 12,
-  "spacing": 8,
-  "modules-left": ["niri/workspaces"],
+  "height": 38,
+  "margin-top": 7,
+  "margin-left": 10,
+  "margin-right": 10,
+  "spacing": 5,
+  "modules-left": ["custom/launcher", "niri/workspaces"],
   "modules-center": ["clock"],
   "modules-right": ["custom/notification", "network", "pulseaudio", "battery", "tray"],
+  "custom/launcher": {
+    "format": "󰍉",
+    "tooltip": true,
+    "tooltip-format": "Search applications",
+    "on-click": "fuzzel"
+  },
   "niri/workspaces": {
     "format": "{icon}",
     "sort-by-id": true,
@@ -23,34 +29,34 @@
     "on-click": "activate"
   },
   "clock": {
-    "format": "  {:%H:%M    %d %b}",
+    "format": "󰥔  {:%H:%M}   󰃭  {:%d %b}",
     "tooltip-format": "<big>{:%A, %d %B %Y}</big>\\n<tt>{:%H:%M:%S}</tt>"
   },
   "pulseaudio": {
-    "format": "  {volume}%",
-    "format-muted": "  muted",
+    "format": "󰕾  {volume}%",
+    "format-muted": "󰖁  muted",
     "tooltip": true,
     "scroll-step": 5,
     "on-click": "swaync-client -t -sw",
     "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
   },
   "network": {
-    "format-wifi": "  {signalStrength}%",
-    "format-ethernet": "  LAN",
-    "format-disconnected": "  offline",
+    "format-wifi": "󰖩  {signalStrength}%",
+    "format-ethernet": "󰈀  LAN",
+    "format-disconnected": "󰖪  offline",
     "tooltip-format": "{essid}: {ipaddr}/{cidr}",
     "interval": 5
   },
   "battery": {
-    "format": "  {capacity}%",
-    "format-charging": "  {capacity}%",
-    "format-plugged": "  AC",
+    "format": "󰁹  {capacity}%",
+    "format-charging": "󰂄  {capacity}%",
+    "format-plugged": "󰚥  AC",
     "states": {"warning": 30, "critical": 15},
     "tooltip": true
   },
   "tray": {
-    "icon-size": 17,
-    "spacing": 8,
+    "icon-size": 16,
+    "spacing": 7,
     "show-passive-items": true,
     "tooltip": true
   },
@@ -58,14 +64,14 @@
     "tooltip": true,
     "format": "{icon}",
     "format-icons": {
-      "notification": "",
-      "none": "",
-      "dnd-notification": "",
-      "dnd-none": "",
-      "inhibited-notification": "",
-      "inhibited-none": "",
-      "dnd-inhibited-notification": "",
-      "dnd-inhibited-none": ""
+      "notification": "󰂚",
+      "none": "󰂚",
+      "dnd-notification": "󰂛",
+      "dnd-none": "󰂛",
+      "inhibited-notification": "󰂚",
+      "inhibited-none": "󰂚",
+      "dnd-inhibited-notification": "󰂛",
+      "dnd-inhibited-none": "󰂛"
     },
     "return-type": "json",
     "exec-if": "which swaync-client",
