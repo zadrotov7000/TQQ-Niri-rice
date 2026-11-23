@@ -64,11 +64,13 @@ set_wallpaper() {
 
     if [[ ! -s "$config_home/waybar/colors.css" \
         || ! -s "$config_home/swaync/colors.css" \
-        || ! -s "$config_home/fuzzel/colors.ini" ]] \
+        || ! -s "$config_home/fuzzel/colors.ini" \
+        || ! -s "$config_home/gtklock/colors.css" ]] \
         || grep -q 'Starter palette' \
             "$config_home/waybar/colors.css" \
             "$config_home/swaync/colors.css" \
-            "$config_home/fuzzel/colors.ini"; then
+            "$config_home/fuzzel/colors.ini" \
+            "$config_home/gtklock/colors.css"; then
         notify "Matugen did not replace the starter colors. Check $matugen_log and $matugen_config."
         return 1
     fi
