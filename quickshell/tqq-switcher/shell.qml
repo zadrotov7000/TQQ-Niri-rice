@@ -194,19 +194,28 @@ PanelWindow {
                 required property int index
                 property real angle: (index / Math.max(1, root.windows.length)) * Math.PI * 2 - Math.PI / 2
                 property real orbitRadius: root.windows.length <= 4 ? 165 : 208
+                property real orbitProgress: 0
+                Component.onCompleted: orbitAnimation.start()
+                NumberAnimation {
+                    id: orbitAnimation
+                    target: parent
+                    property: "orbitProgress"
+                    from: 0
+                    to: 1
+                    duration: 390
+                    easing.type: Easing.OutCubic
+                }
                 opacity: root.reveal
                 scale: 0.82 + (0.18 * root.reveal)
                 transformOrigin: Item.Center
                 width: 172
                 height: 78
-                x: 380 + Math.cos(angle) * orbitRadius * root.reveal - width / 2
-                y: 270 + Math.sin(angle) * orbitRadius * root.reveal - height / 2
+                x: 380 + Math.cos(angle) * orbitRadius * orbitProgress - width / 2
+                y: 270 + Math.sin(angle) * orbitRadius * orbitProgress - height / 2
                 radius: 16
                 color: index === root.selectedIndex ? Qt.alpha(root.accent, 0.23) : Qt.alpha(root.surface, 0.92)
                 border.width: index === root.selectedIndex ? 2 : 1
                 border.color: index === root.selectedIndex ? root.accent : Qt.alpha(root.muted, 0.18)
-                Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                Behavior on y { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
                 ColumnLayout {
                     anchors.fill: parent
