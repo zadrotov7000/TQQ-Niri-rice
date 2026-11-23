@@ -105,13 +105,19 @@ fi
 
 cp -an "$ROOT/wallpapers/." "$DATA_HOME/tqq-niri-rice/wallpapers/"
 
-for script_name in select-wallpaper power-menu tqq-dashboard tqq-launcher tqq-region tqq-lock-screen configure-fetch-autostart check-dependencies install-dependencies wifi-menu.py configure-swaync.py; do
+for script_name in select-wallpaper power-menu tqq-dashboard tqq-launcher tqq-wifi tqq-region tqq-lock-screen configure-fetch-autostart check-dependencies install-dependencies configure-swaync.py; do
     if [[ -e "$LOCAL_BIN/$script_name" ]]; then
         mkdir -p "$BACKUP/local-bin"
         cp -a "$LOCAL_BIN/$script_name" "$BACKUP/local-bin/$script_name"
     fi
     install -m 0755 "$ROOT/scripts/$script_name" "$LOCAL_BIN/$script_name"
 done
+
+if [[ -e "$LOCAL_BIN/wifi-menu.py" ]]; then
+    mkdir -p "$BACKUP/local-bin"
+    cp -a "$LOCAL_BIN/wifi-menu.py" "$BACKUP/local-bin/wifi-menu.py"
+    rm -f -- "$LOCAL_BIN/wifi-menu.py"
+fi
 
 if [[ -e "$LOCAL_BIN/integrate-niri.py" ]]; then
     mkdir -p "$BACKUP/local-bin"
