@@ -33,7 +33,8 @@ PanelWindow {
     property real velocityX: 0
     property real velocityY: 0
     property double lastTick: 0
-    property real influenceRadius: Math.min(250, Math.max(105, Math.min(width, height) * 0.25))
+    // Broader, gentler movement around the selected patch.
+    property real influenceRadius: Math.min(270, Math.max(125, Math.min(width, height) * 0.29))
     // The grab handle is confined to a small circle around the click point.
     // This limits the DEFORMATION, not the real Wayland mouse cursor.
     property real maxPullDistance: Math.min(92, Math.max(55, Math.min(width, height) * 0.10))
@@ -59,7 +60,8 @@ PanelWindow {
         const distance = Math.hypot(x - dragOriginX, y - dragOriginY);
         const t = Math.max(0, Math.min(1, distance / Math.max(1, influenceRadius)));
         const radial = 1.0 - t * t * (3.0 - 2.0 * t);
-        return 0.12 + 0.88 * Math.pow(radial, 1.2);
+        // Match the GPU mesh's gradual falloff.
+        return 0.88 * radial * radial * (3.0 - 2.0 * radial);
     }
 
     function setPullTarget(x, y) {
@@ -72,7 +74,7 @@ PanelWindow {
         const newX = rawX * scale;
         const newY = rawY * scale;
         const impulse = Math.hypot(newX - targetX, newY - targetY);
-        rippleStrength = Math.max(rippleStrength, Math.min(0.95, impulse / 45.0));
+        rippleStrength = Math.max(rippleStrength, Math.min(0.38, impulse / 140.0));
         targetX = newX;
         targetY = newY;
     }
@@ -118,7 +120,7 @@ PanelWindow {
         outlineCanvas.requestPaint();
         // Preserve momentum when released, for a small elastic overshoot.
         rippleStrength = Math.max(rippleStrength,
-                                  Math.min(1.0, Math.hypot(velocityX, velocityY) / 550.0));
+                                  Math.min(0.42, Math.hypot(velocityX, velocityY) / 1300.0));
         targetX = 0;
         targetY = 0;
         physicsActive = true;
@@ -380,12 +382,19 @@ PanelWindow {
                 : 0.016;
             root.lastTick = now;
 
-            // Semi-implicit spring: firm grip, gentle underdamped release.
-            const stiffness = root.dragging ? 245.0 : 188.0;
-            const dampingRatio = root.dragging ? 0.92 : 0.57;
+            // Soft tracking and a gently damped return without snapping.
+            const stiffness = root.dragging ? 100.0 : 72.0;
+            const dampingRatio = root.dragging ? 1.02 : 0.78;
             const damping = 2.0 * Math.sqrt(stiffness) * dampingRatio;
             root.velocityX += ((root.targetX - root.offsetX) * stiffness - root.velocityX * damping) * dt;
             root.velocityY += ((root.targetY - root.offsetY) * stiffness - root.velocityY * damping) * dt;
+            // Cap sudden pointer impulses so the cheek never jumps sharply.
+            const velocity = Math.hypot(root.velocityX, root.velocityY);
+            const maxSpeed = 390.0;
+            if (velocity > maxSpeed) {
+                root.velocityX *= maxSpeed / velocity;
+                root.velocityY *= maxSpeed / velocity;
+            }
             root.offsetX += root.velocityX * dt;
             root.offsetY += root.velocityY * dt;
 
@@ -408,9 +417,9 @@ PanelWindow {
 
             // The ripple fades with motion; no always-running physics loop.
             const speed = Math.hypot(root.velocityX, root.velocityY);
-            root.ripplePhase += dt * 21.0;
-            root.rippleStrength = Math.min(1.0,
-                Math.max(root.rippleStrength * Math.exp(-5.0 * dt), speed / 1900.0));
+            root.ripplePhase += dt * 14.0;
+            root.rippleStrength = Math.min(0.45,
+                Math.max(root.rippleStrength * Math.exp(-7.0 * dt), speed / 3200.0));
             outlineCanvas.requestPaint();
 
             if (!root.dragging
@@ -457,8 +466,8 @@ PanelWindow {
             }
             Text {
                 text: root.hasSelection
-                    ? "ПКМ — тянуть внутри круга · отпусти — отскок"
-                    : "ЛКМ — обвести щёчку · ПКМ — потянуть"
+                    ? "RMB: pull inside the circle · release: soft rebound"
+                    : "LMB: select an area · RMB: gently pull"
                 color: root.fg
                 font.pixelSize: 10
             }
