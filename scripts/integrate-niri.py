@@ -184,8 +184,12 @@ def main() -> int:
     )
     text = text.replace('hotkey-overlay-title="Miku Quick Settings"', 'hotkey-overlay-title="TQQ Quick Settings"')
 
-    # TQQ owns Alt+Tab and Alt+Shift+Tab for its radial switcher.
-    text = remove_keybindings(text, ["Alt+Shift+Tab", "Alt+Tab"])
+    # TQQ owns Alt+Tab for the radial switcher and Win+Enter for the selected
+    # Kitty/Ghostty terminal. Remove only those explicit user-requested binds.
+    text = remove_keybindings(text, [
+        "Alt+Shift+Tab", "Alt+Tab",
+        "Mod+Return", "Super+Return", "Mod+Enter", "Super+Enter",
+    ])
 
     binds_match = re.search(r"(?m)^([ \t]*)binds[ \t]*\{", text)
     if binds_match:
@@ -288,6 +292,7 @@ def main() -> int:
         '    Alt+Shift+Tab hotkey-overlay-title="TQQ Window Switcher" { spawn ' + json.dumps(str(local_bin / "tqq-switcher"), ensure_ascii=False) + ' "previous"; }\n'
         f'    {dashboard_key} hotkey-overlay-title="TQQ Dashboard" {{ spawn {dashboard}; }}\n'
         f'    {launcher_key} hotkey-overlay-title="TQQ App Launcher" {{ spawn {json.dumps(str(local_bin / "tqq-launcher"), ensure_ascii=False)}; }}\n'
+        f'    Mod+Return hotkey-overlay-title="TQQ Terminal" {{ spawn {json.dumps(str(local_bin / "tqq-terminal"), ensure_ascii=False)}; }}\n'
         f'    {lock_key} hotkey-overlay-title="Lock Screen" {{ spawn {lock_screen}; }}\n'
         + "".join(screenshot_lines)
         + "".join(standard_lines)
@@ -344,7 +349,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper ({wallpaper_key}), Quickshell Wi-Fi ({wifi_key}), radial Alt+Tab, dashboard ({dashboard_key}), lock ({lock_key}), launcher ({launcher_key}), screenshots ({screenshot_key or 'Print'}), native workspace/audio controls, and Dunst/Waybar/network applet startup when available."
+        f"and added TQQ wallpaper ({wallpaper_key}), Quickshell Wi-Fi ({wifi_key}), radial Alt+Tab, dashboard ({dashboard_key}), lock ({lock_key}), launcher ({launcher_key}), terminal (Mod+Return), screenshots ({screenshot_key or 'Print'}), native workspace/audio controls, and Dunst/Waybar/network applet startup when available."
     )
     return 0
 
