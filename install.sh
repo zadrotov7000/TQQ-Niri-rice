@@ -76,11 +76,21 @@ backup_config_dir() {
     fi
 }
 
-for config_name in matugen waybar swaync fuzzel fetch quickshell; do
+# Copy only config directories that actually exist in the repository. Quickshell
+# lives at the repository root (./quickshell), not under ./config/quickshell.
+for config_name in matugen swaync fuzzel fetch; do
+    source_dir="$ROOT/config/$config_name"
+    [[ -d "$source_dir" ]] || continue
     backup_config_dir "$config_name"
     mkdir -p "$CONFIG_HOME/$config_name"
-    cp -a "$ROOT/config/$config_name/." "$CONFIG_HOME/$config_name/"
+    cp -a "$source_dir/." "$CONFIG_HOME/$config_name/"
 done
+
+if [[ -d "$ROOT/quickshell" ]]; then
+    backup_config_dir quickshell
+    mkdir -p "$CONFIG_HOME/quickshell"
+    cp -a "$ROOT/quickshell/." "$CONFIG_HOME/quickshell/"
+fi
 
 # Rofi was used by an earlier setup; retain a backup, then remove the old config.
 if [[ -d "$CONFIG_HOME/rofi" ]]; then
@@ -197,5 +207,5 @@ if ((INCLUDE_SDDM)); then
     "$ROOT/scripts/install-sddm-theme"
 fi
 
-echo "TQQ Niri rice installed. Backup: $BACKUP"
+echo "TQQ Niri rice installed. Dashboard: $LOCAL_BIN/tqq-dashboard (Super+Shift+Space). Backup: $BACKUP"
 echo "Run $LOCAL_BIN/check-dependencies to see whether required commands are available."
