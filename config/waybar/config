@@ -13,7 +13,7 @@
     "format": "󰍉",
     "tooltip": true,
     "tooltip-format": "Search applications",
-    "on-click": "fuzzel"
+    "on-click": "tqq-launcher"
   },
   "niri/workspaces": {
     "format": "{icon}",

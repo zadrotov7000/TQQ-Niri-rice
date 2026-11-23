@@ -28,7 +28,7 @@ set_wallpaper() {
                 sleep 0.2
             done
         fi
-        if awww query >/dev/null 2>&1 && awww img --transition-type fade --transition-duration 0.7 -- "$image"; then
+        if awww query >/dev/null 2>&1 && awww img --transition-type center --transition-duration 0.95 --transition-fps 30 -- "$image"; then
             :
         elif command -v swaybg >/dev/null 2>&1; then
             pkill -x swaybg >/dev/null 2>&1 || true
@@ -64,14 +64,10 @@ set_wallpaper() {
 
     if [[ ! -s "$config_home/waybar/colors.css" \
         || ! -s "$config_home/swaync/colors.css" \
-        || ! -s "$config_home/fuzzel/colors.ini" \
-        || ! -s "$config_home/gtklock/colors.css" \
         || ! -s "$config_home/tqq-niri-rice/colors.json" ]] \
         || grep -q 'Starter palette' \
             "$config_home/waybar/colors.css" \
             "$config_home/swaync/colors.css" \
-            "$config_home/fuzzel/colors.ini" \
-            "$config_home/gtklock/colors.css" \
             "$config_home/tqq-niri-rice/colors.json"; then
         notify "Matugen did not replace the starter colors. Check $matugen_log and $matugen_config."
         return 1

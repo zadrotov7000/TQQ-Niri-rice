@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+action="\${1:-next}"
+case "$action" in
+    next|previous|close) ;;
+    *) echo "Usage: tqq-switcher [next|previous|close]" >&2; exit 2 ;;
+esac
+
+export PATH="$HOME/.local/bin:$PATH"
+ipc_command=""
+if command -v qs >/dev/null 2>&1; then
+    ipc_command="$(command -v qs)"
+elif command -v quickshell >/dev/null 2>&1; then
+    ipc_command="$(command -v quickshell)"
+fi
+
+if [[ -n "$ipc_command" ]] && "$ipc_command" ipc call tqq-switcher "$action" >/dev/null 2>&1; then
+    exit 0
+fi
+
+if ! command -v quickshell >/dev/null 2>&1; then
+    echo "Quickshell is not installed." >&2
+    exit 1
+fi
+
+TQQ_SWITCH_DIRECTION="$action" exec quickshell --no-duplicate --config tqq-switcher

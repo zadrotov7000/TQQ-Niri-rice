@@ -249,6 +249,108 @@ PanelWindow {
         onActivated: root.closePanel()
     }
 
+    Popup {
+        id: powerPopup
+        x: panel.x + panel.width - width - 22
+        y: panel.y + 52
+        width: 220
+        padding: 12
+        modal: false
+        focus: true
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        background: Rectangle {
+            radius: 17
+            color: root.surface
+            border.width: 1
+            border.color: Qt.alpha(root.accent, 0.55)
+        }
+        contentItem: ColumnLayout {
+            spacing: 6
+            Text {
+                text: "POWER"
+                color: root.muted
+                font.pixelSize: 9
+                font.bold: true
+                font.letterSpacing: 1.3
+                Layout.leftMargin: 7
+                Layout.bottomMargin: 3
+            }
+            Button {
+                text: "Lock screen"
+                Layout.fillWidth: true
+                onClicked: {
+                    powerPopup.close();
+                    root.closePanel();
+                    Quickshell.execDetached(["tqq-lock-screen"]);
+                }
+                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
+                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+            }
+            Button {
+                text: "Log out"
+                Layout.fillWidth: true
+                onClicked: {
+                    powerPopup.close();
+                    root.closePanel();
+                    Quickshell.execDetached(["niri", "msg", "action", "quit"]);
+                }
+                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
+                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+            }
+            Button {
+                text: "Suspend"
+                Layout.fillWidth: true
+                onClicked: {
+                    powerPopup.close();
+                    root.closePanel();
+                    Quickshell.execDetached(["sh", "-lc", "tqq-lock-screen & sleep 1; systemctl suspend"]);
+                }
+                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
+                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+            }
+            Button {
+                text: "Restart…"
+                Layout.fillWidth: true
+                onClicked: {
+                    powerPopup.close();
+                    rebootDialog.open();
+                }
+                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
+                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+            }
+            Button {
+                text: "Power off…"
+                Layout.fillWidth: true
+                onClicked: {
+                    powerPopup.close();
+                    poweroffDialog.open();
+                }
+                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
+                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
+            }
+        }
+    }
+
+    Dialog {
+        id: rebootDialog
+        title: "Restart this computer?"
+        modal: true
+        anchors.centerIn: parent
+        standardButtons: Dialog.Cancel | Dialog.Ok
+        onAccepted: Quickshell.execDetached(["systemctl", "reboot"])
+        contentItem: Text { text: "Your open applications will be closed."; color: root.fg; wrapMode: Text.WordWrap }
+    }
+
+    Dialog {
+        id: poweroffDialog
+        title: "Power off this computer?"
+        modal: true
+        anchors.centerIn: parent
+        standardButtons: Dialog.Cancel | Dialog.Ok
+        onAccepted: Quickshell.execDetached(["systemctl", "poweroff"])
+        contentItem: Text { text: "Your open applications will be closed."; color: root.fg; wrapMode: Text.WordWrap }
+    }
+
     Dialog {
         id: regionDialog
         title: "Weather location"
@@ -336,6 +438,12 @@ PanelWindow {
                     Layout.preferredHeight: 34
                     Layout.preferredWidth: 92
                     Text { anchors.centerIn: parent; text: "◖ " + root.volumeText; color: root.fg; font.pixelSize: 11 }
+                }
+                Button {
+                    text: "⏻"
+                    onClicked: powerPopup.open()
+                    background: Rectangle { radius: 9; color: root.surfaceHigh }
+                    contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 17; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                 }
                 Button {
                     text: "×"

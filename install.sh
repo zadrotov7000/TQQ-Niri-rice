@@ -68,9 +68,17 @@ backup_config_dir() {
     fi
 }
 
+# Retire the old Fuzzel and GTKLock configs after preserving them in the backup.
+for legacy_config in fuzzel gtklock; do
+    if [[ -d "$CONFIG_HOME/$legacy_config" ]]; then
+        backup_config_dir "$legacy_config"
+        rm -rf -- "$CONFIG_HOME/$legacy_config"
+    fi
+done
+
 # Copy only config directories that actually exist in the repository. Quickshell
 # lives at the repository root (./quickshell), not under ./config/quickshell.
-for config_name in matugen swaync fuzzel fetch gtklock waybar; do
+for config_name in matugen swaync fetch waybar; do
     source_dir="$ROOT/config/$config_name"
     [[ -d "$source_dir" ]] || continue
     backup_config_dir "$config_name"
@@ -91,7 +99,7 @@ if [[ -d "$CONFIG_HOME/rofi" ]]; then
 fi
 
 if [[ "$CONFIG_HOME" != "$HOME/.config" ]]; then
-    python3 - "$CONFIG_HOME" "$CONFIG_HOME/matugen/config.toml" "$CONFIG_HOME/fuzzel/fuzzel.ini" <<'PYXDG'
+    python3 - "$CONFIG_HOME" "$CONFIG_HOME/matugen/config.toml" <<'PYXDG'
 from pathlib import Path
 import sys
 
@@ -105,7 +113,7 @@ fi
 
 cp -an "$ROOT/wallpapers/." "$DATA_HOME/tqq-niri-rice/wallpapers/"
 
-for script_name in select-wallpaper power-menu tqq-dashboard tqq-launcher tqq-wifi tqq-region tqq-lock-screen configure-fetch-autostart check-dependencies install-dependencies configure-swaync.py; do
+for script_name in select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher tqq-squishy tqq-region tqq-lock-screen configure-fetch-autostart check-dependencies install-dependencies configure-swaync.py; do
     if [[ -e "$LOCAL_BIN/$script_name" ]]; then
         mkdir -p "$BACKUP/local-bin"
         cp -a "$LOCAL_BIN/$script_name" "$BACKUP/local-bin/$script_name"
@@ -117,6 +125,12 @@ if [[ -e "$LOCAL_BIN/wifi-menu.py" ]]; then
     mkdir -p "$BACKUP/local-bin"
     cp -a "$LOCAL_BIN/wifi-menu.py" "$BACKUP/local-bin/wifi-menu.py"
     rm -f -- "$LOCAL_BIN/wifi-menu.py"
+fi
+
+if [[ -e "$LOCAL_BIN/power-menu" ]]; then
+    mkdir -p "$BACKUP/local-bin"
+    cp -a "$LOCAL_BIN/power-menu" "$BACKUP/local-bin/power-menu"
+    rm -f -- "$LOCAL_BIN/power-menu"
 fi
 
 if [[ -e "$LOCAL_BIN/integrate-niri.py" ]]; then

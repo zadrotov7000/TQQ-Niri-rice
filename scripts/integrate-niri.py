@@ -51,6 +51,28 @@ def find_block_end(text: str, opening: int) -> int:
     raise ValueError("Niri config has an unclosed block")
 
 
+
+
+def remove_keybindings(text: str, keys: list[str]) -> str:
+    """Remove existing bindings for keys that TQQ deliberately takes over."""
+    for key in keys:
+        pattern = re.compile(r"(?m)^[ \t]*" + re.escape(key) + r"\b[^\n]*\{")
+        match = pattern.search(text)
+        while match:
+            line_end = text.find("\n", match.start())
+            if line_end < 0:
+                line_end = len(text)
+            opening = text.find("{", match.start(), line_end)
+            if opening < 0:
+                break
+            closing = find_block_end(text, opening)
+            end = closing + 1
+            if end < len(text) and text[end] == "\n":
+                end += 1
+            text = text[:match.start()] + text[end:]
+            match = pattern.search(text)
+    return text
+
 def normalize_key(key: str) -> tuple[str, ...]:
     parts = key.split("+")
     modifiers = {"Super" if part == "Mod" else "Control" if part == "Ctrl" else part for part in parts[:-1]}
@@ -136,12 +158,16 @@ def main() -> int:
         "",
         text,
     )
+    # The power menu now lives inside the Quickshell Control Center.
     text = re.sub(
-        r'(?m)^([ \t]*)Super\+E[ \t]+hotkey-overlay-title="Miku Power Menu"[ \t]+\{[^\n]*\}.*$',
-        lambda match: match.group(1) + 'Super+E hotkey-overlay-title="TQQ Power Menu" { spawn ' + json.dumps(str(local_bin / "power-menu"), ensure_ascii=False) + '; }',
+        r'(?m)^[ \t]*(?:Super|Mod)\+E[ \t]+hotkey-overlay-title="(?:Miku|TQQ) Power Menu"[^\n]*(?:\n|$)',
+        "",
         text,
     )
     text = text.replace('hotkey-overlay-title="Miku Quick Settings"', 'hotkey-overlay-title="TQQ Quick Settings"')
+
+    # TQQ owns Alt+Tab and Alt+Shift+Tab for its radial switcher.
+    text = remove_keybindings(text, ["Alt+Shift+Tab", "Alt+Tab"])
 
     binds_match = re.search(r"(?m)^([ \t]*)binds[ \t]*\{", text)
     if binds_match:
@@ -176,6 +202,7 @@ def main() -> int:
     wallpaper = json.dumps(str(local_bin / "select-wallpaper"), ensure_ascii=False)
     wifi_key = choose(["Mod+N", "Mod+Shift+N", "Mod+Ctrl+N"])
     wifi_menu = json.dumps(str(local_bin / "tqq-wifi"), ensure_ascii=False)
+    squishy_key = choose(["Mod+F", "Mod+Shift+F", "Mod+Alt+F", "Mod+Ctrl+F"])
     dashboard_key = choose(["Mod+Shift+Space", "Mod+Alt+Space", "Mod+Ctrl+Space"])
     dashboard = json.dumps(str(local_bin / "tqq-dashboard"), ensure_ascii=False)
     lock_key = choose(["Mod+L", "Mod+Shift+L", "Mod+Ctrl+L", "Mod+Alt+L", "Mod+Ctrl+Shift+L", "Mod+Alt+Shift+L"])
@@ -184,6 +211,9 @@ def main() -> int:
         "\n    // BEGIN TQQ NIRI BINDS\n"
         f'    {wallpaper_key} hotkey-overlay-title="TQQ Wallpaper Picker" {{ spawn {wallpaper}; }}\n'
         f'    {wifi_key} hotkey-overlay-title="TQQ Wi-Fi" {{ spawn {wifi_menu}; }}\n'
+        '    Alt+Tab hotkey-overlay-title="TQQ Window Switcher" { spawn ' + json.dumps(str(local_bin / "tqq-switcher"), ensure_ascii=False) + ' "next"; }\n'
+        '    Alt+Shift+Tab hotkey-overlay-title="TQQ Window Switcher" { spawn ' + json.dumps(str(local_bin / "tqq-switcher"), ensure_ascii=False) + ' "previous"; }\n'
+        f'    {squishy_key} hotkey-overlay-title="TQQ Squishy Physics" {{ spawn {json.dumps(str(local_bin / "tqq-squishy"), ensure_ascii=False)}; }}\n'
         f'    {dashboard_key} hotkey-overlay-title="TQQ Dashboard" {{ spawn {dashboard}; }}\n'
         f'    {launcher_key} hotkey-overlay-title="TQQ App Launcher" {{ spawn {json.dumps(str(local_bin / "tqq-launcher"), ensure_ascii=False)}; }}\n'
         f'    {lock_key} hotkey-overlay-title="Lock Screen" {{ spawn {lock_screen}; }}\n'
@@ -217,18 +247,6 @@ def main() -> int:
         insertion = binds_match.start() if binds_match else len(text)
         text = text[:insertion] + startup_block + text[insertion:]
 
-    launcher_rule = (
-        "\n// BEGIN TQQ LAUNCHER WINDOW RULE\n"
-        "window-rule {\n"
-        '    match app-id="^tqq-launcher$"\n'
-        "    open-floating true\n"
-        "    open-focused true\n"
-        "    default-column-width { fixed 620; }\n"
-        "    default-window-height { fixed 510; }\n"
-        "}\n"
-        "// END TQQ LAUNCHER WINDOW RULE\n"
-    )
-    text = text.rstrip() + "\n" + launcher_rule
 
     layer_rule = (
         "\n// BEGIN TQQ WALLPAPER LAYER RULE\n"
@@ -246,7 +264,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper ({wallpaper_key}), Quickshell Wi-Fi ({wifi_key}), dashboard ({dashboard_key}), lock ({lock_key}), launcher, and available Waybar startup."
+        f"and added TQQ wallpaper, Quickshell Wi-Fi, radial Alt+Tab, Squishy Physics, dashboard, lock, launcher, and available Waybar startup."
     )
     return 0
 
