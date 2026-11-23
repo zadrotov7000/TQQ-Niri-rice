@@ -89,7 +89,9 @@ FloatingWindow {
 
     Rectangle {
         id: panel
-        anchors.fill: parent
+        width: parent.width
+        height: parent.height
+        x: 0
         y: -height
         radius: 20
         color: root.bg
