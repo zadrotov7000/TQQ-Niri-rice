@@ -55,73 +55,6 @@ def find_block_end(text: str, opening: int) -> int:
 
 
 
-def ensure_russian_keyboard(text: str) -> str:
-    """Add Russian to the existing XKB layouts without replacing other input settings."""
-    def default_layout() -> str:
-        keyboard_file = Path("/etc/default/keyboard")
-        try:
-            data = keyboard_file.read_text()
-            match = re.search(r'(?m)^XKBLAYOUT=["\x27]?([A-Za-z0-9_,]+)', data)
-            if match:
-                values = [part for part in match.group(1).split(",") if part]
-                return ",".join(values) if values else "us"
-        except OSError:
-            pass
-        return "us"
-
-    fallback = default_layout()
-    layout = fallback if "ru" in fallback.split(",") else fallback + ",ru"
-    toggle = "grp:alt_shift_toggle"
-
-    def xkb_contents(contents: str) -> str:
-        current = re.search(r'(?m)^[ \t]*layout[ \t]+"([^"]+)"', contents)
-        if current:
-            existing = current.group(1)
-            if "ru" not in [part.strip() for part in existing.split(",")]:
-                contents = contents[:current.start(1)] + existing + ",ru" + contents[current.end(1):]
-        else:
-            contents += f'\n            layout "{layout}"'
-        current = re.search(r'(?m)^[ \t]*options[ \t]+"([^"]*)"', contents)
-        if current:
-            existing = current.group(1)
-            if "grp:" not in existing:
-                updated = existing.rstrip(",") + ("," if existing else "") + toggle
-                contents = contents[:current.start(1)] + updated + contents[current.end(1):]
-        else:
-            contents += f'\n            options "{toggle}"'
-        # Keep the closing KDL brace on its own line.
-        return contents if contents.endswith("\n") else contents + "\n"
-
-    input_match = re.search(r"(?m)^[ \t]*input[ \t]*\{", text)
-    if not input_match:
-        return text.rstrip() + (
-            '\n\n// TQQ: preserve the system keyboard and add Russian.\n'
-            'input {\n    keyboard {\n        xkb {\n'
-            + f'            layout "{layout}"\n'
-            + f'            options "{toggle}"\n'
-            '        }\n    }\n}\n'
-        )
-
-    input_open = text.find("{", input_match.start())
-    input_close = find_block_end(text, input_open)
-    input_body = text[input_open + 1:input_close]
-    kb_match = re.search(r"(?m)^[ \t]*keyboard[ \t]*\{", input_body)
-    if not kb_match:
-        addition = f'\n    keyboard {{\n        xkb {{\n            layout "{layout}"\n            options "{toggle}"\n        }}\n    }}\n'
-        return text[:input_close] + addition + text[input_close:]
-    kb_open = input_open + 1 + input_body.find("{", kb_match.start())
-    kb_close = find_block_end(text, kb_open)
-    kb_body = text[kb_open + 1:kb_close]
-    xkb_match = re.search(r"(?m)^[ \t]*xkb[ \t]*\{", kb_body)
-    if not xkb_match:
-        addition = f'\n        xkb {{\n            layout "{layout}"\n            options "{toggle}"\n        }}\n'
-        return text[:kb_close] + addition + text[kb_close:]
-    xkb_open = kb_open + 1 + kb_body.find("{", xkb_match.start())
-    xkb_close = find_block_end(text, xkb_open)
-    old_body = text[xkb_open + 1:xkb_close]
-    return text[:xkb_open + 1] + xkb_contents(old_body) + text[xkb_close:]
-
-
 def remove_keybindings(text: str, keys: list[str]) -> str:
     """Remove existing bindings for keys that TQQ deliberately takes over."""
     for key in keys:
@@ -250,9 +183,6 @@ def main() -> int:
         text,
     )
     text = text.replace('hotkey-overlay-title="Miku Quick Settings"', 'hotkey-overlay-title="TQQ Quick Settings"')
-
-    # Add Russian while keeping the current base language and other input settings.
-    text = ensure_russian_keyboard(text)
 
     # TQQ owns Alt+Tab and Alt+Shift+Tab for its radial switcher.
     text = remove_keybindings(text, ["Alt+Shift+Tab", "Alt+Tab"])
@@ -416,7 +346,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper ({wallpaper_key}), Quickshell Wi-Fi ({wifi_key}), radial Alt+Tab, Squishy Physics ({squishy_key}), dashboard ({dashboard_key}), lock ({lock_key}), launcher ({launcher_key}), screenshots ({screenshot_key or 'Print'}), native workspace/audio controls, Russian keyboard (Alt+Shift), and Dunst/Waybar/network applet startup when available."
+        f"and added TQQ wallpaper ({wallpaper_key}), Quickshell Wi-Fi ({wifi_key}), radial Alt+Tab, Squishy Physics ({squishy_key}), dashboard ({dashboard_key}), lock ({lock_key}), launcher ({launcher_key}), screenshots ({screenshot_key or 'Print'}), native workspace/audio controls, and Dunst/Waybar/network applet startup when available."
     )
     return 0
 
