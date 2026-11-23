@@ -10,8 +10,8 @@
   "display": {
     "separator": "",
     "color": {
-      "keys": "#eda9bb",
-      "output": "#f1eaf1"
+      "keys": "38;2;237;169;187",
+      "output": "38;2;241;234;241"
     },
     "percent": {
       "type": [
@@ -23,108 +23,108 @@
     {
       "type": "custom",
       "format": "╭──────────────────────────────────────────────────────╮",
-      "outputColor": "#eda9bb"
+      "outputColor": "38;2;237;169;187"
     },
     {
       "type": "os",
       "key": "│ OS      → ",
       "format": "{pretty-name<-42} {#keys}│{#}",
-      "keyColor": "#eda9bb",
-      "outputColor": "#f1eaf1"
+      "keyColor": "38;2;237;169;187",
+      "outputColor": "38;2;241;234;241"
     },
     {
       "type": "kernel",
       "key": "│ Kernel  → ",
       "format": "{release<-42} {#keys}│{#}",
-      "keyColor": "#eda9bb",
-      "outputColor": "#f1eaf1"
+      "keyColor": "38;2;237;169;187",
+      "outputColor": "38;2;241;234;241"
     },
     {
       "type": "shell",
       "key": "│ Shell   → ",
       "format": "{pretty-name<16}{version<-26} {#keys}│{#}",
-      "keyColor": "#eda9bb",
-      "outputColor": "#f1eaf1"
+      "keyColor": "38;2;237;169;187",
+      "outputColor": "38;2;241;234;241"
     },
     {
       "type": "custom",
       "format": "╰──────────────────────────────────────────────────────╯",
-      "outputColor": "#eda9bb"
+      "outputColor": "38;2;237;169;187"
     },
     "break",
     {
       "type": "custom",
       "format": "╭──────────────────────────────────────────────────────╮",
-      "outputColor": "#eda9bb"
+      "outputColor": "38;2;237;169;187"
     },
     {
       "type": "terminal",
       "key": "│ Terminal→ ",
       "format": "{pretty-name<16}{version<-26} {#keys}│{#}",
-      "keyColor": "#eda9bb",
-      "outputColor": "#f1eaf1"
+      "keyColor": "38;2;237;169;187",
+      "outputColor": "38;2;241;234;241"
     },
     {
       "type": "wm",
       "key": "│ WM      → ",
       "format": "{pretty-name<-42} {#keys}│{#}",
-      "keyColor": "#eda9bb",
-      "outputColor": "#f1eaf1"
+      "keyColor": "38;2;237;169;187",
+      "outputColor": "38;2;241;234;241"
     },
     {
       "type": "custom",
       "format": "╰──────────────────────────────────────────────────────╯",
-      "outputColor": "#eda9bb"
+      "outputColor": "38;2;237;169;187"
     },
     "break",
     {
       "type": "custom",
       "format": "╭──────────────────────────────────────────────────────╮",
-      "outputColor": "#eda9bb"
+      "outputColor": "38;2;237;169;187"
     },
     {
       "type": "cpu",
       "key": "│ CPU     → ",
       "format": "{name<-42} {#keys}│{#}",
-      "keyColor": "#eda9bb",
-      "outputColor": "#f1eaf1"
+      "keyColor": "38;2;237;169;187",
+      "outputColor": "38;2;241;234;241"
     },
     {
       "type": "gpu",
       "key": "│ GPU     → ",
       "format": "{name<-42} {#keys}│{#}",
-      "keyColor": "#eda9bb",
-      "outputColor": "#f1eaf1"
+      "keyColor": "38;2;237;169;187",
+      "outputColor": "38;2;241;234;241"
     },
     {
       "type": "custom",
       "format": "╰──────────────────────────────────────────────────────╯",
-      "outputColor": "#eda9bb"
+      "outputColor": "38;2;237;169;187"
     },
     "break",
     {
       "type": "custom",
       "format": "╭──────────────────────────────────────────────────────╮",
-      "outputColor": "#eda9bb"
+      "outputColor": "38;2;237;169;187"
     },
     {
       "type": "memory",
       "key": "│ RAM     → ",
       "format": "{used<10} / {total<10} ({percentage<8})         {#keys}│{#}",
-      "keyColor": "#eda9bb",
-      "outputColor": "#f1eaf1"
+      "keyColor": "38;2;237;169;187",
+      "outputColor": "38;2;241;234;241"
     },
     {
       "type": "swap",
       "key": "│ Swap    → ",
       "format": "{used<10} / {total<10} ({percentage<8})         {#keys}│{#}",
-      "keyColor": "#eda9bb",
-      "outputColor": "#f1eaf1"
+      "keyColor": "38;2;237;169;187",
+      "outputColor": "38;2;241;234;241"
     },
     {
       "type": "custom",
       "format": "╰──────────────────────────────────────────────────────╯",
-      "outputColor": "#eda9bb"
+      "outputColor": "38;2;237;169;187"
     }
   ]
 }
