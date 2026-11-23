@@ -34,6 +34,8 @@ PanelWindow {
     property real volumeLevel: 0.5
     property int brightnessLevel: 50
     property bool brightnessAvailable: false
+    property real panelOffset: -1000
+    property bool closing: false
 
     property color bg: "#111014"
     property color surface: "#211e25"
@@ -78,10 +80,32 @@ PanelWindow {
         weatherProcess.running = true;
     }
 
+    function closePanel() {
+        if (closing) return;
+        closing = true;
+        closeAnimation.start();
+    }
+
     Component.onCompleted: {
         paletteProcess.running = true;
         regionProcess.running = true;
         refresh();
+        panelOffset = -panel.height;
+        panel.opacity = 0;
+        openAnimation.start();
+    }
+
+    ParallelAnimation {
+        id: openAnimation
+        NumberAnimation { target: root; property: "panelOffset"; to: 0; duration: 520; easing.type: Easing.OutCubic }
+        NumberAnimation { target: panel; property: "opacity"; to: 1; duration: 420; easing.type: Easing.OutCubic }
+    }
+
+    ParallelAnimation {
+        id: closeAnimation
+        NumberAnimation { target: root; property: "panelOffset"; to: -panel.height; duration: 380; easing.type: Easing.InCubic }
+        NumberAnimation { target: panel; property: "opacity"; to: 0; duration: 300; easing.type: Easing.InCubic }
+        onFinished: Qt.quit()
     }
 
     Timer {
@@ -222,7 +246,7 @@ PanelWindow {
     Shortcut {
         sequence: "Escape"
         context: Qt.ApplicationShortcut
-        onActivated: Qt.quit()
+        onActivated: root.closePanel()
     }
 
     Dialog {
@@ -258,16 +282,16 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         color: "#33000000"
-        MouseArea { anchors.fill: parent; onClicked: Qt.quit() }
+        MouseArea { anchors.fill: parent; onClicked: root.closePanel() }
     }
 
     Rectangle {
         id: panel
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: Math.max(58, parent.height * 0.075)
+        y: Math.max(58, parent.height * 0.075) + root.panelOffset
         width: Math.min(parent.width * 0.62, 1040)
-        height: Math.min(parent.height * 0.76, parent.height - anchors.topMargin - 28)
+        height: Math.min(parent.height * 0.76, parent.height - Math.max(58, parent.height * 0.075) - 28)
+        opacity: 0
         radius: 22
         color: root.bg
         border.width: 1
@@ -315,7 +339,7 @@ PanelWindow {
                 }
                 Button {
                     text: "×"
-                    onClicked: Qt.quit()
+                    onClicked: root.closePanel()
                     background: Rectangle { radius: 9; color: root.surfaceHigh }
                     contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 20; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                 }
