@@ -4,13 +4,13 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 
 ## Lightweight by design
 
-TQQ focuses on a responsive desktop without relying on a heavyweight widget framework or a pile of always-running background apps. It uses familiar, relatively lightweight components such as SwayNC and Fuzzel, plus an on-demand Quickshell dashboard. Waybar is optional and is not installed or started by the default setup. That makes it suitable for modest hardware and older laptops, including systems with limited RAM.
+TQQ focuses on a responsive desktop without relying on a heavyweight widget framework or a pile of always-running background apps. It uses familiar, relatively lightweight components such as SwayNC and Fuzzel, plus an on-demand Quickshell dashboard. Waybar remains optional: when installed, TQQ copies its theme and starts it with Niri; it is not added as a required dependency. That makes it suitable for modest hardware and older laptops, including systems with limited RAM.
 
 Actual performance depends on the hardware, graphics drivers, display resolution, wallpaper effects, and which optional components are enabled. For the lightest setup, keep optional effects and background applications to a minimum.
 
 ## Included
 
-- **Optional Waybar theme:** `config/waybar/` contains the former Island bar configuration for users who choose to install Waybar separately. The default installer does not require, install, copy, or autostart Waybar.
+- **Optional Waybar theme:** `config/waybar/` contains the Island bar configuration. If Waybar is already installed, TQQ copies the config and starts it with Niri; Waybar is not installed as a dependency.
 - **SwayNC quick settings:** volume and brightness sliders, media controls, Do Not Disturb, a Wi-Fi picker, and notifications. The installer enables brightness only when it finds a backlight device.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens on the Wayland overlay layer; it is not managed as a normal desktop window. The desktop wallpaper stays visible through its transparent background. The gallery appears immediately and decodes the selected wallpaper plus nearby previews in a background worker, caching them for the session. Floating wallpaper cards slide smoothly when browsing, with angled side previews and a live five-color palette sampled from the selected image. Character wallpapers show the character's name instead of the raw filename. Use Left/Right or the mouse wheel to browse, click a side card to move to it, click the centered card or press Enter to apply, and press Escape to close.
 - **Fuzzel:** application launcher styled as a compact dark search panel near the top of the screen, with fuzzy matching. Reboot and power-off ask for confirmation.
@@ -87,7 +87,7 @@ The rice adds wallpaper, Wi-Fi, dashboard, and lock-screen shortcuts to the exis
 | Open the Fuzzel application search | `Mod+D` (Win+D; modified D fallback if occupied) |
 | Open the TQQ Wi-Fi picker | `Mod+N` (Win+N; fallback `Mod+Shift+N` or `Mod+Ctrl+N`) |\n| Lock the session | `Mod+L` (Win+L; fallback `Mod+Shift+L` if occupied) |
 
-Waybar is optional. SwayNC provides notifications and quick settings independently of the dashboard.
+Waybar is optional but auto-starts when present. SwayNC provides notifications and quick settings independently of the dashboard.
 
 ## Config layout
 
