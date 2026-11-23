@@ -7,6 +7,7 @@ on:
       - "wallpaper-gallery/**"
       - "config/waybar/**"
       - "config/swaync/**"
+      - "quickshell/**"
       - "scripts/**"
       - "install.sh"
       - "README.md"
@@ -16,6 +17,7 @@ on:
       - "wallpaper-gallery/**"
       - "config/waybar/**"
       - "config/swaync/**"
+      - "quickshell/**"
       - "scripts/**"
       - "install.sh"
       - ".github/workflows/wallpaper-gallery.yml"
@@ -36,7 +38,7 @@ jobs:
           components: rustfmt
       - name: Validate shell scripts
         run: |
-          bash -n install.sh scripts/select-wallpaper scripts/build-wallpaper-gallery scripts/check-dependencies scripts/install-dependencies
+          bash -n install.sh scripts/select-wallpaper scripts/build-wallpaper-gallery scripts/check-dependencies scripts/install-dependencies scripts/tqq-dashboard
       - name: Validate Python scripts
         run: |
           python3 -m py_compile scripts/integrate-niri.py scripts/configure-swaync.py scripts/wifi-menu.py
@@ -49,6 +51,7 @@ jobs:
           printf 'binds {\n    Super+Space { spawn "fuzzel"; }\n    Super+Return { spawn "kitty"; }\n}\n' > "$tmp/config.kdl"
           python3 scripts/integrate-niri.py "$tmp/config.kdl" "$tmp/bin"
           grep -q 'Mod+D .*spawn "fuzzel"' "$tmp/config.kdl"
+          grep -q 'TQQ Dashboard.*spawn .*tqq-dashboard' "$tmp/config.kdl"
           ! grep -q 'Super+Space .*spawn "fuzzel"' "$tmp/config.kdl"
           grep -q 'Super+Return .*spawn "kitty"' "$tmp/config.kdl"
       - name: Format Rust source
