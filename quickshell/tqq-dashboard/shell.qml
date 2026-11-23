@@ -30,7 +30,7 @@ PanelWindow {
 
     Process {
         id: stats
-        command: ["bash", "-lc", "printf 'CPU  '; awk -v RS='' '{print $1}' /proc/loadavg; printf 'RAM  '; free -h | awk '/Mem:/ {print $3 " / " $2}'; printf 'DISK '; df -h / | awk 'NR==2 {print $3 " / " $2 " (" $5 ")"}'; if command -v sensors >/dev/null 2>&1; then printf 'TEMP '; sensors 2>/dev/null | awk '/Package id 0:|Tctl:/ {print $4; exit}'; fi"]
+        command: ["bash", "-lc", "printf 'LOAD '; awk '{print $1}' /proc/loadavg; printf 'RAM  '; free -h | awk '/Mem:/ {print $3 " / " $2}'; printf 'DISK '; df -h / | awk 'NR==2 {print $3 " / " $2 " (" $5 ")"}'; if command -v sensors >/dev/null 2>&1; then printf 'TEMP '; sensors 2>/dev/null | awk '/Package id 0:|Tctl:/ {print $4; exit}'; fi"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: root.systemInfo = text
@@ -134,7 +134,7 @@ PanelWindow {
                         Button { text: "Network settings"; onClicked: Quickshell.execDetached(["nm-connection-editor"]) }
                         Button { text: "Bluetooth"; onClicked: Quickshell.execDetached(["blueman-manager"]) }
                         Item { Layout.fillWidth: true }
-                        Button { text: "Refresh"; onClicked: stats.running = true }
+                        Button { text: "Refresh"; onClicked: { stats.running = false; stats.running = true } }
                     }
                 }
             }
