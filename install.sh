@@ -28,6 +28,7 @@ for script in \
     "$ROOT/scripts/apply-windowfx" \
     "$ROOT/scripts/build-wallpaper-gallery" \
     "$ROOT/scripts/build-squishy-shaders" \
+    "$ROOT/scripts/update-squishy" \
     "$ROOT/scripts/select-wallpaper" \
     "$ROOT/scripts/tqq-dashboard" \
     "$ROOT/scripts/tqq-launcher" \
