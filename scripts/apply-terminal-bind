@@ -34,7 +34,41 @@ cp -p -- "$NIRI_CONFIG" "$backup_dir/config.kdl"
 candidate="$(mktemp "$CONFIG_HOME/niri/.tqq-terminal-XXXXXXXX.kdl")"
 trap 'rm -f -- "$candidate"' EXIT
 cp -p -- "$NIRI_CONFIG" "$candidate"
-python3 "$ROOT/scripts/integrate-niri.py" "$candidate" "$LOCAL_BIN"
+# Only touch the requested Win+Enter shortcut; keep all existing other Niri
+# shortcuts and TQQ generated sections byte-for-byte unchanged.
+python3 - "$candidate" "$ROOT/scripts/integrate-niri.py" "$LOCAL_BIN/tqq-terminal" <<'PY'
+from pathlib import Path
+import importlib.util
+import json
+import re
+import sys
+
+path = Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location("tqq_niri", sys.argv[2])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+text = path.read_text()
+text = re.sub(
+    r"(?ms)^[ \t]*// BEGIN TQQ TERMINAL BIND\n.*?^[ \t]*// END TQQ TERMINAL BIND[ \t]*(?:\n|$)",
+    "",
+    text,
+)
+text = module.remove_keybindings(
+    text, ["Mod+Return", "Super+Return", "Mod+Enter", "Super+Enter"]
+)
+match = re.search(r"(?m)^[ \t]*binds[ \t]*\{", text)
+if not match:
+    raise SystemExit("No Niri binds block found; config is untouched.")
+opening = text.find("{", match.start())
+closing = module.find_block_end(text, opening)
+binding = (
+    '\n    // BEGIN TQQ TERMINAL BIND\n'
+    '    Mod+Return hotkey-overlay-title="TQQ Terminal" { spawn '
+    + json.dumps(sys.argv[3]) + '; }\n'
+    '    // END TQQ TERMINAL BIND\n'
+)
+path.write_text(text[:closing] + binding + text[closing:])
+PY
 if ! niri validate --config "$candidate"; then
     echo "Niri validation failed; the existing config is untouched." >&2
     exit 1
