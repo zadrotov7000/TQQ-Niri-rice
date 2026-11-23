@@ -8,4 +8,9 @@ if ! command -v quickshell >/dev/null 2>&1; then
     exit 1
 fi
 
-exec quickshell --no-duplicate --config tqq-lock
+# Keep failures diagnosable when the lock is launched via a Niri binding.
+# Do not log passwords; only Quickshell process output is captured.
+umask 077
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice"
+mkdir -p "$state_dir"
+exec quickshell --no-duplicate --config tqq-lock >>"$state_dir/lockscreen.log" 2>&1
