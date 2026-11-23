@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+REGION_DIR="$CONFIG_HOME/tqq-niri-rice"
+REGION_FILE="$REGION_DIR/weather-region"
+
+default_region() {
+    local timezone=""
+    if command -v timedatectl >/dev/null 2>&1; then
+        timezone="$(timedatectl show -p Timezone --value 2>/dev/null || true)"
+    fi
+    case "$timezone" in
+        Europe/Copenhagen) printf 'Copenhagen\n' ;;
+        Europe/Berlin) printf 'Berlin\n' ;;
+        Europe/London) printf 'London\n' ;;
+        Europe/Paris) printf 'Paris\n' ;;
+        Europe/Warsaw) printf 'Warsaw\n' ;;
+        Europe/Kyiv|Europe/Kiev) printf 'Kyiv\n' ;;
+        America/New_York) printf 'New York\n' ;;
+        America/Los_Angeles) printf 'Los Angeles\n' ;;
+        Asia/Tokyo) printf 'Tokyo\n' ;;
+        *) printf '%s\n' "${timezone##*/}" | sed 's/_/ /g' ;;
+    esac
+}
+
+case "${1:-get}" in
+    get)
+        if [[ -s "$REGION_FILE" ]]; then
+            IFS= read -r region < "$REGION_FILE" || true
+            printf '%s\n' "$region"
+        else
+            default_region
+        fi
+        ;;
+    set)
+        [[ $# -ge 2 ]] || { echo "Usage: tqq-region set CITY" >&2; exit 2; }
+        region="$2"
+        [[ -n "$region" && "$region" != *$'\n'* ]] || { echo "Invalid region." >&2; exit 2; }
+        mkdir -p "$REGION_DIR"
+        printf '%s\n' "$region" > "$REGION_FILE"
+        ;;
+    weather)
+        region=""
+        if [[ -s "$REGION_FILE" ]]; then
+            IFS= read -r region < "$REGION_FILE" || true
+        else
+            region="$(default_region)"
+        fi
+        [[ -n "$region" ]] || { echo "No region configured." >&2; exit 1; }
+        command -v curl >/dev/null 2>&1 || { echo "curl is required for weather." >&2; exit 1; }
+        exec curl --fail --silent --show-error --location --max-time 12 --get \
+            --data-urlencode "format=j1" "https://wttr.in/$region"
+        ;;
+    *)
+        echo "Usage: tqq-region [get|set CITY|weather]" >&2
+        exit 2
+        ;;
+esac
