@@ -124,7 +124,7 @@
     {
       "type": "memory",
       "key": "│ RAM      → ",
-      "format": "{used<10} / {total<10} {percentage<7} {#keys}│{#}",
+      "format": "{used<10} / {total<10} {percentage<6} {#keys}│{#}",
       "keyColor": "38;2;237;169;187",
       "outputColor": "38;2;241;234;241",
       "keyWidth": 0
@@ -132,7 +132,7 @@
     {
       "type": "swap",
       "key": "│ Swap     → ",
-      "format": "{used<10} / {total<10} {percentage<7} {#keys}│{#}",
+      "format": "{used<10} / {total<10} {percentage<6} {#keys}│{#}",
       "keyColor": "38;2;237;169;187",
       "outputColor": "38;2;241;234;241",
       "keyWidth": 0
