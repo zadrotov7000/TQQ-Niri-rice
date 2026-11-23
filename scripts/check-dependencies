@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 
-required=(niri swaync swaync-client fuzzel matugen quickshell gtklock playerctl wpctl pavucontrol nm-connection-editor blueman-manager python3 cargo rustc pkg-config pgrep pkill)
+required=(niri swaync swaync-client fuzzel matugen quickshell gtklock playerctl wpctl pavucontrol nm-connection-editor blueman-manager curl python3 cargo rustc pkg-config pgrep pkill)
 missing=()
 for command_name in "${required[@]}"; do
     command -v "$command_name" >/dev/null 2>&1 || missing+=("$command_name")
