@@ -103,7 +103,7 @@ case "${ID:-}" in
         install_matugen
         ;;
     arch|endeavouros|manjaro|cachyos)
-        packages=(curl quickshell playerctl pavucontrol networkmanager network-manager-applet blueman brightnessctl lm_sensors swaync swaybg ttf-font-awesome ttf-jetbrains-mono hicolor-icon-theme python rust cargo pkgconf gtk4 gtk4-layer-shell)
+        packages=(curl quickshell qt6-shadertools playerctl pavucontrol networkmanager network-manager-applet blueman brightnessctl lm_sensors swaync swaybg ttf-font-awesome ttf-jetbrains-mono hicolor-icon-theme python rust cargo pkgconf gtk4 gtk4-layer-shell)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire wireplumber)
         fi
