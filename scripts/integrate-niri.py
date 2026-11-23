@@ -175,7 +175,7 @@ def main() -> int:
 
     wallpaper = json.dumps(str(local_bin / "select-wallpaper"), ensure_ascii=False)
     wifi_key = choose(["Mod+N", "Mod+Shift+N", "Mod+Ctrl+N"])
-    wifi_menu = json.dumps(str(local_bin / "wifi-menu.py"), ensure_ascii=False)
+    wifi_menu = json.dumps(str(local_bin / "tqq-wifi"), ensure_ascii=False)
     dashboard_key = choose(["Mod+Shift+Space", "Mod+Alt+Space", "Mod+Ctrl+Space"])
     dashboard = json.dumps(str(local_bin / "tqq-dashboard"), ensure_ascii=False)
     lock_key = choose(["Mod+L", "Mod+Shift+L", "Mod+Ctrl+L", "Mod+Alt+L", "Mod+Ctrl+Shift+L", "Mod+Alt+Shift+L"])
@@ -246,7 +246,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper ({wallpaper_key}), Wi-Fi ({wifi_key}), dashboard ({dashboard_key}), lock ({lock_key}), launcher, and available Waybar startup."
+        f"and added TQQ wallpaper ({wallpaper_key}), Quickshell Wi-Fi ({wifi_key}), dashboard ({dashboard_key}), lock ({lock_key}), launcher, and available Waybar startup."
     )
     return 0
 
