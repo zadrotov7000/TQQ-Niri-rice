@@ -11,6 +11,7 @@ BACKUP="$STATE_HOME/backups/lock-screen-$(date +%Y%m%d-%H%M%S)-$$"
 mkdir -p "$BACKUP" "$LOCAL_BIN"
 chmod 700 "$BACKUP"
 
+bash -n "$ROOT/scripts/tqq-lock-screen"
 python3 - "$ROOT/scripts/tqq-avatar" <<'PY'
 from pathlib import Path
 import sys
@@ -26,8 +27,8 @@ for panel in tqq-lock tqq-dashboard; do
         exit 1
     fi
 done
-if [[ -L "$LOCAL_BIN/tqq-avatar" ]]; then
-    echo "Avatar helper is symlink-managed; refusing to overwrite it." >&2
+if [[ -L "$LOCAL_BIN/tqq-avatar" || -L "$LOCAL_BIN/tqq-lock-screen" ]]; then
+    echo "A TQQ launcher is symlink-managed; refusing to overwrite it." >&2
     exit 1
 fi
 
@@ -44,7 +45,11 @@ if [[ -f "$LOCAL_BIN/tqq-avatar" ]]; then
     cp -p -- "$LOCAL_BIN/tqq-avatar" "$BACKUP/tqq-avatar"
 fi
 install -m 0755 "$ROOT/scripts/tqq-avatar" "$LOCAL_BIN/tqq-avatar"
+if [[ -f "$LOCAL_BIN/tqq-lock-screen" ]]; then
+    cp -p -- "$LOCAL_BIN/tqq-lock-screen" "$BACKUP/tqq-lock-screen"
+fi
+install -m 0755 "$ROOT/scripts/tqq-lock-screen" "$LOCAL_BIN/tqq-lock-screen"
 
-echo "TQQ lock screen and Control Center avatar UI updated."
+echo "TQQ lock screen and Control Center avatar picker updated."
 echo "Backup: $BACKUP"
 echo "Close and reopen Control Center to load the new profile settings."
