@@ -1,37 +1,58 @@
-name: Rust wallpaper gallery
+name: TQQ configuration and wallpaper gallery checks
 
 on:
   push:
     branches: [main]
     paths:
       - "wallpaper-gallery/**"
-      - "scripts/build-wallpaper-gallery"
-      - "scripts/check-dependencies"
-      - "scripts/install-dependencies"
+      - "config/waybar/**"
+      - "config/swaync/**"
+      - "scripts/**"
       - "install.sh"
-      - "scripts/select-wallpaper"
+      - "README.md"
       - ".github/workflows/wallpaper-gallery.yml"
   pull_request:
     paths:
       - "wallpaper-gallery/**"
+      - "config/waybar/**"
+      - "config/swaync/**"
+      - "scripts/**"
+      - "install.sh"
       - ".github/workflows/wallpaper-gallery.yml"
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-24.04
     container: debian:trixie
     steps:
       - uses: actions/checkout@v4
-      - name: Install GTK4 development files
+      - name: Install build and validation dependencies
         run: |
           apt-get update
-          apt-get install -y libgtk-4-dev libgtk4-layer-shell-dev pkg-config build-essential ca-certificates curl
+          apt-get install -y libgtk-4-dev libgtk4-layer-shell-dev pkg-config build-essential ca-certificates curl python3
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+      - name: Validate shell scripts
+        run: |
+          bash -n install.sh scripts/select-wallpaper scripts/build-wallpaper-gallery scripts/check-dependencies scripts/install-dependencies
+      - name: Validate Python scripts
+        run: |
+          python3 -m py_compile scripts/integrate-niri.py scripts/configure-swaync.py scripts/wifi-menu.py
+      - name: Validate JSON configs
+        run: |
+          python3 -c 'import json; json.load(open("config/waybar/config")); json.load(open("config/swaync/config.json"))'
+      - name: Test Niri shortcut migration
+        run: |
+          tmp="$(mktemp -d)"
+          printf 'binds {\n    Super+Space { spawn "fuzzel"; }\n    Super+Return { spawn "kitty"; }\n}\n' > "$tmp/config.kdl"
+          python3 scripts/integrate-niri.py "$tmp/config.kdl" "$tmp/bin"
+          grep -q 'Mod+D .*spawn "fuzzel"' "$tmp/config.kdl"
+          ! grep -q 'Super+Space .*spawn "fuzzel"' "$tmp/config.kdl"
+          grep -q 'Super+Return .*spawn "kitty"' "$tmp/config.kdl"
       - name: Format Rust source
-        run: cargo fmt --manifest-path wallpaper-gallery/Cargo.toml
+        run: cargo fmt --manifest-path wallpaper-gallery/Cargo.toml -- --check
       - name: Check Rust code
         run: cargo check --manifest-path wallpaper-gallery/Cargo.toml
       - name: Build release binary
