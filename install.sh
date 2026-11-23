@@ -42,7 +42,7 @@ elif ((!SKIP_DEPS)) && ! "$ROOT/scripts/check-dependencies"; then
     fi
 fi
 
-mkdir -p "$BACKUP" "$LOCAL_BIN" "$DATA_HOME/tqq-niri-rice/wallpapers"
+mkdir -p "$BACKUP" "$LOCAL_BIN" "$DATA_HOME/tqq-niri-rice/wallpapers" "$CONFIG_HOME/tqq-niri-rice"
 
 # Build and install the native Rust wallpaper gallery.
 if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
