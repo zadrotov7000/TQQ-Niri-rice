@@ -7,6 +7,7 @@ CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
 STATE_FILE="$STATE_HOME/tqq-niri-rice/current-wallpaper"
 LOCK_CACHE="$CACHE_HOME/tqq-niri-rice/lock-background.jpg"
 STYLE="$CONFIG_HOME/gtklock/style.css"
+RUNTIME_STYLE="$CACHE_HOME/tqq-niri-rice/gtklock-style.css"
 
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
@@ -30,7 +31,11 @@ if [[ -n "$wallpaper" && -r "$wallpaper" ]]; then
         echo "ImageMagick is missing; cannot prepare the blurred lock background." >&2
         exit 1
     fi
-    exec gtklock --config "$CONFIG_HOME/gtklock/config.ini" --style "$STYLE" --start-hidden --background "$LOCK_CACHE"
+    # GTKLock CSS can override --background; append an explicit image rule.
+    mkdir -p "$(dirname "$RUNTIME_STYLE")"
+    cat "$STYLE" > "$RUNTIME_STYLE"
+    printf '\n/* TQQ blurred wallpaper */\nwindow { background-image: url("file://%s"); background-size: cover; background-repeat: no-repeat; background-position: center; background-color: #08070b; }\n' "$LOCK_CACHE" >> "$RUNTIME_STYLE"
+    exec gtklock --config "$CONFIG_HOME/gtklock/config.ini" --style "$RUNTIME_STYLE" --start-hidden
 fi
 
 exec gtklock --config "$CONFIG_HOME/gtklock/config.ini" --style "$STYLE" --start-hidden
