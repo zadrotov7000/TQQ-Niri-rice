@@ -1,20 +1,20 @@
 @import "colors.css";
 
-/* Island layout: a transparent bar with separate floating capsules. */
 * {
     border: none;
     border-radius: 0;
-    font-family: sans-serif;
-    font-size: 13px;
-    font-weight: 500;
+    font-family: "JetBrainsMono Nerd Font", "Symbols Nerd Font";
+    font-size: 12px;
+    font-weight: 600;
     min-height: 0;
 }
 
 window#waybar {
     background: transparent;
-    color: @foreground;
+    color: #f3eeee;
 }
 
+#custom-launcher,
 #workspaces,
 #clock,
 #custom-notification,
@@ -22,12 +22,28 @@ window#waybar {
 #pulseaudio,
 #battery,
 #tray {
-    background: alpha(@background, 0.92);
-    border: 1px solid alpha(@primary, 0.38);
-    border-radius: 18px;
-    margin: 5px 3px;
-    padding: 0 12px;
-    color: @foreground;
+    background: rgba(13, 10, 13, 0.88);
+    border: 1px solid rgba(190, 74, 88, 0.34);
+    border-radius: 15px;
+    margin: 5px 2px;
+    padding: 0 11px;
+    color: #f3eeee;
+}
+
+#custom-launcher {
+    color: #f0a1a9;
+    padding: 0 13px;
+    font-size: 15px;
+}
+
+#custom-launcher:hover,
+#custom-notification:hover,
+#network:hover,
+#pulseaudio:hover,
+#battery:hover,
+#tray:hover {
+    background: rgba(45, 20, 26, 0.96);
+    border-color: rgba(220, 93, 111, 0.72);
 }
 
 #workspaces {
@@ -35,71 +51,63 @@ window#waybar {
 }
 
 #workspaces button {
-    color: alpha(@foreground, 0.62);
+    color: rgba(243, 238, 238, 0.56);
     background: transparent;
-    border-radius: 14px;
+    border-radius: 12px;
     margin: 4px 2px;
-    padding: 0 8px;
+    padding: 0 7px;
     transition: color 140ms ease, background 140ms ease;
 }
 
 #workspaces button:hover {
-    color: @foreground;
-    background: alpha(@primary, 0.18);
+    color: #ffffff;
+    background: rgba(174, 62, 78, 0.20);
 }
 
 #workspaces button.focused,
 #workspaces button.active {
-    color: @foreground;
-    background: alpha(@primary, 0.34);
+    color: #ffffff;
+    background: rgba(174, 62, 78, 0.42);
 }
 
 #workspaces button.urgent,
 #battery.critical:not(.charging) {
-    color: @error;
+    color: #ff7888;
 }
 
 #clock {
     font-weight: 700;
-    padding: 0 17px;
+    padding: 0 18px;
+    letter-spacing: 0.2px;
 }
 
 #custom-notification,
 #network,
 #pulseaudio,
 #battery {
-    padding: 0 12px;
-}
-
-#custom-notification:hover,
-#network:hover,
-#pulseaudio:hover,
-#battery:hover,
-#tray:hover {
-    background: alpha(@surface, 0.98);
-    border-color: alpha(@primary, 0.7);
+    padding: 0 11px;
 }
 
 #pulseaudio.muted,
 #network.disconnected {
-    color: alpha(@foreground, 0.58);
+    color: rgba(243, 238, 238, 0.52);
 }
 
 #battery.warning {
-    color: @secondary;
+    color: #e9b36f;
 }
 
-#tray > .passive { opacity: 0.68; }
+#tray > .passive { opacity: 0.65; }
 #tray > .active { opacity: 1; }
 #tray > .needs-attention {
-    background: alpha(@primary, 0.25);
-    border-radius: 10px;
+    background: rgba(174, 62, 78, 0.28);
+    border-radius: 9px;
 }
 
 tooltip {
-    background: @background;
-    color: @foreground;
-    border: 1px solid alpha(@primary, 0.55);
-    border-radius: 10px;
+    background: rgba(13, 10, 13, 0.97);
+    color: #f3eeee;
+    border: 1px solid rgba(190, 74, 88, 0.48);
+    border-radius: 9px;
     padding: 5px 8px;
 }
