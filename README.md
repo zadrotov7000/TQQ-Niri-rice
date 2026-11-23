@@ -11,7 +11,8 @@ Actual performance depends on the hardware, graphics drivers, display resolution
 ## Included
 
 - **Optional Waybar theme:** `config/waybar/` contains the Island bar configuration. If Waybar is already installed, TQQ copies the config and starts it with Niri; Waybar is not installed as a dependency.
-- **SwayNC quick settings:** volume and brightness sliders, media controls, Do Not Disturb, a Wi-Fi picker, and notifications. The installer enables brightness only when it finds a backlight device.
+- **SwayNC quick settings:** volume and brightness sliders, media controls, Do Not Disturb, and notifications. The installer enables brightness only when it finds a backlight device.
+- **Quickshell Wi-Fi panel:** a centered TQQ glass-style network picker launched with `Mod+N`. It scans nearby NetworkManager networks, shows signal strength and security, asks for a password when needed, and connects without opening Fuzzel.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens on the Wayland overlay layer; it is not managed as a normal desktop window. The desktop wallpaper stays visible through its transparent background. The gallery appears immediately and decodes the selected wallpaper plus nearby previews in a background worker, caching them for the session. Floating wallpaper cards slide smoothly when browsing, with angled side previews and a live five-color palette sampled from the selected image. Character wallpapers show the character's name instead of the raw filename. Use Left/Right or the mouse wheel to browse, click a side card to move to it, click the centered card or press Enter to apply, and press Escape to close.
 - **Animated TQQ application launcher:** a Quickshell search panel with live application filtering, keyboard navigation, and a top-to-position slide-in and slide-out animation. The launcher runs as a normal floating Quickshell window so Niri can manage its placement and window transitions. Reboot and power-off still ask for confirmation.
 - **Wallpaper switching:** `Mod+B` (Win+B) opens the gallery and updates the Matugen palette; `awww` applies the wallpaper with a transition when available, and `swaybg` is the fallback.
@@ -54,7 +55,7 @@ The regular installer does not change or configure the display manager. Existing
 
 ### Dependencies
 
-Required programs: GTKLock and ImageMagick (for the blurred lock-screen wallpaper), JetBrainsMono Nerd Font (for icon glyphs), Niri, Quickshell, SwayNC (`swaync` and `swaync-client`), Fuzzel, Matugen, PipeWire/WirePlumber (`wpctl`), `brightnessctl` for the dashboard brightness slider, Python 3 for configuration helpers, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for building the overlay gallery, and the standard process tools `pgrep`/`pkill`. The native gallery is implemented in Rust under `wallpaper-gallery/`; it preloads and caches wallpaper textures and renders a transparent overlay-layer surface. For wallpaper display, install `awww` and its daemon or `swaybg`. NetworkManager (`nmcli`) enables the Wi-Fi picker; `notify-send` and `brightnessctl` are optional.
+Required programs: GTKLock and ImageMagick (for the blurred lock-screen wallpaper), JetBrainsMono Nerd Font (for icon glyphs), Niri, Quickshell, SwayNC (`swaync` and `swaync-client`), Fuzzel, Matugen, PipeWire/WirePlumber (`wpctl`), `brightnessctl` for the dashboard brightness slider, Python 3 for configuration helpers, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for building the overlay gallery, and the standard process tools `pgrep`/`pkill`. The native gallery is implemented in Rust under `wallpaper-gallery/`; it preloads and caches wallpaper textures and renders a transparent overlay-layer surface. For wallpaper display, install `awww` and its daemon or `swaybg`. NetworkManager (`nmcli`) powers the Quickshell Wi-Fi picker; `notify-send` and `brightnessctl` are optional.
 
 `scripts/check-dependencies` reports missing commands and package hints. `scripts/install-dependencies` has package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Package names and availability vary by release. When Matugen is unavailable as a package, the installer uses its checksum-verified upstream x86_64 release; other architectures can build it with Rust 1.88 or newer. Niri itself and optional awww transitions may need to be installed separately. The wallpaper switcher falls back to swaybg.
 
@@ -85,7 +86,7 @@ The rice adds wallpaper, Wi-Fi, dashboard, animated application-launcher, and lo
 | Open wallpaper gallery, apply wallpaper, and update colors | `Mod+B` (Win+B) |
 | Open the TQQ dashboard | `Mod+Shift+Space` (fallback to another free modified Space binding) |
 | Open the animated TQQ application search | `Mod+D` (Win+D; modified D fallback if occupied) |
-| Open the TQQ Wi-Fi picker | `Mod+N` (Win+N; fallback `Mod+Shift+N` or `Mod+Ctrl+N`) |
+| Open the Quickshell Wi-Fi panel | `Mod+N` (Win+N; fallback `Mod+Shift+N` or `Mod+Ctrl+N`) |
 | Lock the session | First free key from `Mod+L`, `Mod+Shift+L`, `Mod+Ctrl+L`, `Mod+Alt+L`, `Mod+Ctrl+Shift+L`, `Mod+Alt+Shift+L` (installer prints the selected key) |
 
 Waybar is optional but auto-starts when present. SwayNC provides notifications and quick settings independently of the dashboard.
@@ -98,7 +99,7 @@ Waybar is optional but auto-starts when present. SwayNC provides notifications a
 - `config/matugen/` — dark wallpaper-derived templates for Waybar, SwayNC, and Fuzzel.
 - `config/fetch/` — 3D Fetch display settings.
 - `config/gtklock/` — GTKLock screen styling and configuration; Matugen updates its accent colors from the active wallpaper.
-- `wallpaper-gallery/` — native Rust/GTK4 wallpaper gallery. `scripts/` — gallery build helper, wallpaper application, power, Wi-Fi, dependency, Fetch autostart, SwayNC hardware detection, and Niri config helpers.
+- `quickshell/tqq-wifi/` — Quickshell Wi-Fi panel. `wallpaper-gallery/` — native Rust/GTK4 wallpaper gallery. `scripts/` — gallery build helper, wallpaper application, power, Wi-Fi, dependency, Fetch autostart, SwayNC hardware detection, and Niri config helpers.
 - `wallpapers/` — the TQQ wallpaper collection installed to the rice data directory.
 
 Rofi is not used by this rice. If an existing `~/.config/rofi/` is present, the installer backs it up and removes it so the old Rofi setup is not left alongside Fuzzel.
