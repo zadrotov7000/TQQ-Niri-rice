@@ -164,12 +164,15 @@ def main() -> int:
     wifi_menu = json.dumps(str(local_bin / "wifi-menu.py"), ensure_ascii=False)
     dashboard_key = choose(["Mod+Shift+Space", "Mod+Alt+Space", "Mod+Ctrl+Space"])
     dashboard = json.dumps(str(local_bin / "tqq-dashboard"), ensure_ascii=False)
+    lock_key = choose(["Mod+L", "Mod+Shift+L"])
+    lock_screen = json.dumps(str(local_bin / "tqq-lock-screen"), ensure_ascii=False)
     managed_binds = (
         "\n    // BEGIN TQQ NIRI BINDS\n"
         f'    {wallpaper_key} hotkey-overlay-title="TQQ Wallpaper Picker" {{ spawn {wallpaper}; }}\n'
         f'    {wifi_key} hotkey-overlay-title="TQQ Wi-Fi" {{ spawn {wifi_menu}; }}\n'
         f'    {dashboard_key} hotkey-overlay-title="TQQ Dashboard" {{ spawn {dashboard}; }}\n'
         f'    {launcher_key} hotkey-overlay-title="TQQ App Launcher" {{ spawn "fuzzel"; }}\n'
+        f'    {lock_key} hotkey-overlay-title="Lock Screen" {{ spawn {lock_screen}; }}\n'
         "    // END TQQ NIRI BINDS\n"
     )
     if binds_match:
