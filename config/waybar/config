@@ -8,7 +8,7 @@
   "spacing": 5,
   "modules-left": ["custom/launcher", "niri/workspaces"],
   "modules-center": ["clock"],
-  "modules-right": ["cpu", "memory", "disk", "custom/notification", "network", "pulseaudio", "battery", "tray"],
+  "modules-right": ["disk", "custom/notification", "network", "pulseaudio", "tray"],
   "custom/launcher": {
     "format": "󰍉",
     "tooltip": true,
@@ -33,16 +33,6 @@
     "tooltip-format": "<big>{:%A, %d %B %Y}</big>\\n<tt>{:%H:%M:%S}</tt>",
     "on-click": "tqq-dashboard"
   },
-  "cpu": {
-    "format": "󰍛  {usage}%",
-    "interval": 3,
-    "tooltip": true
-  },
-  "memory": {
-    "format": "󰘚  {percentage}%",
-    "interval": 5,
-    "tooltip": true
-  },
   "disk": {
     "path": "/",
     "format": "󰋊  {percentage_used}%",
@@ -63,13 +53,6 @@
     "format-disconnected": "󰖪  offline",
     "tooltip-format": "{essid}: {ipaddr}/{cidr}",
     "interval": 5
-  },
-  "battery": {
-    "format": "󰁹  {capacity}%",
-    "format-charging": "󰂄  {capacity}%",
-    "format-plugged": "󰚥  AC",
-    "states": {"warning": 30, "critical": 15},
-    "tooltip": true
   },
   "tray": {
     "icon-size": 16,
