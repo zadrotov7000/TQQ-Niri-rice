@@ -39,7 +39,7 @@ PanelWindow {
     property color fg: "#f4f0f5"
     property color muted: "#aaa1ae"
     property color accent: "#d8a6c2"
-    property color onAccent: "#241823"
+    property color accentForeground: "#241823"
 
     property var monthCursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
     property int selectedDay: new Date().getDate()
@@ -117,7 +117,7 @@ PanelWindow {
                     root.fg = p.foreground;
                     root.muted = p.muted;
                     root.accent = p.primary;
-                    root.onAccent = p.on_primary;
+                    root.accentForeground = p.on_primary;
                 } catch (error) {
                     console.warn("TQQ palette unavailable; using fallback colors:", error);
                 }
@@ -352,7 +352,7 @@ PanelWindow {
                                     Text {
                                         anchors.centerIn: parent
                                         text: modelData > 0 ? modelData : ""
-                                        color: parent.color === "transparent" ? root.fg : root.onAccent
+                                        color: parent.color === "transparent" ? root.fg : root.accentForeground
                                         font.pixelSize: 11
                                     }
                                 }
@@ -411,7 +411,7 @@ PanelWindow {
                                 }
                                 contentItem: Text {
                                     text: "Ⅱ"
-                                    color: root.onAccent
+                                    color: root.accentForeground
                                     horizontalAlignment: Text.AlignHCenter
                                 }
                             }
