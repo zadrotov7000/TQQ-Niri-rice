@@ -97,6 +97,14 @@ def main() -> int:
         text,
     )
 
+    # Remove stale dashboard launch binds left behind by older TQQ releases.
+    # The managed TQQ block below will add exactly one current dashboard binding.
+    text = re.sub(
+        r'(?m)^[ \t]*(?:Super|Mod)\+[^\n{}]*hotkey-overlay-title="TQQ Dashboard"[^\n{}]*\{[^\n]*tqq-dashboard[^\n]*\}[ \t]*(?:\n|$)',
+        "",
+        text,
+    )
+
     # Migrate known leftovers from earlier Itsuki/Miku-based configs.
     # Keep useful visual settings, but remove stale labels and the duplicate Kitty rule.
     text = re.sub(
