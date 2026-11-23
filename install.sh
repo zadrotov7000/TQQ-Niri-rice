@@ -185,6 +185,14 @@ fi
 "$LOCAL_BIN/configure-swaync.py" "$CONFIG_HOME/swaync/config.json"
 "$LOCAL_BIN/configure-fetch-autostart"
 
+# Apply the saved (or newly seeded) wallpaper now, regenerate Matugen colors,
+# and refresh running Waybar/SwayNC instances instead of waiting for a Niri restart.
+if [[ -s "$STATE_FILE" ]]; then
+    if ! "$LOCAL_BIN/select-wallpaper" --restore; then
+        echo "Warning: the saved wallpaper could not be applied. Run $LOCAL_BIN/select-wallpaper --restore after checking awww/swaybg and Matugen." >&2
+    fi
+fi
+
 if ((INCLUDE_SDDM)); then
     "$ROOT/scripts/install-sddm-theme"
 fi
