@@ -88,8 +88,8 @@ PanelWindow {
         color: root.bg
         border.width: 1
         border.color: Qt.alpha(root.accent, 0.58)
-        opacity: panel.shown && !root.closing ? 1 : 0
-        scale: panel.shown && !root.closing ? 1 : 0.94
+        opacity: root.shown && !root.closing ? 1 : 0
+        scale: root.shown && !root.closing ? 1 : 0.94
         transformOrigin: Item.Top
         Behavior on opacity { NumberAnimation { duration: 230; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: 230; easing.type: Easing.OutCubic } }
@@ -98,7 +98,7 @@ PanelWindow {
         Timer {
             id: appearTimer
             interval: 1
-            onTriggered: panel.shown = true
+            onTriggered: root.shown = true
         }
         MouseArea { anchors.fill: parent; onClicked: function(mouse) { mouse.accepted = false } }
 
