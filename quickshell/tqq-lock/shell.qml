@@ -7,9 +7,8 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Pam
 
-WlSessionLock {
-    id: sessionLock
-    locked: true
+Scope {
+    id: root
 
     property string wallpaperPath: ""
     property string clockText: Qt.formatDateTime(new Date(), "HH:mm")
@@ -46,20 +45,10 @@ WlSessionLock {
         calendarDays = makeCalendar();
     }
 
-    function showUnlock() {
-        if (unlockVisible) {
-            passwordField.forceActiveFocus();
+    function authenticate(password) {
+        if (authenticating || !password || password.length === 0)
             return;
-        }
-        unlockVisible = true;
-        Qt.callLater(function() { passwordField.forceActiveFocus(); });
-    }
-
-    function authenticate() {
-        if (authenticating || passwordField.text.length === 0)
-            return;
-        pendingPassword = passwordField.text;
-        passwordField.text = "";
+        pendingPassword = password;
         statusText = "Verifying…";
         failed = false;
         authenticating = true;
@@ -82,8 +71,8 @@ WlSessionLock {
         repeat: true
         running: true
         onTriggered: {
-            sessionLock.clockText = Qt.formatDateTime(new Date(), "HH:mm");
-            sessionLock.dateText = Qt.locale("en_US").toString(new Date(), "dddd, d MMMM");
+            root.clockText = Qt.formatDateTime(new Date(), "HH:mm");
+            root.dateText = Qt.locale("en_US").toString(new Date(), "dddd, d MMMM");
         }
     }
 
@@ -91,7 +80,7 @@ WlSessionLock {
         id: wallpaperProcess
         command: ["cat", (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/tqq-niri-rice/current-wallpaper"]
         stdout: StdioCollector {
-            onStreamFinished: sessionLock.wallpaperPath = text.trim()
+            onStreamFinished: root.wallpaperPath = text.trim()
         }
     }
 
@@ -107,7 +96,7 @@ WlSessionLock {
         id: avatarProcess
         command: ["tqq-avatar", "get"]
         stdout: StdioCollector {
-            onStreamFinished: sessionLock.profileAvatar = text.trim()
+            onStreamFinished: root.profileAvatar = text.trim()
         }
     }
 
@@ -119,13 +108,13 @@ WlSessionLock {
                 try {
                     const result = JSON.parse(text);
                     const now = result.current_condition[0];
-                    sessionLock.weatherTemp = now.temp_C + "°";
-                    sessionLock.weatherDesc = now.weatherDesc[0].value;
-                    sessionLock.weatherWind = now.windspeedKmph + " km/h";
-                    sessionLock.weatherHumidity = now.humidity + "%";
+                    root.weatherTemp = now.temp_C + "°";
+                    root.weatherDesc = now.weatherDesc[0].value;
+                    root.weatherWind = now.windspeedKmph + " km/h";
+                    root.weatherHumidity = now.humidity + "%";
                 } catch (error) {
-                    sessionLock.weatherTemp = "—";
-                    sessionLock.weatherDesc = "Weather unavailable";
+                    root.weatherTemp = "—";
+                    root.weatherDesc = "Weather unavailable";
                 }
             }
         }
@@ -136,42 +125,46 @@ WlSessionLock {
         config: "login"
         onPamMessage: {
             if (responseRequired) {
-                pam.respond(sessionLock.pendingPassword);
-                sessionLock.pendingPassword = "";
+                pam.respond(root.pendingPassword);
+                root.pendingPassword = "";
             }
         }
         onCompleted: function(result) {
-            sessionLock.authenticating = false;
+            root.authenticating = false;
             if (result === PamResult.Success) {
-                sessionLock.statusText = "Unlocked";
+                root.statusText = "Unlocked";
                 sessionLock.locked = false;
                 Qt.callLater(function() { Qt.quit(); });
             } else {
-                sessionLock.pendingPassword = "";
-                sessionLock.failed = true;
-                sessionLock.statusText = result === PamResult.MaxTries
+                root.pendingPassword = "";
+                root.failed = true;
+                root.statusText = result === PamResult.MaxTries
                     ? "Authentication limit reached. Try another method or wait."
                     : "Incorrect password. Try again.";
-                sessionLock.showUnlock();
-                passwordField.forceActiveFocus();
+                // The entry surface keeps keyboard focus during retries.
             }
         }
         onError: function(error) {
             console.warn("TQQ lock PAM error:", error);
-            sessionLock.statusText = "Authentication error";
-            sessionLock.failed = true;
-            sessionLock.authenticating = false;
+            root.statusText = "Authentication error";
+            root.failed = true;
+            root.authenticating = false;
         }
     }
 
-    WlSessionLockSurface {
+    // WlSessionLock has one default surface Component. Services above belong
+    // to Scope, never to the WlSessionLock default property.
+    WlSessionLock {
+        id: sessionLock
+        locked: true
+        WlSessionLockSurface {
         id: lockSurface
         color: "#08070b"
 
         Image {
             id: wallpaper
             anchors.fill: parent
-            source: sessionLock.wallpaperPath.length ? "file://" + sessionLock.wallpaperPath : ""
+            source: root.wallpaperPath.length ? "file://" + root.wallpaperPath : ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: false
             cache: false
@@ -220,14 +213,14 @@ WlSessionLock {
                     font.letterSpacing: 2
                 }
                 Text {
-                    text: sessionLock.clockText
+                    text: root.clockText
                     color: "#fff9fd"
                     font.pixelSize: 81
                     font.weight: Font.Light
                     font.letterSpacing: -3
                 }
                 Text {
-                    text: sessionLock.dateText
+                    text: root.dateText
                     color: "#e1d4e0"
                     font.pixelSize: 16
                 }
@@ -266,21 +259,21 @@ WlSessionLock {
                         font.pixelSize: 48
                     }
                     Text {
-                        text: sessionLock.weatherTemp
+                        text: root.weatherTemp
                         color: "#fff9fd"
                         font.pixelSize: 54
                         font.weight: Font.Light
                     }
                 }
                 Text {
-                    text: sessionLock.weatherDesc
+                    text: root.weatherDesc
                     color: "#f1e4ef"
                     font.pixelSize: 15
                     elide: Text.ElideRight
                     width: parent.width
                 }
                 Text {
-                    text: "WIND  " + sessionLock.weatherWind + "     HUMIDITY  " + sessionLock.weatherHumidity
+                    text: "WIND  " + root.weatherWind + "     HUMIDITY  " + root.weatherHumidity
                     color: "#c7b9c9"
                     font.pixelSize: 11
                 }
@@ -319,7 +312,7 @@ WlSessionLock {
                         anchors.fill: parent
                         anchors.margins: 3
                         visible: false
-                        source: sessionLock.profileAvatar.length > 0 ? "file://" + sessionLock.profileAvatar : ""
+                        source: root.profileAvatar.length > 0 ? "file://" + root.profileAvatar : ""
                         fillMode: Image.PreserveAspectCrop
                         cache: false
                         asynchronous: true
@@ -337,12 +330,12 @@ WlSessionLock {
                         source: lockAvatarImage
                         maskEnabled: true
                         maskSource: lockAvatarMask
-                        visible: sessionLock.profileAvatar.length > 0
+                        visible: root.profileAvatar.length > 0
                     }
                     Text {
                         anchors.centerIn: parent
-                        visible: sessionLock.profileAvatar.length === 0
-                        text: sessionLock.profileName.slice(0, 1).toUpperCase()
+                        visible: root.profileAvatar.length === 0
+                        text: root.profileName.slice(0, 1).toUpperCase()
                         color: "#e9bfd5"
                         font.pixelSize: 66
                         font.weight: Font.Light
@@ -350,7 +343,7 @@ WlSessionLock {
                 }
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: sessionLock.profileName
+                    text: root.profileName
                     color: "#fff8fc"
                     font.pixelSize: 24
                     font.bold: true
@@ -371,8 +364,12 @@ WlSessionLock {
                     color: "#faf5f8"
                     placeholderTextColor: "#ab9bae"
                     horizontalAlignment: TextInput.AlignHCenter
-                    enabled: !sessionLock.authenticating
-                    onAccepted: sessionLock.authenticate()
+                    enabled: !root.authenticating
+                    onAccepted: {
+                        const submitted = text;
+                        text = "";
+                        root.authenticate(submitted);
+                    }
                     background: Rectangle {
                         radius: 12
                         color: "#322532"
@@ -383,9 +380,13 @@ WlSessionLock {
                 Button {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 41
-                    text: sessionLock.authenticating ? "VERIFYING…" : "UNLOCK"
-                    enabled: !sessionLock.authenticating
-                    onClicked: sessionLock.authenticate()
+                    text: root.authenticating ? "VERIFYING…" : "UNLOCK"
+                    enabled: !root.authenticating
+                    onClicked: {
+                        const submitted = passwordField.text;
+                        passwordField.text = "";
+                        root.authenticate(submitted);
+                    }
                     contentItem: Text {
                         text: parent.text
                         color: "#261422"
@@ -398,8 +399,8 @@ WlSessionLock {
                 }
                 Text {
                     Layout.fillWidth: true
-                    text: sessionLock.statusText
-                    color: sessionLock.failed ? "#ff9eae" : "#a99dab"
+                    text: root.statusText
+                    color: root.failed ? "#ff9eae" : "#a99dab"
                     font.pixelSize: 11
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
@@ -436,13 +437,13 @@ WlSessionLock {
                     Layout.fillWidth: true
                     Button {
                         text: "‹"
-                        onClicked: sessionLock.shiftMonth(-1)
+                        onClicked: root.shiftMonth(-1)
                         background: Rectangle { radius: 8; color: "#332837" }
                         contentItem: Text { text: parent.text; color: "#f9eaf2"; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 18 }
                     }
                     Item { Layout.fillWidth: true }
                     Text {
-                        text: Qt.locale("en_US").toString(sessionLock.calendarMonth, "MMMM yyyy")
+                        text: Qt.locale("en_US").toString(root.calendarMonth, "MMMM yyyy")
                         color: "#fbf0f9"
                         font.pixelSize: 14
                         font.bold: true
@@ -450,7 +451,7 @@ WlSessionLock {
                     Item { Layout.fillWidth: true }
                     Button {
                         text: "›"
-                        onClicked: sessionLock.shiftMonth(1)
+                        onClicked: root.shiftMonth(1)
                         background: Rectangle { radius: 8; color: "#332837" }
                         contentItem: Text { text: parent.text; color: "#f9eaf2"; horizontalAlignment: Text.AlignHCenter; font.pixelSize: 18 }
                     }
@@ -472,15 +473,15 @@ WlSessionLock {
                         }
                     }
                     Repeater {
-                        model: sessionLock.calendarDays
+                        model: root.calendarDays
                         delegate: Rectangle {
                             required property var modelData
                             Layout.preferredWidth: 32
                             Layout.preferredHeight: 32
                             radius: 10
                             property bool isToday: modelData === new Date().getDate()
-                                && sessionLock.calendarMonth.getMonth() === new Date().getMonth()
-                                && sessionLock.calendarMonth.getFullYear() === new Date().getFullYear()
+                                && root.calendarMonth.getMonth() === new Date().getMonth()
+                                && root.calendarMonth.getFullYear() === new Date().getFullYear()
                             color: isToday ? "#d8a6c2" : "transparent"
                             Text {
                                 anchors.centerIn: parent
@@ -503,26 +504,22 @@ WlSessionLock {
         }
 
         Component.onCompleted: Qt.callLater(function() {
-            sessionLock.unlockVisible = true;
+            root.unlockVisible = true;
             passwordField.forceActiveFocus();
         })
 
         Shortcut {
-            sequence: "Return"
-            context: Qt.ApplicationShortcut
-            onActivated: sessionLock.showUnlock()
-        }
-        Shortcut {
             sequence: "Escape"
             context: Qt.ApplicationShortcut
             onActivated: {
-                if (!sessionLock.authenticating) {
+                if (!root.authenticating) {
                     passwordField.text = "";
-                    sessionLock.failed = false;
-                    sessionLock.statusText = "ENTER YOUR PASSWORD";
+                    root.failed = false;
+                    root.statusText = "ENTER YOUR PASSWORD";
                 }
             }
         }
 
+        }
     }
 }
