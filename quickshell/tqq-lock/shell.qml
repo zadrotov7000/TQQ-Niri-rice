@@ -291,7 +291,7 @@ WlSessionLock {
         Rectangle {
             id: profileCard
             width: Math.min(340, Math.max(270, parent.width * 0.26))
-            height: 390
+            height: 452
             anchors.centerIn: parent
             radius: 25
             color: "#af14121d"
