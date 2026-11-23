@@ -90,6 +90,13 @@ def main() -> int:
     local_bin = Path(sys.argv[2])
     text = config_path.read_text() if config_path.exists() else ""
 
+    # Remove a standalone terminal-only shortcut left by the focused updater,
+    # before rebuilding the managed TQQ bind block on a full install.
+    text = re.sub(
+        r"(?ms)^[ \\t]*// BEGIN TQQ TERMINAL BIND\\n.*?^[ \\t]*// END TQQ TERMINAL BIND[ \\t]*(?:\\n|$)",
+        "",
+        text,
+    )
     # Remove only previously generated TQQ blocks. Every user setting and bind stays intact.
     text = re.sub(
         r"(?ms)^// BEGIN TQQ LAUNCHER WINDOW RULE\n.*?^// END TQQ LAUNCHER WINDOW RULE[ \t]*(?:\n|$)",
