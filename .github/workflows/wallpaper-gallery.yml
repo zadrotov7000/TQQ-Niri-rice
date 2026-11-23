@@ -40,7 +40,7 @@ jobs:
           components: rustfmt
       - name: Validate shell scripts
         run: |
-          bash -n install.sh scripts/select-wallpaper scripts/build-wallpaper-gallery scripts/check-dependencies scripts/install-dependencies scripts/tqq-dashboard scripts/tqq-lock-screen
+          bash -n install.sh scripts/select-wallpaper scripts/build-wallpaper-gallery scripts/check-dependencies scripts/install-dependencies scripts/tqq-dashboard scripts/tqq-region scripts/tqq-lock-screen
       - name: Validate Python scripts
         run: |
           python3 -m py_compile scripts/integrate-niri.py scripts/configure-swaync.py scripts/wifi-menu.py
