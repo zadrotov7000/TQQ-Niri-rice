@@ -23,6 +23,7 @@ PanelWindow {
     property color accentForeground: "#241823"
     property bool closing: false
     property var selectedEntry: null
+    property bool shown: false
 
     function closeLauncher() {
         if (closing) return;
@@ -87,17 +88,17 @@ PanelWindow {
         color: root.bg
         border.width: 1
         border.color: Qt.alpha(root.accent, 0.58)
-        opacity: root.closing ? 0 : 1
-        scale: root.closing ? 0.94 : 1
+        opacity: panel.shown && !root.closing ? 1 : 0
+        scale: panel.shown && !root.closing ? 1 : 0.94
         transformOrigin: Item.Top
         Behavior on opacity { NumberAnimation { duration: 230; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: 230; easing.type: Easing.OutCubic } }
-        Component.onCompleted: { opacity = 0; scale = 0.94; appearTimer.start(); }
+        Component.onCompleted: appearTimer.start()
 
         Timer {
             id: appearTimer
             interval: 1
-            onTriggered: { panel.opacity = 1; panel.scale = 1; }
+            onTriggered: panel.shown = true
         }
         MouseArea { anchors.fill: parent; onClicked: function(mouse) { mouse.accepted = false } }
 
@@ -161,6 +162,7 @@ PanelWindow {
                     visible: matches
                     radius: 11
                     color: ListView.isCurrentItem ? root.surfaceHigh : "transparent"
+                    Component.onCompleted: if (ListView.isCurrentItem) root.selectedEntry = entry
                     property bool matches: {
                         const query = searchField.text.trim().toLowerCase();
                         if (!query) return true;
@@ -206,8 +208,4 @@ PanelWindow {
         }
     }
 
-    onClosingChanged: {
-        if (closing) return;
-        if (appList.currentItem) selectedEntry = appList.currentItem.entry;
-    }
 }
