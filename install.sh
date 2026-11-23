@@ -24,12 +24,31 @@ for script in \
     "$ROOT/scripts/check-dependencies" \
     "$ROOT/scripts/install-dependencies" \
     "$ROOT/scripts/build-wallpaper-gallery" \
-    "$ROOT/scripts/build-squishy-shaders"; do
+    "$ROOT/scripts/build-squishy-shaders" \
+    "$ROOT/scripts/select-wallpaper" \
+    "$ROOT/scripts/tqq-dashboard" \
+    "$ROOT/scripts/tqq-launcher" \
+    "$ROOT/scripts/tqq-wifi" \
+    "$ROOT/scripts/tqq-switcher" \
+    "$ROOT/scripts/tqq-squishy" \
+    "$ROOT/scripts/tqq-lock-screen" \
+    "$ROOT/scripts/configure-fetch-autostart"; do
     if ! bash -n "$script"; then
         echo "Shell syntax validation failed: $script" >&2
         exit 1
     fi
 done
+
+# Compile Python helpers in memory so syntax checks do not leave __pycache__ files.
+python3 - "$ROOT/scripts/integrate-niri.py" "$ROOT/scripts/configure-swaync.py" <<'PYCHECK'
+from pathlib import Path
+import sys
+
+for filename in sys.argv[1:]:
+    source = Path(filename).read_text()
+    compile(source, filename, "exec")
+print("Python helper syntax validation passed.")
+PYCHECK
 
 for arg in "$@"; do
     case "$arg" in
