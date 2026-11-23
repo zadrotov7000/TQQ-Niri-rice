@@ -68,7 +68,9 @@ fn run() -> Result<(), Box<dyn Error>> {
 prefer-no-csd
 
 layout {{
-    focus-ring {{ off }}
+    focus-ring {{
+        off
+    }}
     border {{
         on
         width 3
