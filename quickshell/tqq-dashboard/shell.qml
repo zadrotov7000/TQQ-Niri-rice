@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -35,6 +36,7 @@ PanelWindow {
     property int brightnessLevel: 50
     property bool brightnessAvailable: false
     property string profileAvatar: ""
+    property int avatarRevision: 0
     property string avatarPending: ""
     property string avatarFeedback: ""
     property real panelOffset: -1000
@@ -177,6 +179,7 @@ PanelWindow {
         stdout: StdioCollector {
             onStreamFinished: {
                 root.avatarFeedback = text.trim();
+                root.avatarRevision += 1;
                 profileReader.running = false;
                 profileReader.running = true;
             }
@@ -419,12 +422,29 @@ PanelWindow {
                     border.color: root.accent
                     border.width: 2
                     Image {
+                        id: profileAvatarSource
                         anchors.fill: parent
                         anchors.margins: 2
-                        source: root.profileAvatar.length ? "file://" + root.profileAvatar : ""
-                        visible: root.profileAvatar.length > 0
+                        source: root.profileAvatar.length
+                            ? "file://" + root.profileAvatar + "?rev=" + root.avatarRevision : ""
+                        visible: false
                         fillMode: Image.PreserveAspectCrop
                         cache: false
+                    }
+                    Rectangle {
+                        id: profileAvatarMask
+                        anchors.fill: profileAvatarSource
+                        radius: width / 2
+                        color: "white"
+                        visible: false
+                        layer.enabled: true
+                    }
+                    MultiEffect {
+                        anchors.fill: profileAvatarSource
+                        source: profileAvatarSource
+                        maskEnabled: true
+                        maskSource: profileAvatarMask
+                        visible: root.profileAvatar.length > 0
                     }
                     Text {
                         anchors.centerIn: parent
