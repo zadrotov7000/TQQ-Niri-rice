@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
@@ -35,10 +34,6 @@ PanelWindow {
     property real volumeLevel: 0.5
     property int brightnessLevel: 50
     property bool brightnessAvailable: false
-    property string profileAvatar: ""
-    property int avatarRevision: 0
-    property string avatarPending: ""
-    property string avatarFeedback: ""
     property real panelOffset: -1000
     property bool closing: false
 
@@ -100,7 +95,6 @@ PanelWindow {
 
     Component.onCompleted: {
         paletteProcess.running = true;
-        profileReader.running = true;
         regionProcess.running = true;
         refresh();
         panelOffset = -panel.height;
@@ -164,34 +158,6 @@ PanelWindow {
             }
         }
     }
-
-    // Avatar is shared with the secure lock screen, but never stores credentials.
-    Process {
-        id: profileReader
-        command: ["tqq-avatar", "get"]
-        stdout: StdioCollector {
-            onStreamFinished: root.profileAvatar = text.trim()
-        }
-    }
-    Process {
-        id: profileWriter
-        command: ["tqq-avatar", "set", root.avatarPending]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                root.avatarFeedback = text.trim();
-                root.avatarRevision += 1;
-                profileReader.running = false;
-                profileReader.running = true;
-            }
-        }
-        stderr: StdioCollector {
-            onStreamFinished: {
-                if (text.trim().length > 0)
-                    root.avatarFeedback = text.trim();
-            }
-        }
-    }
-
     Process {
         id: regionProcess
         command: ["tqq-region", "get"]
@@ -393,130 +359,6 @@ PanelWindow {
     }
 
     Dialog {
-        id: avatarDialog
-        title: "Lock screen avatar"
-        modal: true
-        anchors.centerIn: parent
-        standardButtons: Dialog.Save | Dialog.Cancel
-        onAccepted: {
-            const image = avatarField.text.trim();
-            if (image.length > 0) {
-                root.avatarPending = image;
-                root.avatarFeedback = "";
-                profileWriter.running = false;
-                profileWriter.running = true;
-            }
-        }
-        contentItem: ColumnLayout {
-            implicitWidth: 350
-            spacing: 13
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 14
-                Rectangle {
-                    Layout.preferredWidth: 66
-                    Layout.preferredHeight: 66
-                    radius: 33
-                    clip: true
-                    color: root.surfaceHigh
-                    border.color: root.accent
-                    border.width: 2
-                    Image {
-                        id: profileAvatarSource
-                        anchors.fill: parent
-                        anchors.margins: 2
-                        source: root.profileAvatar.length
-                            ? "file://" + root.profileAvatar + "?rev=" + root.avatarRevision : ""
-                        visible: false
-                        fillMode: Image.PreserveAspectCrop
-                        cache: false
-                    }
-                    Rectangle {
-                        id: profileAvatarMask
-                        anchors.fill: profileAvatarSource
-                        radius: width / 2
-                        color: "white"
-                        visible: false
-                        layer.enabled: true
-                    }
-                    MultiEffect {
-                        anchors.fill: profileAvatarSource
-                        source: profileAvatarSource
-                        maskEnabled: true
-                        maskSource: profileAvatarMask
-                        visible: root.profileAvatar.length > 0
-                    }
-                    Text {
-                        anchors.centerIn: parent
-                        visible: root.profileAvatar.length === 0
-                        text: "●"
-                        color: root.accent
-                        font.pixelSize: 32
-                    }
-                }
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    Text {
-                        text: "PROFILE IMAGE"
-                        color: root.accent
-                        font.pixelSize: 11
-                        font.bold: true
-                    }
-                    Text {
-                        text: "Shown above the lock screen password"
-                        color: root.muted
-                        font.pixelSize: 11
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
-                    }
-                }
-            }
-            TextField {
-                id: avatarField
-                Layout.fillWidth: true
-                placeholderText: "/home/user/Pictures/avatar.png"
-                color: root.fg
-                background: Rectangle {
-                    color: root.surfaceHigh
-                    radius: 10
-                    border.width: 1
-                    border.color: root.accent
-                }
-            }
-            Text {
-                Layout.fillWidth: true
-                text: "PNG, JPEG or WebP · Maximum 12 MB"
-                color: root.muted
-                wrapMode: Text.WordWrap
-                font.pixelSize: 11
-            }
-            Button {
-                text: "BROWSE IMAGE"
-                Layout.fillWidth: true
-                onClicked: {
-                    avatarDialog.close();
-                    root.closePanel();
-                    Quickshell.execDetached(["tqq-avatar", "pick"]);
-                }
-                background: Rectangle { color: root.surfaceHigh; radius: 10 }
-                contentItem: Text {
-                    text: parent.text
-                    color: root.fg
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-            }
-            Text {
-                Layout.fillWidth: true
-                text: "Browse requires Zenity or KDialog. You can also paste the image path above and press Save."
-                color: root.muted
-                wrapMode: Text.WordWrap
-                font.pixelSize: 10
-            }
-        }
-    }
-
-    Dialog {
         id: regionDialog
         title: "Weather location"
         modal: true
@@ -580,11 +422,6 @@ PanelWindow {
                     Layout.preferredWidth: 44
                     Layout.preferredHeight: 36
                     Text { anchors.centerIn: parent; text: "⚙"; color: root.accent; font.bold: true; font.pixelSize: 19 }
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: avatarDialog.open()
-                    }
                 }
                 Text { text: root.mediaInfo; color: root.fg; font.pixelSize: 12; elide: Text.ElideRight; Layout.maximumWidth: 250 }
                 Item { Layout.fillWidth: true }
@@ -966,19 +803,6 @@ PanelWindow {
                 Layout.fillWidth: true
                 Text { text: "CONTROL CENTER"; color: root.muted; font.pixelSize: 9; font.letterSpacing: 1 }
                 Item { Layout.fillWidth: true }
-                Text { text: root.avatarFeedback; visible: root.avatarFeedback.length > 0; color: root.accent; font.pixelSize: 10; elide: Text.ElideRight; Layout.maximumWidth: 220 }
-                Button {
-                    text: "PROFILE / AVATAR"
-                    onClicked: avatarDialog.open()
-                    background: Rectangle { radius: 9; color: root.surfaceHigh }
-                    contentItem: Text {
-                        text: parent.text
-                        color: root.fg
-                        font.pixelSize: 10
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-                }
                 Text { text: "ESC TO CLOSE"; color: root.muted; font.pixelSize: 9 }
             }
         }
