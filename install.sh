@@ -9,15 +9,13 @@ STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 BACKUP="$STATE_HOME/tqq-niri-rice/backups/$(date +%Y%m%d-%H%M%S)"
 INSTALL_DEPS=0
 SKIP_DEPS=0
-INCLUDE_SDDM=0
 
 usage() {
     cat <<'USAGE'
-Usage: ./install.sh [--install-deps | --skip-deps] [--include-sddm]
+Usage: ./install.sh [--install-deps | --skip-deps]
 
   --install-deps  Install missing system dependencies using the distro package manager.
   --skip-deps     Do not ask about dependencies; print the checker command instead.
-  --include-sddm  Install and select the optional SDDM login theme (requires sudo/root).
 USAGE
 }
 
@@ -25,16 +23,10 @@ for arg in "$@"; do
     case "$arg" in
         --install-deps) INSTALL_DEPS=1 ;;
         --skip-deps) SKIP_DEPS=1 ;;
-        --include-sddm) INCLUDE_SDDM=1 ;;
         -h|--help) usage; exit 0 ;;
         *) echo "Unknown option: $arg" >&2; usage >&2; exit 2 ;;
     esac
 done
-
-if ((INCLUDE_SDDM)) && ! command -v sddm >/dev/null 2>&1; then
-    echo "SDDM is not installed. Install it before using --include-sddm." >&2
-    exit 1
-fi
 
 if ((INSTALL_DEPS)); then
     "$ROOT/scripts/install-dependencies"
@@ -113,7 +105,7 @@ fi
 
 cp -an "$ROOT/wallpapers/." "$DATA_HOME/tqq-niri-rice/wallpapers/"
 
-for script_name in select-wallpaper power-menu tqq-dashboard configure-fetch-autostart check-dependencies install-dependencies install-sddm-theme wifi-menu.py configure-swaync.py; do
+for script_name in select-wallpaper power-menu tqq-dashboard tqq-lock-screen configure-fetch-autostart check-dependencies install-dependencies wifi-menu.py configure-swaync.py; do
     if [[ -e "$LOCAL_BIN/$script_name" ]]; then
         mkdir -p "$BACKUP/local-bin"
         cp -a "$LOCAL_BIN/$script_name" "$BACKUP/local-bin/$script_name"
@@ -201,10 +193,6 @@ if [[ -s "$STATE_FILE" ]]; then
     if ! "$LOCAL_BIN/select-wallpaper" --restore; then
         echo "Warning: the saved wallpaper could not be applied. Run $LOCAL_BIN/select-wallpaper --restore after checking awww/swaybg and Matugen." >&2
     fi
-fi
-
-if ((INCLUDE_SDDM)); then
-    "$ROOT/scripts/install-sddm-theme"
 fi
 
 echo "TQQ Niri rice installed. Dashboard: $LOCAL_BIN/tqq-dashboard (Super+Shift+Space). Backup: $BACKUP"
