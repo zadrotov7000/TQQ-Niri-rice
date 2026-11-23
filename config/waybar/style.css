@@ -15,6 +15,9 @@ window#waybar {
 }
 
 #custom-launcher,
+#cpu,
+#memory,
+#disk,
 #workspaces,
 #clock,
 #custom-notification,
@@ -37,6 +40,9 @@ window#waybar {
 }
 
 #custom-launcher:hover,
+#cpu:hover,
+#memory:hover,
+#disk:hover,
 #custom-notification:hover,
 #network:hover,
 #pulseaudio:hover,
@@ -81,6 +87,9 @@ window#waybar {
     letter-spacing: 0.2px;
 }
 
+#cpu,
+#memory,
+#disk,
 #custom-notification,
 #network,
 #pulseaudio,
