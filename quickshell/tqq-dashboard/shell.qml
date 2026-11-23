@@ -153,6 +153,37 @@ PanelWindow {
         onActivated: Qt.quit()
     }
 
+    Dialog {
+        id: regionDialog
+        title: "Weather region"
+        modal: true
+        anchors.centerIn: parent
+        standardButtons: Dialog.Save | Dialog.Cancel
+        onAccepted: {
+            const city = regionField.text.trim();
+            if (city.length > 0) {
+                Quickshell.execDetached(["tqq-region", "set", city]);
+                root.weatherRegion = city;
+                weatherProcess.running = false;
+                weatherProcess.running = true;
+            }
+        }
+        contentItem: ColumnLayout {
+            implicitWidth: 300
+            Text {
+                text: "Initial city is inferred from your system time zone. You can change it here."
+                color: "#c9bbc6"
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+            TextField {
+                id: regionField
+                placeholderText: "City, e.g. Copenhagen"
+                Layout.fillWidth: true
+            }
+        }
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "#c008060b"
@@ -212,6 +243,18 @@ PanelWindow {
                         spacing: 12
                         RowLayout {
                             Layout.fillWidth: true
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            ColumnLayout {
+                                spacing: 2
+                                Text { text: root.weatherTemperature; color: "#f6edf2"; font.pixelSize: 34; font.weight: Font.DemiBold }
+                                Text { text: root.weatherDescription; color: "#b9aab6"; font.pixelSize: 12 }
+                                Text { text: root.weatherRegion; color: "#e7a4b7"; font.pixelSize: 11 }
+                            }
+                            Item { Layout.fillWidth: true }
+                            Button { text: "Change region"; onClicked: regionDialog.open() }
+                        }
                             Text { text: "CALENDAR"; color: "#e7a4b7"; font.pixelSize: 11; font.bold: true }
                             Item { Layout.fillWidth: true }
                             Button { text: "‹"; onClicked: root.shiftMonth(-1) }
