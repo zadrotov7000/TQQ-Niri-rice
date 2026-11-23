@@ -40,7 +40,7 @@ for script in \
 done
 
 # Compile Python helpers in memory so syntax checks do not leave __pycache__ files.
-python3 - "$ROOT/scripts/integrate-niri.py" "$ROOT/scripts/configure-swaync.py" <<'PYCHECK'
+python3 - "$ROOT/scripts/integrate-niri.py" <<'PYCHECK'
 from pathlib import Path
 import sys
 
@@ -148,10 +148,10 @@ progress_run 35 "Compiling GPU shaders" bash "$ROOT/scripts/build-squishy-shader
     "$ROOT/quickshell/tqq-squishy" \
     "$BACKUP/squishy-shaders"
 
-# Install the shipped desktop configs (SwayNC, Matugen, Waybar and Fetch).
+# Install the shipped desktop configs (Dunst, Matugen, Waybar and Fetch).
 # Existing config directories are backed up before TQQ files are merged in.
 mkdir -p "$BACKUP/config"
-for config_name in fetch matugen swaync waybar; do
+for config_name in fetch matugen dunst waybar; do
     source_config="$ROOT/config/$config_name"
     target_config="$CONFIG_HOME/$config_name"
     [[ -d "$source_config" ]] || continue
@@ -197,7 +197,7 @@ progress_mark 79 "Copying wallpapers"
 for script_name in \
     select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher \
     tqq-squishy tqq-region tqq-lock-screen configure-fetch-autostart \
-    check-dependencies install-dependencies configure-swaync.py; do
+    check-dependencies install-dependencies; do
     source_file="$ROOT/scripts/$script_name"
     if [[ ! -f "$source_file" ]]; then
         echo "Required project script is missing: $source_file" >&2
@@ -278,7 +278,6 @@ if [[ ! -s "$STATE_FILE" ]]; then
     fi
 fi
 
-"$LOCAL_BIN/configure-swaync.py" "$CONFIG_HOME/swaync/config.json"
 "$LOCAL_BIN/configure-fetch-autostart"
 progress_mark 95 "Configuring desktop services"
 

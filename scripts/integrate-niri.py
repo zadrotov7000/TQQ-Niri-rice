@@ -116,6 +116,14 @@ def main() -> int:
         text,
     )
 
+    # Migrate standalone SwayNC autostart entries left by older TQQ releases.
+    # Do not change unrelated startup commands or user settings.
+    text = re.sub(
+        r'(?m)^[ \t]*(?:spawn-at-startup|spawn-sh-at-startup)[ \t]+"swaync"[ \t]*(?:\n|$)',
+        "",
+        text,
+    )
+
     # Remove the old simple Win+Space -> Fuzzel shortcut from earlier TQQ installs.
     # Keep other user-defined Win+Space actions untouched.
     text = re.sub(
@@ -225,7 +233,7 @@ def main() -> int:
         text = text.rstrip() + "\n\nbinds {" + managed_binds + "}\n"
 
     startup_entries = []
-    startup_apps = ["swaync"]
+    startup_apps = ["dunst"]
     if shutil.which("waybar"):
         startup_apps.append("waybar")
     for app in startup_apps:
@@ -264,7 +272,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper, Quickshell Wi-Fi, radial Alt+Tab, Squishy Physics ({squishy_key}), dashboard, lock, launcher, and available Waybar startup."
+        f"and added TQQ wallpaper, Quickshell Wi-Fi, radial Alt+Tab, Squishy Physics ({squishy_key}), dashboard, lock, launcher, and Dunst/available Waybar startup."
     )
     return 0
 

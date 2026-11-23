@@ -14,7 +14,7 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 - **Wallpaper transition:** the repository uses `awww` when available. Wallpaper changes use a circular center-out reveal; `swaybg` remains the fallback. Wallpaper changes regenerate Matugen colors and do not reload the Niri config.
 - **Wallpaper persistence:** the selected image is restored when Niri starts.
 - **Optional Waybar theme:** `config/waybar/` contains the Island bar configuration. Waybar is started by Niri only when installed.
-- **SwayNC:** notifications, quick settings, media controls, Do Not Disturb, and volume/brightness controls.
+- **Dunst:** lightweight notifications and notification history; the Waybar bell restores the latest notification and right-click toggles Do Not Disturb. Media, network, brightness and volume controls stay in the Quickshell dashboard.
 - **3D Fetch support:** optional config for [areofyl/fetch](https://github.com/areofyl/fetch). Existing Fetch/Fastfetch startup is preserved.
 
 ## Install
@@ -29,11 +29,11 @@ cd TQQ-Niri-rice
 
 The installer checks dependencies and asks whether to install missing packages. Use `./install.sh --install-deps` to install them explicitly or `./install.sh --skip-deps` to skip the prompt.
 
-Before changing the Niri config or replacing installed TQQ helper scripts, the installer stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. It does not uninstall system packages, remove old user config folders, or delete legacy helper files. Removing unused applications is left to the user. The installer backs up and installs the SwayNC, Matugen, Waybar, Fetch, and Quickshell configs into their standard locations (under ~/.config or $XDG_CONFIG_HOME), including the compiled Squishy shaders. The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
+Before changing the Niri config or replacing installed TQQ helper scripts, the installer stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. It does not uninstall system packages, remove old user config folders, or delete legacy helper files. Removing unused applications is left to the user. Older SwayNC packages and files are not automatically removed; the new installer does not install, configure, start, or invoke SwayNC. The installer backs up and installs the Dunst, Matugen, Waybar, Fetch, and Quickshell configs into their standard locations (under ~/.config or $XDG_CONFIG_HOME), including the compiled Squishy shaders. The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
 
 ## Dependencies
 
-The desktop requires Niri, Quickshell (including its PAM service module), SwayNC, Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, Qt ShaderTools (`qsb`, build-time only, to compile the Squishy vertex/fragment shaders), and common process tools (`pgrep`, `pkill`). For wallpaper display, install `awww` and its daemon or `swaybg`.
+The desktop requires Niri, Quickshell (including its PAM service module), Dunst (`dunst` and `dunstctl`), Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, Qt ShaderTools (`qsb`, build-time only, to compile the Squishy vertex/fragment shaders), and common process tools (`pgrep`, `pkill`). For wallpaper display, install `awww` and its daemon or `swaybg`.
 
 `scripts/check-dependencies` reports missing commands and package hints. The installer compiles the Squishy `.vert` and `.frag` sources into Qt `.qsb` shader packages before copying the Quickshell configuration. `scripts/install-dependencies` includes package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Quickshell is installed from Debian Backports on Debian 13. Niri and `awww` may need to be installed separately depending on the distribution.
 
@@ -61,6 +61,6 @@ The installer preserves existing Niri settings and unrelated keybindings. It res
 - `quickshell/tqq-squishy/` — wallpaper lasso and spring-drag overlay.
 - `wallpaper-gallery/` — native Rust/GTK4 wallpaper gallery.
 - `config/matugen/` — wallpaper-derived palette templates.
-- `config/swaync/` and `config/waybar/` — notification and bar styling.
+- `config/dunst/` and `config/waybar/` — notification and bar styling.
 - `scripts/` — installers, launchers, wallpaper handling, and Niri integration helpers.
 - `wallpapers/` — included TQQ wallpaper collection.

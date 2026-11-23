@@ -63,11 +63,11 @@ set_wallpaper() {
     fi
 
     if [[ ! -s "$config_home/waybar/colors.css" \
-        || ! -s "$config_home/swaync/colors.css" \
+        || ! -s "$config_home/dunst/dunstrc" \
         || ! -s "$config_home/tqq-niri-rice/colors.json" ]] \
         || grep -q 'Starter palette' \
             "$config_home/waybar/colors.css" \
-            "$config_home/swaync/colors.css" \
+            "$config_home/dunst/dunstrc" \
             "$config_home/tqq-niri-rice/colors.json"; then
         notify "Matugen did not replace the starter colors. Check $matugen_log and $matugen_config."
         return 1
@@ -120,16 +120,9 @@ PYFETCH
         done
     fi
     pkill -SIGUSR2 -x waybar >/dev/null 2>&1 || true
-    if command -v swaync-client >/dev/null 2>&1; then
-        if ((wait_for_components)); then
-            local attempt
-            for attempt in {1..30}; do
-                swaync-client -rs >/dev/null 2>&1 && break
-                sleep 0.1
-            done
-        else
-            swaync-client -rs >/dev/null 2>&1 || true
-        fi
+    # Dunst reads its updated Matugen theme without blocking installation.
+    if command -v dunstctl >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
+        timeout 2s dunstctl reload >/dev/null 2>&1 || true
     fi
     notify "Wallpaper and desktop palette updated."
 }

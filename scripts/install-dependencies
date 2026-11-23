@@ -83,7 +83,7 @@ case "${ID:-}" in
             echo "deb http://deb.debian.org/debian trixie-backports main" | run_privileged tee /etc/apt/sources.list.d/tqq-trixie-backports.list >/dev/null
         fi
         run_privileged apt-get update
-        packages=(curl qt6-shader-baker sway-notification-center swaybg fonts-font-awesome fonts-jetbrains-mono hicolor-icon-theme python3 cargo rustc pkg-config libgtk-4-dev libgtk4-layer-shell-dev playerctl pavucontrol network-manager network-manager-gnome blueman brightnessctl lm-sensors)
+        packages=(curl qt6-shader-baker dunst swaybg fonts-font-awesome fonts-jetbrains-mono hicolor-icon-theme python3 cargo rustc pkg-config libgtk-4-dev libgtk4-layer-shell-dev playerctl pavucontrol network-manager network-manager-gnome blueman brightnessctl lm-sensors)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire-bin wireplumber)
         fi
@@ -103,7 +103,7 @@ case "${ID:-}" in
         install_matugen
         ;;
     arch|endeavouros|manjaro|cachyos)
-        packages=(curl quickshell qt6-shadertools playerctl pavucontrol networkmanager network-manager-applet blueman brightnessctl lm_sensors swaync swaybg ttf-font-awesome ttf-jetbrains-mono hicolor-icon-theme python rust cargo pkgconf gtk4 gtk4-layer-shell)
+        packages=(curl quickshell qt6-shadertools playerctl pavucontrol networkmanager network-manager-applet blueman brightnessctl lm_sensors dunst swaybg ttf-font-awesome ttf-jetbrains-mono hicolor-icon-theme python rust cargo pkgconf gtk4 gtk4-layer-shell)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire wireplumber)
         fi
@@ -118,7 +118,7 @@ case "${ID:-}" in
         fi
         ;;
     fedora)
-        packages=(curl quickshell qt6-qtshadertools playerctl pavucontrol NetworkManager-bluetooth NetworkManager-gnome blueman brightnessctl lm_sensors SwayNotificationCenter swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust gtk4-devel gtk4-layer-shell-devel pkgconf-pkg-config)
+        packages=(curl quickshell qt6-qtshadertools playerctl pavucontrol NetworkManager-bluetooth NetworkManager-gnome blueman brightnessctl lm_sensors dunst swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust gtk4-devel gtk4-layer-shell-devel pkgconf-pkg-config)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire-utils wireplumber)
         fi
@@ -135,7 +135,7 @@ case "${ID:-}" in
         install_matugen
         ;;
     opensuse*|opensuse-tumbleweed|opensuse-leap)
-        packages=(curl quickshell qt6-shadertools playerctl pavucontrol NetworkManager-bluetooth blueman lm_sensors SwayNotificationCenter swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust pkg-config gtk4-devel)
+        packages=(curl quickshell qt6-shadertools playerctl pavucontrol NetworkManager-bluetooth blueman lm_sensors dunst swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust pkg-config gtk4-devel)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire wireplumber)
         fi
