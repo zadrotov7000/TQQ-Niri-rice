@@ -146,9 +146,9 @@ def main() -> int:
                 return candidate
         raise ValueError("No free keybinding among: " + ", ".join(candidates))
 
-    # Reserve Win+B for wallpaper selection and choose the first free Wi-Fi shortcut.
+    # Reserve Win+B for wallpaper selection. Never fall back to Win+Space: that is a common input/language-switch shortcut.\n    # The launcher uses Win+D, then modified D combinations only.
     wallpaper_key = choose(["Mod+B"])
-    launcher_key = choose(["Mod+D", "Mod+Space", "Mod+P"])
+    launcher_key = choose(["Mod+D", "Mod+Shift+D", "Mod+Alt+D", "Mod+Ctrl+D"])
 
     wallpaper = json.dumps(str(local_bin / "select-wallpaper"), ensure_ascii=False)
     wifi_key = choose(["Mod+N", "Mod+Shift+N", "Mod+Ctrl+N"])
