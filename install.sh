@@ -15,12 +15,16 @@ usage() {
 Usage: ./install.sh [--install-deps | --skip-deps]
 
   --install-deps  Install missing system dependencies using the distro package manager.
-  --skip-deps     Do not ask about dependencies; print the checker command instead.
+  --skip-deps     Skip the dependency prompt and print the checker command.
 USAGE
 }
 
-# Validate shell entry points before running dependency checks or changing packages.
-for script in "$ROOT/install.sh" "$ROOT/scripts/check-dependencies" "$ROOT/scripts/install-dependencies" "$ROOT/scripts/build-wallpaper-gallery" "$ROOT/scripts/build-squishy-shaders"; do
+for script in \
+    "$ROOT/install.sh" \
+    "$ROOT/scripts/check-dependencies" \
+    "$ROOT/scripts/install-dependencies" \
+    "$ROOT/scripts/build-wallpaper-gallery" \
+    "$ROOT/scripts/build-squishy-shaders"; do
     if ! bash -n "$script"; then
         echo "Shell syntax validation failed: $script" >&2
         exit 1
@@ -41,260 +45,8 @@ if ((INSTALL_DEPS)); then
 elif ((!SKIP_DEPS)) && ! "$ROOT/scripts/check-dependencies"; then
     if [[ -t 0 ]]; then
         read -r -p "Install the missing dependencies now? [y/N] " answer || answer=""
-        answer="${answer//
-            *) echo "Dependency installation skipped. Run $ROOT/scripts/install-dependencies or install.sh --install-deps later." ;;
-        esac
-    else
-        echo "Dependency installation skipped in non-interactive mode. Run $ROOT/scripts/install-dependencies or install.sh --install-deps." >&2
-    fi
-fi
-
-mkdir -p "$BACKUP" "$LOCAL_BIN" "$DATA_HOME/tqq-niri-rice/wallpapers" "$CONFIG_HOME/tqq-niri-rice"
-
-# Compile the Quickshell GPU shaders before changing the installed configuration.
-SQUISHY_SHADER_BUILD="$BACKUP/squishy-shaders"
-bash "$ROOT/scripts/build-squishy-shaders" "$ROOT/quickshell/tqq-squishy" "$SQUISHY_SHADER_BUILD"
-
-# Build and install the native Rust wallpaper gallery.
-if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
-    mkdir -p "$BACKUP/local-bin"
-    cp -a "$LOCAL_BIN/tqq-wallpaper-gallery" "$BACKUP/local-bin/tqq-wallpaper-gallery"
-fi
-bash "$ROOT/scripts/build-wallpaper-gallery" "$LOCAL_BIN/tqq-wallpaper-gallery"
-
-# Retire the previous Python gallery modules after preserving a backup.
-for legacy_script in wallpaper-picker.py wallpaper_gallery_ui.py; do
-    if [[ -e "$LOCAL_BIN/$legacy_script" ]]; then
-        mkdir -p "$BACKUP/local-bin"
-        cp -a "$LOCAL_BIN/$legacy_script" "$BACKUP/local-bin/$legacy_script"
-        rm -f -- "$LOCAL_BIN/$legacy_script"
-    fi
-done
-
-backup_config_dir() {
-    local name="$1"
-    if [[ -d "$CONFIG_HOME/$name" ]]; then
-        mkdir -p "$BACKUP/config/$name"
-        cp -a "$CONFIG_HOME/$name/." "$BACKUP/config/$name/"
-    fi
-}
-
-# Retire the old Fuzzel and GTKLock configs after preserving them in the backup.
-for legacy_config in fuzzel gtklock; do
-    if [[ -d "$CONFIG_HOME/$legacy_config" ]]; then
-        backup_config_dir "$legacy_config"
-        rm -rf -- "$CONFIG_HOME/$legacy_config"
-    fi
-done
-
-# Retire both legacy desktop packages now replaced by Quickshell.
-run_privileged() {
-    if ((EUID == 0)); then
-        "$@"
-    elif command -v sudo >/dev/null 2>&1; then
-        sudo "$@"
-    else
-        echo "A legacy package is installed but sudo is unavailable; remove it with your package manager." >&2
-        return 1
-    fi
-}
-
-remove_legacy_package() {
-    local package="$1"
-    if command -v dpkg-query >/dev/null 2>&1 \
-        && [[ "$(dpkg-query -W -f='${db:Status-Status}' "$package" 2>/dev/null || true)" == "installed" ]]; then
-        # Simulate first. Some locally-built compositor packages declare legacy launchers
-        # as hard dependencies; never let removing one tear down the active compositor.
-        local simulation removed candidate
-        if ! simulation="$(apt-get -s remove "$package" 2>&1)"; then
-            echo "Could not safely simulate removal of $package; leaving it installed." >&2
-            printf '%s\n' "$simulation" >&2
-            return 0
-        fi
-        while IFS= read -r candidate; do
-            [[ -z "$candidate" ]] && continue
-            if [[ "$candidate" != "$package" && "$candidate" != "$package:"* ]]; then
-                echo "Refusing to remove $package: APT would also remove $candidate." >&2
-                echo "No packages were removed. Keep the compositor installed and fix its package dependency first." >&2
-                return 0
-            fi
-        done < <(printf '%s\n' "$simulation" | awk '$1 == "Remv" { print $2 }')
-        echo "Removing legacy $package package with apt (simulation confirmed no other removals)…"
-        run_privileged apt-get remove -y "$package"
-    elif command -v pacman >/dev/null 2>&1 && pacman -Q "$package" >/dev/null 2>&1; then
-        local simulation
-        if ! simulation="$(pacman -R --print "$package" 2>&1)"; then
-            echo "Could not safely simulate removal of $package; leaving it installed." >&2
-            printf '%s\n' "$simulation" >&2
-            return 0
-        fi
-        if printf '%s\n' "$simulation" | grep -Eq '(^|[[:space:]])(niri|niri-git)([[:space:]]|$)'; then
-            echo "Refusing to remove $package: Pacman reports that it would remove Niri." >&2
-            return 0
-        fi
-        echo "Removing legacy $package package with pacman…"
-        run_privileged pacman -R --noconfirm "$package"
-    elif command -v rpm >/dev/null 2>&1 && rpm -q "$package" >/dev/null 2>&1; then
-        local simulation
-        if command -v dnf >/dev/null 2>&1; then
-            if ! simulation="$(dnf -q remove --assumeno "$package" 2>&1)"; then
-                echo "Could not safely simulate removal of $package; leaving it installed." >&2
-                printf '%s\n' "$simulation" >&2
-                return 0
-            fi
-            if printf '%s\n' "$simulation" | grep -Eq '(^|[[:space:]])(niri|niri-git)([[:space:]]|$)'; then
-                echo "Refusing to remove $package: DNF reports that it would remove Niri." >&2
-                return 0
-            fi
-            run_privileged dnf remove -y "$package"
-        elif command -v zypper >/dev/null 2>&1; then
-            if ! simulation="$(zypper --non-interactive --dry-run remove "$package" 2>&1)"; then
-                echo "Could not safely simulate removal of $package; leaving it installed." >&2
-                printf '%s\n' "$simulation" >&2
-                return 0
-            fi
-            if printf '%s\n' "$simulation" | grep -Eq '(niri|niri-git).*(remove|deinstall)|((remove|deinstall).*(niri|niri-git))'; then
-                echo "Refusing to remove $package: Zypper reports that it would remove Niri." >&2
-                return 0
-            fi
-            run_privileged zypper --non-interactive remove "$package"
-        else
-            echo "$package is installed, but no supported package manager was found to remove it." >&2
-            return 1
-        fi
-    else
-        echo "Legacy $package package not installed."
-    fi
-}
-
-remove_legacy_package fuzzel
-remove_legacy_package gtklock
-
-
-if [[ "$CONFIG_HOME" != "$HOME/.config" ]]; then
-    python3 - "$CONFIG_HOME" "$CONFIG_HOME/matugen/config.toml" <<'PYXDG'
-from pathlib import Path
-import sys
-
-config_home = sys.argv[1]
-for raw_path in sys.argv[2:]:
-    path = Path(raw_path)
-    content = path.read_text()
-    path.write_text(content.replace("~/.config", config_home))
-PYXDG
-fi
-
-cp -an "$ROOT/wallpapers/." "$DATA_HOME/tqq-niri-rice/wallpapers/"
-
-for script_name in select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher tqq-squishy tqq-region tqq-lock-screen configure-fetch-autostart check-dependencies install-dependencies configure-swaync.py; do
-    if [[ -e "$LOCAL_BIN/$script_name" ]]; then
-        mkdir -p "$BACKUP/local-bin"
-        cp -a "$LOCAL_BIN/$script_name" "$BACKUP/local-bin/$script_name"
-    fi
-    install -m 0755 "$ROOT/scripts/$script_name" "$LOCAL_BIN/$script_name"
-done
-
-if [[ -e "$LOCAL_BIN/wifi-menu.py" ]]; then
-    mkdir -p "$BACKUP/local-bin"
-    cp -a "$LOCAL_BIN/wifi-menu.py" "$BACKUP/local-bin/wifi-menu.py"
-    rm -f -- "$LOCAL_BIN/wifi-menu.py"
-fi
-
-if [[ -e "$LOCAL_BIN/power-menu" ]]; then
-    mkdir -p "$BACKUP/local-bin"
-    cp -a "$LOCAL_BIN/power-menu" "$BACKUP/local-bin/power-menu"
-    rm -f -- "$LOCAL_BIN/power-menu"
-fi
-
-if [[ -e "$LOCAL_BIN/integrate-niri.py" ]]; then
-    mkdir -p "$BACKUP/local-bin"
-    cp -a "$LOCAL_BIN/integrate-niri.py" "$BACKUP/local-bin/integrate-niri.py"
-fi
-install -m 0755 "$ROOT/scripts/integrate-niri.py" "$LOCAL_BIN/integrate-niri.py"
-
-NIRI_CONFIG="$CONFIG_HOME/niri/config.kdl"
-NIRI_CONFIG_BACKED_UP=0
-mkdir -p "$CONFIG_HOME/niri" "$BACKUP/config/niri"
-
-# A previous rice installer replaced the full Niri file. If that generated file
-# is still active, recover the newest user config backup before integrating binds.
-if [[ -f "$NIRI_CONFIG" ]] && grep -q '^// TQQ Niri Rice configuration\.' "$NIRI_CONFIG"; then
-    previous_config=""
-    backup_root="$STATE_HOME/tqq-niri-rice/backups"
-    if [[ -d "$backup_root" ]]; then
-        while IFS= read -r candidate; do
-            if ! grep -q '^// TQQ Niri Rice configuration\.' "$candidate"; then
-                previous_config="$candidate"
-                break
-            fi
-        done < <(find "$backup_root" -type f -path '*/config/niri/config.kdl' -print | LC_ALL=C sort -r)
-    fi
-    if [[ -n "$previous_config" ]]; then
-        cp -a "$previous_config" "$NIRI_CONFIG"
-        echo "Restored the previous Niri config from $previous_config before adding rice binds."
-    else
-        echo "Warning: this is a generated TQQ config and no original Niri backup was found; existing user binds cannot be recovered automatically." >&2
-    fi
-fi
-
-if [[ -e "$NIRI_CONFIG" ]]; then
-    cp -a "$NIRI_CONFIG" "$BACKUP/config/niri/config.kdl"
-    NIRI_CONFIG_BACKED_UP=1
-fi
-if ! python3 "$LOCAL_BIN/integrate-niri.py" "$NIRI_CONFIG" "$LOCAL_BIN"; then
-    if ((NIRI_CONFIG_BACKED_UP)); then
-        cp -a "$BACKUP/config/niri/config.kdl" "$NIRI_CONFIG"
-    else
-        rm -f -- "$NIRI_CONFIG"
-    fi
-    echo "Niri config generation failed; restored the previous config when available. Backup: $BACKUP/config/niri/config.kdl" >&2
-    exit 1
-fi
-if command -v niri >/dev/null 2>&1 && ! niri validate; then
-    if ((NIRI_CONFIG_BACKED_UP)); then
-        cp -a "$BACKUP/config/niri/config.kdl" "$NIRI_CONFIG"
-    else
-        rm -f -- "$NIRI_CONFIG"
-    fi
-    echo "Niri validation failed; restored the previous config when available. Backup: $BACKUP/config/niri/config.kdl" >&2
-    exit 1
-fi
-
-# Seed the first wallpaper only when the user has not selected one before.
-WALLPAPER_STATE_HOME="$STATE_HOME/tqq-niri-rice"
-STATE_FILE="$WALLPAPER_STATE_HOME/current-wallpaper"
-if [[ ! -s "$STATE_FILE" ]]; then
-    first_wallpaper="$(find "$DATA_HOME/tqq-niri-rice/wallpapers" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -print -quit)"
-    if [[ -n "$first_wallpaper" ]]; then
-        mkdir -p "$WALLPAPER_STATE_HOME"
-        printf '%s\n' "$first_wallpaper" > "$STATE_FILE"
-    fi
-fi
-
-if [[ -e "$HOME/.bashrc" || "$(basename "${SHELL:-bash}")" == bash ]]; then
-    [[ ! -f "$HOME/.bashrc" ]] || cp -a "$HOME/.bashrc" "$BACKUP/bashrc"
-fi
-if [[ -e "$HOME/.zshrc" || "$(basename "${SHELL:-bash}")" == zsh ]]; then
-    [[ ! -f "$HOME/.zshrc" ]] || cp -a "$HOME/.zshrc" "$BACKUP/zshrc"
-fi
-"$LOCAL_BIN/configure-swaync.py" "$CONFIG_HOME/swaync/config.json"
-"$LOCAL_BIN/configure-fetch-autostart"
-
-# Apply the saved (or newly seeded) wallpaper now, regenerate Matugen colors,
-# and refresh running Waybar/SwayNC instances instead of waiting for a Niri restart.
-if [[ -s "$STATE_FILE" ]]; then
-    if ! "$LOCAL_BIN/select-wallpaper" --restore; then
-        echo "Warning: the saved wallpaper could not be applied. Run $LOCAL_BIN/select-wallpaper --restore after checking awww/swaybg and Matugen." >&2
-    fi
-fi
-
-echo "TQQ Niri rice installed. Dashboard: $LOCAL_BIN/tqq-dashboard (Super+Shift+Space). Backup: $BACKUP"
-echo "Run $LOCAL_BIN/check-dependencies to see whether required commands are available."
-\033'/}"
-        # Accept the first typed character so stray terminal arrow-key escape bytes do not cancel "y".
-        answer="${answer:0:1}"
         case "$answer" in
-            y|Y) "$ROOT/scripts/install-dependencies" ;;
+            y|Y|yes|YES) "$ROOT/scripts/install-dependencies" ;;
             *) echo "Dependency installation skipped. Run $ROOT/scripts/install-dependencies or install.sh --install-deps later." ;;
         esac
     else
@@ -304,9 +56,10 @@ fi
 
 mkdir -p "$BACKUP" "$LOCAL_BIN" "$DATA_HOME/tqq-niri-rice/wallpapers" "$CONFIG_HOME/tqq-niri-rice"
 
-# Compile the Quickshell GPU shaders before changing the installed configuration.
-SQUISHY_SHADER_BUILD="$BACKUP/squishy-shaders"
-bash "$ROOT/scripts/build-squishy-shaders" "$ROOT/quickshell/tqq-squishy" "$SQUISHY_SHADER_BUILD"
+# Compile Quickshell GPU shaders before changing the installed configuration.
+bash "$ROOT/scripts/build-squishy-shaders" \
+    "$ROOT/quickshell/tqq-squishy" \
+    "$BACKUP/squishy-shaders"
 
 # Build and install the native Rust wallpaper gallery.
 if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
@@ -315,149 +68,24 @@ if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
 fi
 bash "$ROOT/scripts/build-wallpaper-gallery" "$LOCAL_BIN/tqq-wallpaper-gallery"
 
-# Retire the previous Python gallery modules after preserving a backup.
-for legacy_script in wallpaper-picker.py wallpaper_gallery_ui.py; do
-    if [[ -e "$LOCAL_BIN/$legacy_script" ]]; then
-        mkdir -p "$BACKUP/local-bin"
-        cp -a "$LOCAL_BIN/$legacy_script" "$BACKUP/local-bin/$legacy_script"
-        rm -f -- "$LOCAL_BIN/$legacy_script"
-    fi
-done
-
-backup_config_dir() {
-    local name="$1"
-    if [[ -d "$CONFIG_HOME/$name" ]]; then
-        mkdir -p "$BACKUP/config/$name"
-        cp -a "$CONFIG_HOME/$name/." "$BACKUP/config/$name/"
-    fi
-}
-
-# Retire the old Fuzzel and GTKLock configs after preserving them in the backup.
-for legacy_config in fuzzel gtklock; do
-    if [[ -d "$CONFIG_HOME/$legacy_config" ]]; then
-        backup_config_dir "$legacy_config"
-        rm -rf -- "$CONFIG_HOME/$legacy_config"
-    fi
-done
-
-# Retire both legacy desktop packages now replaced by Quickshell.
-run_privileged() {
-    if ((EUID == 0)); then
-        "$@"
-    elif command -v sudo >/dev/null 2>&1; then
-        sudo "$@"
-    else
-        echo "A legacy package is installed but sudo is unavailable; remove it with your package manager." >&2
-        return 1
-    fi
-}
-
-remove_legacy_package() {
-    local package="$1"
-    if command -v dpkg-query >/dev/null 2>&1 \
-        && [[ "$(dpkg-query -W -f='${db:Status-Status}' "$package" 2>/dev/null || true)" == "installed" ]]; then
-        # Simulate first. Some locally-built compositor packages declare legacy launchers
-        # as hard dependencies; never let removing one tear down the active compositor.
-        local simulation removed candidate
-        if ! simulation="$(apt-get -s remove "$package" 2>&1)"; then
-            echo "Could not safely simulate removal of $package; leaving it installed." >&2
-            printf '%s\n' "$simulation" >&2
-            return 0
-        fi
-        while IFS= read -r candidate; do
-            [[ -z "$candidate" ]] && continue
-            if [[ "$candidate" != "$package" && "$candidate" != "$package:"* ]]; then
-                echo "Refusing to remove $package: APT would also remove $candidate." >&2
-                echo "No packages were removed. Keep the compositor installed and fix its package dependency first." >&2
-                return 0
-            fi
-        done < <(printf '%s\n' "$simulation" | awk '$1 == "Remv" { print $2 }')
-        echo "Removing legacy $package package with apt (simulation confirmed no other removals)…"
-        run_privileged apt-get remove -y "$package"
-    elif command -v pacman >/dev/null 2>&1 && pacman -Q "$package" >/dev/null 2>&1; then
-        local simulation
-        if ! simulation="$(pacman -R --print "$package" 2>&1)"; then
-            echo "Could not safely simulate removal of $package; leaving it installed." >&2
-            printf '%s\n' "$simulation" >&2
-            return 0
-        fi
-        if printf '%s\n' "$simulation" | grep -Eq '(^|[[:space:]])(niri|niri-git)([[:space:]]|$)'; then
-            echo "Refusing to remove $package: Pacman reports that it would remove Niri." >&2
-            return 0
-        fi
-        echo "Removing legacy $package package with pacman…"
-        run_privileged pacman -R --noconfirm "$package"
-    elif command -v rpm >/dev/null 2>&1 && rpm -q "$package" >/dev/null 2>&1; then
-        local simulation
-        if command -v dnf >/dev/null 2>&1; then
-            if ! simulation="$(dnf -q remove --assumeno "$package" 2>&1)"; then
-                echo "Could not safely simulate removal of $package; leaving it installed." >&2
-                printf '%s\n' "$simulation" >&2
-                return 0
-            fi
-            if printf '%s\n' "$simulation" | grep -Eq '(^|[[:space:]])(niri|niri-git)([[:space:]]|$)'; then
-                echo "Refusing to remove $package: DNF reports that it would remove Niri." >&2
-                return 0
-            fi
-            run_privileged dnf remove -y "$package"
-        elif command -v zypper >/dev/null 2>&1; then
-            if ! simulation="$(zypper --non-interactive --dry-run remove "$package" 2>&1)"; then
-                echo "Could not safely simulate removal of $package; leaving it installed." >&2
-                printf '%s\n' "$simulation" >&2
-                return 0
-            fi
-            if printf '%s\n' "$simulation" | grep -Eq '(niri|niri-git).*(remove|deinstall)|((remove|deinstall).*(niri|niri-git))'; then
-                echo "Refusing to remove $package: Zypper reports that it would remove Niri." >&2
-                return 0
-            fi
-            run_privileged zypper --non-interactive remove "$package"
-        else
-            echo "$package is installed, but no supported package manager was found to remove it." >&2
-            return 1
-        fi
-    else
-        echo "Legacy $package package not installed."
-    fi
-}
-
-remove_legacy_package fuzzel
-remove_legacy_package gtklock
-
-
-if [[ "$CONFIG_HOME" != "$HOME/.config" ]]; then
-    python3 - "$CONFIG_HOME" "$CONFIG_HOME/matugen/config.toml" <<'PYXDG'
-from pathlib import Path
-import sys
-
-config_home = sys.argv[1]
-for raw_path in sys.argv[2:]:
-    path = Path(raw_path)
-    content = path.read_text()
-    path.write_text(content.replace("~/.config", config_home))
-PYXDG
-fi
-
 cp -an "$ROOT/wallpapers/." "$DATA_HOME/tqq-niri-rice/wallpapers/"
 
-for script_name in select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher tqq-squishy tqq-region tqq-lock-screen configure-fetch-autostart check-dependencies install-dependencies configure-swaync.py; do
+# Install only the launchers and helpers used by the current Quickshell setup.
+for script_name in \
+    select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher \
+    tqq-squishy tqq-region tqq-lock-screen configure-fetch-autostart \
+    check-dependencies install-dependencies configure-swaync.py; do
+    source_file="$ROOT/scripts/$script_name"
+    if [[ ! -f "$source_file" ]]; then
+        echo "Required project script is missing: $source_file" >&2
+        exit 1
+    fi
     if [[ -e "$LOCAL_BIN/$script_name" ]]; then
         mkdir -p "$BACKUP/local-bin"
         cp -a "$LOCAL_BIN/$script_name" "$BACKUP/local-bin/$script_name"
     fi
-    install -m 0755 "$ROOT/scripts/$script_name" "$LOCAL_BIN/$script_name"
+    install -m 0755 "$source_file" "$LOCAL_BIN/$script_name"
 done
-
-if [[ -e "$LOCAL_BIN/wifi-menu.py" ]]; then
-    mkdir -p "$BACKUP/local-bin"
-    cp -a "$LOCAL_BIN/wifi-menu.py" "$BACKUP/local-bin/wifi-menu.py"
-    rm -f -- "$LOCAL_BIN/wifi-menu.py"
-fi
-
-if [[ -e "$LOCAL_BIN/power-menu" ]]; then
-    mkdir -p "$BACKUP/local-bin"
-    cp -a "$LOCAL_BIN/power-menu" "$BACKUP/local-bin/power-menu"
-    rm -f -- "$LOCAL_BIN/power-menu"
-fi
 
 if [[ -e "$LOCAL_BIN/integrate-niri.py" ]]; then
     mkdir -p "$BACKUP/local-bin"
@@ -469,8 +97,8 @@ NIRI_CONFIG="$CONFIG_HOME/niri/config.kdl"
 NIRI_CONFIG_BACKED_UP=0
 mkdir -p "$CONFIG_HOME/niri" "$BACKUP/config/niri"
 
-# A previous rice installer replaced the full Niri file. If that generated file
-# is still active, recover the newest user config backup before integrating binds.
+# If an older TQQ release replaced the whole config, restore the latest
+# available user config backup before integrating the current TQQ bindings.
 if [[ -f "$NIRI_CONFIG" ]] && grep -q '^// TQQ Niri Rice configuration\.' "$NIRI_CONFIG"; then
     previous_config=""
     backup_root="$STATE_HOME/tqq-niri-rice/backups"
@@ -484,9 +112,9 @@ if [[ -f "$NIRI_CONFIG" ]] && grep -q '^// TQQ Niri Rice configuration\.' "$NIRI
     fi
     if [[ -n "$previous_config" ]]; then
         cp -a "$previous_config" "$NIRI_CONFIG"
-        echo "Restored the previous Niri config from $previous_config before adding rice binds."
+        echo "Restored the previous Niri config from $previous_config before adding TQQ bindings."
     else
-        echo "Warning: this is a generated TQQ config and no original Niri backup was found; existing user binds cannot be recovered automatically." >&2
+        echo "Warning: generated TQQ config found, but no original Niri backup was found." >&2
     fi
 fi
 
@@ -494,52 +122,46 @@ if [[ -e "$NIRI_CONFIG" ]]; then
     cp -a "$NIRI_CONFIG" "$BACKUP/config/niri/config.kdl"
     NIRI_CONFIG_BACKED_UP=1
 fi
+
 if ! python3 "$LOCAL_BIN/integrate-niri.py" "$NIRI_CONFIG" "$LOCAL_BIN"; then
     if ((NIRI_CONFIG_BACKED_UP)); then
         cp -a "$BACKUP/config/niri/config.kdl" "$NIRI_CONFIG"
     else
         rm -f -- "$NIRI_CONFIG"
     fi
-    echo "Niri config generation failed; restored the previous config when available. Backup: $BACKUP/config/niri/config.kdl" >&2
+    echo "Niri config integration failed; restored the previous config when available." >&2
     exit 1
 fi
+
 if command -v niri >/dev/null 2>&1 && ! niri validate; then
     if ((NIRI_CONFIG_BACKED_UP)); then
         cp -a "$BACKUP/config/niri/config.kdl" "$NIRI_CONFIG"
     else
         rm -f -- "$NIRI_CONFIG"
     fi
-    echo "Niri validation failed; restored the previous config when available. Backup: $BACKUP/config/niri/config.kdl" >&2
+    echo "Niri validation failed; restored the previous config when available." >&2
     exit 1
 fi
 
-# Seed the first wallpaper only when the user has not selected one before.
-WALLPAPER_STATE_HOME="$STATE_HOME/tqq-niri-rice"
-STATE_FILE="$WALLPAPER_STATE_HOME/current-wallpaper"
+# Seed the first wallpaper only if the user has not selected one before.
+STATE_FILE="$STATE_HOME/tqq-niri-rice/current-wallpaper"
 if [[ ! -s "$STATE_FILE" ]]; then
-    first_wallpaper="$(find "$DATA_HOME/tqq-niri-rice/wallpapers" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -print -quit)"
+    first_wallpaper="$(find "$DATA_HOME/tqq-niri-rice/wallpapers" -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) -print -quit)"
     if [[ -n "$first_wallpaper" ]]; then
-        mkdir -p "$WALLPAPER_STATE_HOME"
-        printf '%s\n' "$first_wallpaper" > "$STATE_FILE"
+        mkdir -p "$(dirname "$STATE_FILE")"
+        printf '%s\\n' "$first_wallpaper" > "$STATE_FILE"
     fi
 fi
 
-if [[ -e "$HOME/.bashrc" || "$(basename "${SHELL:-bash}")" == bash ]]; then
-    [[ ! -f "$HOME/.bashrc" ]] || cp -a "$HOME/.bashrc" "$BACKUP/bashrc"
-fi
-if [[ -e "$HOME/.zshrc" || "$(basename "${SHELL:-bash}")" == zsh ]]; then
-    [[ ! -f "$HOME/.zshrc" ]] || cp -a "$HOME/.zshrc" "$BACKUP/zshrc"
-fi
 "$LOCAL_BIN/configure-swaync.py" "$CONFIG_HOME/swaync/config.json"
 "$LOCAL_BIN/configure-fetch-autostart"
 
-# Apply the saved (or newly seeded) wallpaper now, regenerate Matugen colors,
-# and refresh running Waybar/SwayNC instances instead of waiting for a Niri restart.
 if [[ -s "$STATE_FILE" ]]; then
     if ! "$LOCAL_BIN/select-wallpaper" --restore; then
-        echo "Warning: the saved wallpaper could not be applied. Run $LOCAL_BIN/select-wallpaper --restore after checking awww/swaybg and Matugen." >&2
+        echo "Warning: saved wallpaper could not be applied. Check awww/swaybg and Matugen." >&2
     fi
 fi
 
-echo "TQQ Niri rice installed. Dashboard: $LOCAL_BIN/tqq-dashboard (Super+Shift+Space). Backup: $BACKUP"
-echo "Run $LOCAL_BIN/check-dependencies to see whether required commands are available."
+echo "TQQ Niri rice installed. Dashboard: $LOCAL_BIN/tqq-dashboard (Super+Shift+Space)."
+echo "Backup: $BACKUP"
+echo "Run $LOCAL_BIN/check-dependencies to check required commands."
