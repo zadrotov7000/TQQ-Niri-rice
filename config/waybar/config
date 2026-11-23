@@ -8,7 +8,7 @@
   "spacing": 5,
   "modules-left": ["custom/launcher", "niri/workspaces"],
   "modules-center": ["clock"],
-  "modules-right": ["custom/notification", "network", "pulseaudio", "battery", "tray"],
+  "modules-right": ["cpu", "memory", "disk", "custom/notification", "network", "pulseaudio", "battery", "tray"],
   "custom/launcher": {
     "format": "󰍉",
     "tooltip": true,
@@ -32,7 +32,7 @@
     "format": "󰥔  {:%H:%M}   󰃭  {:%d %b}",
     "tooltip-format": "<big>{:%A, %d %B %Y}</big>\\n<tt>{:%H:%M:%S}</tt>"
   },
-  "pulseaudio": {
+  "cpu": {\n    "format": "󰍛  {usage}%",\n    "interval": 3,\n    "tooltip": true\n  },\n  "memory": {\n    "format": "󰘚  {percentage}%",\n    "interval": 5,\n    "tooltip": true\n  },\n  "disk": {\n    "path": "/",\n    "format": "󰋊  {percentage_used}%",\n    "interval": 30,\n    "tooltip": true\n  },\n  "pulseaudio": {
     "format": "󰕾  {volume}%",
     "format-muted": "󰖁  muted",
     "tooltip": true,
