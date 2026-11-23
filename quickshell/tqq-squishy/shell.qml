@@ -78,14 +78,24 @@ PanelWindow {
     Shortcut { sequence: "Escape"; context: Qt.ApplicationShortcut; onActivated: Qt.quit() }
     Shortcut { sequence: "Backspace"; context: Qt.ApplicationShortcut; onActivated: root.resetSelection() }
 
+    Image {
+        id: wallpaperSource
+        anchors.fill: parent
+        source: root.wallpaperPath.length ? "file://" + root.wallpaperPath : ""
+        visible: false
+        cache: true
+        asynchronous: true
+        onStatusChanged: if (status === Image.Ready) canvas.requestPaint()
+    }
+
     Canvas {
         id: canvas
         anchors.fill: parent
         onPaint: {
             const ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
-            if (root.wallpaperPath.length)
-                ctx.drawImage("file://" + root.wallpaperPath, 0, 0, width, height);
+            if (wallpaperSource.status === Image.Ready)
+                ctx.drawImage(wallpaperSource, 0, 0, width, height);
             else {
                 ctx.fillStyle = "#111014";
                 ctx.fillRect(0, 0, width, height);
@@ -101,8 +111,8 @@ PanelWindow {
                 ctx.fillStyle = "rgba(10, 8, 14, 0.22)";
                 ctx.fill();
                 ctx.clip();
-                if (root.wallpaperPath.length)
-                    ctx.drawImage("file://" + root.wallpaperPath, root.patchX, root.patchY, width, height);
+                if (wallpaperSource.status === Image.Ready)
+                    ctx.drawImage(wallpaperSource, root.patchX, root.patchY, width, height);
                 ctx.restore();
 
                 ctx.save();
