@@ -174,8 +174,9 @@ Scope {
             anchors.fill: parent
             source: wallpaper
             blurEnabled: true
-            blur: 0.78
-            blurMax: 40
+            blur: 1.0
+            blurMax: 64
+            blurMultiplier: 1.5
             brightness: -0.30
             saturation: 0.82
         }
