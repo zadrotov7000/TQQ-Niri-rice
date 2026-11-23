@@ -14,7 +14,7 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 - **Wallpaper persistence:** the selected image is restored when Niri starts.
 - **Waybar Island:** compact dark pills with smooth borders cycling through the wallpaper-derived Matugen `primary`, `secondary` and `tertiary` colors (Waybar only). The launcher, clock, network, volume, disk and notification icons use Font Awesome 4 glyphs, provided by Debian's `fonts-font-awesome` package, with Nerd Fonts as optional fallback. NetworkManager and Blueman applets start with Niri when present. Clicking Waybar's Wi-Fi icon opens TQQ Wi-Fi.
 - **Dunst:** lightweight notifications and notification history; the Waybar bell restores the latest notification and right-click toggles Do Not Disturb. Media, network, brightness and volume controls stay in the Quickshell dashboard.
-- **3D Fetch support:** optional config for [areofyl/fetch](https://github.com/areofyl/fetch). Existing Fetch/Fastfetch startup is preserved.
+- **TQQ Fastfetch:** Debian ASCII logo on the left, exactly four outlined information boxes on the right: OS/Kernel/Shell, Terminal/WM, CPU/GPU, RAM/Swap. Matugen recolors the borders and labels from the selected wallpaper. All detected values come from Fastfetch.
 - **Kitty and Ghostty terminals:** optional matching dark-glass terminal themes with wallpaper-driven Matugen colors, understated transparency, padded text, cursor accents, and a coordinated ANSI palette. Existing user configs are backed up and extended with a single include; Ghostty is not installed automatically.
 
 ## Install
@@ -29,11 +29,11 @@ cd TQQ-Niri-rice
 
 The installer checks dependencies and asks whether to install missing packages. Use `./install.sh --install-deps` to install them explicitly or `./install.sh --skip-deps` to skip the prompt.
 
-Before changing the Niri config or replacing installed TQQ helper scripts, the installer stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. It does not uninstall system packages, remove old user config folders, or delete legacy helper files. Removing unused applications is left to the user. Older SwayNC packages and files are not automatically removed; the new installer does not install, configure, start, or invoke SwayNC. The installer backs up and installs the Dunst, Matugen, Waybar, Fetch, and Quickshell configs into their standard locations (under ~/.config or $XDG_CONFIG_HOME). The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
+Before changing the Niri config or replacing installed TQQ helper scripts, the installer stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. It does not uninstall system packages, remove old user config folders, or delete legacy helper files. Removing unused applications is left to the user. Older SwayNC packages and files are not automatically removed; the new installer does not install, configure, start, or invoke SwayNC. The installer backs up and installs the Dunst, Matugen, Waybar, Fastfetch, and Quickshell configs into their standard locations (under ~/.config or $XDG_CONFIG_HOME). The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
 
 ## Dependencies
 
-The desktop requires Niri, Quickshell (including its PAM service module), Dunst (`dunst` and `dunstctl`), Waybar, Nerd Font symbols (installed by `scripts/install-icon-fonts`), the NetworkManager and Blueman tray applets, Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, and common process tools (`pgrep`, `pkill`). For wallpaper display, install `awww` and its daemon or `swaybg`.
+The desktop requires Niri, Fastfetch, Quickshell (including its PAM service module), Dunst (`dunst` and `dunstctl`), Waybar, Nerd Font symbols (installed by `scripts/install-icon-fonts`), the NetworkManager and Blueman tray applets, Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, and common process tools (`pgrep`, `pkill`). For wallpaper display, install `awww` and its daemon or `swaybg`.
 
 `scripts/check-dependencies` reports missing commands and package hints. `scripts/install-dependencies` includes package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Quickshell is installed from Debian Backports on Debian 13. Niri and `awww` may need to be installed separately depending on the distribution. Run `./scripts/install-dependencies` after updating the repository to repair missing status icons without rebuilding the Rust wallpaper gallery.
 
@@ -66,6 +66,32 @@ pkill -SIGUSR2 -x waybar
 ```
 
 The animated border uses the active Matugen palette, not a fixed RGB/rainbow cycle. When the wallpaper is changed using TQQ, Matugen regenerates `~/.config/waybar/colors.css` and TQQ reloads Waybar. It does not affect Niri window borders, Kitty or other applications. If Waybar is not running, start it with `waybar &` from your Niri session. If icons remain empty, check `fc-match FontAwesome` and restart Waybar after installing the font.
+
+## TQQ Fastfetch — four info boxes
+
+The default profile shows a Debian ASCII logo on the left. On the right are **exactly four compact bordered groups**, with each value formatted as `Label → value`:
+
+1. `OS`, `Kernel`, `Shell`
+2. `Terminal`, `WM`
+3. `CPU`, `GPU`
+4. `RAM`, `Swap`
+
+Other detected fields (packages, screen, uptime, etc.) are intentionally omitted. Long CPU/GPU names are truncated to keep the boxes aligned. The palette is a Matugen template; it updates when the TQQ wallpaper changes.
+
+Debian 13 has Fastfetch in its repositories. To set up only this theme, without reinstalling the rice:
+
+```bash
+sudo apt install fastfetch
+cd ~/TQQ-Niri-rice
+git pull --ff-only
+./scripts/setup-fastfetch
+./scripts/configure-fastfetch-autostart
+fastfetch
+```
+
+The setup writes `~/.config/fastfetch/tqq.jsonc` and links the usual `config.jsonc` to it after backing up any existing regular config. Symlink-managed user configs are left alone. Backups are in `~/.local/state/tqq-niri-rice/backups/fastfetch-*`. The shell autostart helper migrates **only old TQQ-owned Fetch blocks**, retains unrelated shell configuration, and does not add a duplicate if the user already runs Fastfetch.
+
+The original 3D Fetch config and launcher have been removed from this repository. The setup **does not uninstall** any previously installed 3D Fetch binary or erase the user's old `~/.config/fetch` directory.
 
 ## TQQ WindowFX — windows and animations (Niri 26.04)
 
@@ -166,6 +192,7 @@ The installer preserves existing Niri settings and unrelated keybindings. It res
 - `quickshell/tqq-switcher/` — radial Alt+Tab selector.
 - `wallpaper-gallery/` — native Rust/GTK4 wallpaper gallery.
 - `config/kitty/` and `config/ghostty/` — optional terminal themes and starter palettes.
+- `config/fastfetch/` — boxed Fastfetch theme and its wallpaper-derived colors.
 - `config/matugen/` — wallpaper-derived palette templates.
 - `config/dunst/` and `config/waybar/` — notification and bar styling.
 - `scripts/` — installers, launchers, wallpaper handling, and Niri integration helpers.
