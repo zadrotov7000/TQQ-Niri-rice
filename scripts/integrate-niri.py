@@ -219,7 +219,6 @@ def main() -> int:
     wallpaper = json.dumps(str(local_bin / "select-wallpaper"), ensure_ascii=False)
     wifi_key = choose(["Mod+N", "Mod+Shift+N", "Mod+Ctrl+N"])
     wifi_menu = json.dumps(str(local_bin / "tqq-wifi"), ensure_ascii=False)
-    squishy_key = choose(["Mod+F", "Mod+Shift+F", "Mod+Alt+F", "Mod+Ctrl+F"])
     dashboard_key = choose(["Mod+Shift+Space", "Mod+Alt+Space", "Mod+Ctrl+Space"])
     dashboard = json.dumps(str(local_bin / "tqq-dashboard"), ensure_ascii=False)
     lock_key = choose(["Mod+L", "Mod+Shift+L", "Mod+Ctrl+L", "Mod+Alt+L", "Mod+Ctrl+Shift+L", "Mod+Alt+Shift+L"])
@@ -287,7 +286,6 @@ def main() -> int:
         f'    {wifi_key} hotkey-overlay-title="TQQ Wi-Fi" {{ spawn {wifi_menu}; }}\n'
         '    Alt+Tab hotkey-overlay-title="TQQ Window Switcher" { spawn ' + json.dumps(str(local_bin / "tqq-switcher"), ensure_ascii=False) + ' "next"; }\n'
         '    Alt+Shift+Tab hotkey-overlay-title="TQQ Window Switcher" { spawn ' + json.dumps(str(local_bin / "tqq-switcher"), ensure_ascii=False) + ' "previous"; }\n'
-        f'    {squishy_key} hotkey-overlay-title="TQQ Squishy Physics" {{ spawn {json.dumps(str(local_bin / "tqq-squishy"), ensure_ascii=False)}; }}\n'
         f'    {dashboard_key} hotkey-overlay-title="TQQ Dashboard" {{ spawn {dashboard}; }}\n'
         f'    {launcher_key} hotkey-overlay-title="TQQ App Launcher" {{ spawn {json.dumps(str(local_bin / "tqq-launcher"), ensure_ascii=False)}; }}\n'
         f'    {lock_key} hotkey-overlay-title="Lock Screen" {{ spawn {lock_screen}; }}\n'
@@ -346,7 +344,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper ({wallpaper_key}), Quickshell Wi-Fi ({wifi_key}), radial Alt+Tab, Squishy Physics ({squishy_key}), dashboard ({dashboard_key}), lock ({lock_key}), launcher ({launcher_key}), screenshots ({screenshot_key or 'Print'}), native workspace/audio controls, and Dunst/Waybar/network applet startup when available."
+        f"and added TQQ wallpaper ({wallpaper_key}), Quickshell Wi-Fi ({wifi_key}), radial Alt+Tab, dashboard ({dashboard_key}), lock ({lock_key}), launcher ({launcher_key}), screenshots ({screenshot_key or 'Print'}), native workspace/audio controls, and Dunst/Waybar/network applet startup when available."
     )
     return 0
 
