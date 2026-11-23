@@ -68,6 +68,11 @@ def main() -> int:
 
     # Remove only previously generated TQQ blocks. Every user setting and bind stays intact.
     text = re.sub(
+        r"(?ms)^// BEGIN TQQ LAUNCHER WINDOW RULE\n.*?^// END TQQ LAUNCHER WINDOW RULE[ \t]*(?:\n|$)",
+        "",
+        text,
+    )
+    text = re.sub(
         r"(?ms)^// BEGIN TQQ NIRI STARTUP\n.*?^// END TQQ NIRI STARTUP[ \t]*(?:\n|$)",
         "",
         text,
@@ -211,6 +216,19 @@ def main() -> int:
         binds_match = re.search(r"(?m)^([ \t]*)binds[ \t]*\{", text)
         insertion = binds_match.start() if binds_match else len(text)
         text = text[:insertion] + startup_block + text[insertion:]
+
+    launcher_rule = (
+        "\n// BEGIN TQQ LAUNCHER WINDOW RULE\n"
+        "window-rule {\n"
+        '    match app-id="^tqq-launcher$"\n'
+        "    open-floating true\n"
+        "    open-focused true\n"
+        "    default-column-width { fixed 620; }\n"
+        "    default-window-height { fixed 510; }\n"
+        "}\n"
+        "// END TQQ LAUNCHER WINDOW RULE\n"
+    )
+    text = text.rstrip() + "\n" + launcher_rule
 
     layer_rule = (
         "\n// BEGIN TQQ WALLPAPER LAYER RULE\n"
