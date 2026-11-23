@@ -53,7 +53,6 @@ PanelWindow {
         bluetooth.running = false; bluetooth.running = true;
         media.running = false; media.running = true;
         audio.running = false; audio.running = true;
-        weatherProcess.running = false; weatherProcess.running = true;
     }
 
     Timer {
@@ -110,6 +109,40 @@ PanelWindow {
                 const match = text.match(/Volume:\\s*([0-9.]+)/);
                 if (match) root.volumeLevel = Math.max(0, Math.min(1, Number(match[1])));
                 root.audioInfo = match ? "Output volume · " + Math.round(Number(match[1]) * 100) + "%" : text.trim();
+            }
+        }
+    }
+
+    Process {
+        id: regionProcess
+        command: ["tqq-region", "get"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const value = text.trim();
+                if (value.length > 0) {
+                    root.weatherRegion = value;
+                    regionField.text = value;
+                    weatherProcess.running = true;
+                }
+            }
+        }
+    }
+
+    Process {
+        id: weatherProcess
+        command: ["tqq-region", "weather"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    const current = data.current_condition[0];
+                    root.weatherTemperature = current.temp_C + "°";
+                    root.weatherDescription = current.weatherDesc[0].value;
+                } catch (error) {
+                    root.weatherTemperature = "—";
+                    root.weatherDescription = "Weather unavailable";
+                }
             }
         }
     }
