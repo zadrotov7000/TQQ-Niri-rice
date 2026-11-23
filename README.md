@@ -6,7 +6,7 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 
 - **Control Center:** the animated Quickshell dashboard with calendar, clock, weather, media, network, system information, volume and brightness controls. The power menu is in its top-right corner beside the close button.
 - **Application launcher:** the Waybar magnifying-glass button opens the Quickshell application search. The panel expands from a compact box under the launcher icon. `Mod+D` remains available as a keyboard shortcut.
-- **Wi-Fi panel:** `Mod+N` (or the installer's free fallback) opens a Quickshell network panel. It scans NetworkManager, shows signal strength and security, prompts for a password when needed, and connects without Fuzzel.
+- **Wi-Fi panel:** `Mod+N` (or the installer's free fallback) opens a Quickshell network panel. It scans NetworkManager, shows signal strength and security, prompts for a password when needed, and connects through NetworkManager.
 - **Lock screen:** Quickshell uses the native Wayland `WlSessionLock` protocol and PAM authentication, with the current wallpaper blurred behind the clock/date and a password form revealed by Enter. The lock remains held by the compositor if Quickshell exits unexpectedly.
 - **Radial window switcher:** `Alt+Tab` opens a circular window selector. Repeated `Alt+Tab` moves forward; `Alt+Shift+Tab` moves backward. The highlighted window is focused when the switcher times out, and Escape cancels.
 - **Squishy Physics:** a free `Mod+F`-family shortcut opens an interactive wallpaper overlay. Draw a lasso with the left mouse button, then hold the right mouse button and drag inside the selected area. The selected patch is rendered on a 128×72 GPU mesh and follows the pointer with a damped spring response, elastic tension ripple, and spring-back on release. Canvas is used only to rasterize the lasso mask and draw its outline; image deformation is rendered by Qt Quick `ShaderEffect` shaders. This is the native Qt graphics pipeline (OpenGL/Vulkan and other Qt RHI backends), not an embedded browser/WebGL2 context. Backspace clears the selection and Escape closes the overlay.
@@ -29,7 +29,7 @@ cd TQQ-Niri-rice
 
 The installer checks dependencies and asks whether to install missing packages. Use `./install.sh --install-deps` to install them explicitly or `./install.sh --skip-deps` to skip the prompt.
 
-Before replacing configs, TQQ stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. During migration, old Fuzzel and GTKLock config folders and helper scripts are backed up and retired. The installer simulates removal of installed Fuzzel and GTKLock packages first. It removes a legacy package only when the package manager confirms that no other packages (especially Niri) would be removed; otherwise it leaves that package installed and prints a warning. It never runs `autoremove`. The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
+Before changing the Niri config or replacing installed TQQ helper scripts, the installer stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. It does not uninstall system packages, remove old user config folders, or delete legacy helper files. Removing unused applications is left to the user. The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
 
 ## Dependencies
 
