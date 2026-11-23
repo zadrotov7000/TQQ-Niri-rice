@@ -34,6 +34,8 @@ PanelWindow {
     property real volumeLevel: 0.5
     property int brightnessLevel: 50
     property bool brightnessAvailable: false
+    property string profileAvatar: ""
+    property int profileAvatarRevision: 0
     property real panelOffset: -1000
     property bool closing: false
 
@@ -95,6 +97,7 @@ PanelWindow {
 
     Component.onCompleted: {
         paletteProcess.running = true;
+        avatarRead.running = true;
         regionProcess.running = true;
         refresh();
         panelOffset = -panel.height;
@@ -158,6 +161,28 @@ PanelWindow {
             }
         }
     }
+    // Load the same local avatar file used by the lock screen.
+    // The helper reads only the image path; it never handles passwords.
+    Process {
+        id: avatarRead
+        command: ["tqq-avatar", "get"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.profileAvatar = text.trim();
+                root.profileAvatarRevision += 1;
+            }
+        }
+    }
+    Timer {
+        interval: 3500
+        repeat: true
+        running: true
+        onTriggered: {
+            avatarRead.running = false;
+            avatarRead.running = true;
+        }
+    }
+
     Process {
         id: regionProcess
         command: ["tqq-region", "get"]
@@ -803,6 +828,66 @@ PanelWindow {
                 Layout.fillWidth: true
                 Text { text: "CONTROL CENTER"; color: root.muted; font.pixelSize: 9; font.letterSpacing: 1 }
                 Item { Layout.fillWidth: true }
+
+                // Right-side avatar picker card. No extra dialog or QML module.
+                Rectangle {
+                    Layout.preferredWidth: 184
+                    Layout.preferredHeight: 42
+                    radius: 11
+                    color: root.surfaceHigh
+                    border.width: 1
+                    border.color: Qt.alpha(root.accent, 0.4)
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 6
+                        spacing: 9
+                        Rectangle {
+                            Layout.preferredWidth: 30
+                            Layout.preferredHeight: 30
+                            radius: 15
+                            clip: true
+                            color: root.surface
+                            Image {
+                                anchors.fill: parent
+                                source: root.profileAvatar.length
+                                    ? "file://" + root.profileAvatar + "?revision=" + root.profileAvatarRevision : ""
+                                visible: root.profileAvatar.length > 0
+                                fillMode: Image.PreserveAspectCrop
+                                cache: false
+                                asynchronous: true
+                            }
+                            Text {
+                                anchors.centerIn: parent
+                                text: "●"
+                                visible: root.profileAvatar.length === 0
+                                color: root.accent
+                                font.pixelSize: 21
+                            }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 1
+                            Text {
+                                text: "LOCK AVATAR"
+                                color: root.fg
+                                font.pixelSize: 10
+                                font.bold: true
+                            }
+                            Text {
+                                text: "CHOOSE IMAGE"
+                                color: root.accent
+                                font.pixelSize: 9
+                            }
+                        }
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: Quickshell.execDetached(["tqq-avatar", "pick"])
+                    }
+                }
+
                 Text { text: "ESC TO CLOSE"; color: root.muted; font.pixelSize: 9 }
             }
         }
