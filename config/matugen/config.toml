@@ -20,3 +20,7 @@ output_path = '~/.config/fuzzel/colors.ini'
 [templates.gtklock]
 input_path = '~/.config/matugen/templates/gtklock-colors.css'
 output_path = '~/.config/gtklock/colors.css'
+
+[templates.tqq]
+input_path = '~/.config/matugen/templates/tqq-colors.json'
+output_path = '~/.config/tqq-niri-rice/colors.json'
