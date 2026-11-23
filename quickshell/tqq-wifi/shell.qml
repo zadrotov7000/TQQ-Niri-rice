@@ -74,7 +74,7 @@ PanelWindow {
 
     function parseNetworks(output) {
         const found = [];
-        const bySsid = {};
+        const bySsid = Object.create(null);
 
         for (const line of output.split("\n")) {
             if (!line.trim())
@@ -510,6 +510,7 @@ PanelWindow {
                     required property var modelData
                     width: ListView.view.width
                     height: 68
+                    property int signalValue: modelData.signal
                     radius: 14
                     color: modelData.connected ? Qt.alpha(root.accent, 0.13) : root.surface
                     border.width: modelData.connected ? 1 : 0
@@ -574,7 +575,7 @@ PanelWindow {
                                         height: 5 + index * 3
                                         radius: 2
                                         anchors.bottom: parent.bottom
-                                        color: modelData.signal >= (index + 1) * 25
+                                        color: parent.parent.signalValue >= (index + 1) * 25
                                             ? root.accent : Qt.alpha(root.muted, 0.28)
                                     }
                                 }
