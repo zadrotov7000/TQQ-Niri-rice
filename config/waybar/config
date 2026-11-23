@@ -30,9 +30,26 @@
   },
   "clock": {
     "format": "󰥔  {:%H:%M}   󰃭  {:%d %b}",
-    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\\n<tt>{:%H:%M:%S}</tt>"
+    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\
+<tt>{:%H:%M:%S}</tt>"
   },
-  "cpu": {\n    "format": "󰍛  {usage}%",\n    "interval": 3,\n    "tooltip": true\n  },\n  "memory": {\n    "format": "󰘚  {percentage}%",\n    "interval": 5,\n    "tooltip": true\n  },\n  "disk": {\n    "path": "/",\n    "format": "󰋊  {percentage_used}%",\n    "interval": 30,\n    "tooltip": true\n  },\n  "pulseaudio": {
+  "cpu": {
+    "format": "󰍛  {usage}%",
+    "interval": 3,
+    "tooltip": true
+  },
+  "memory": {
+    "format": "󰘚  {percentage}%",
+    "interval": 5,
+    "tooltip": true
+  },
+  "disk": {
+    "path": "/",
+    "format": "󰋊  {percentage_used}%",
+    "interval": 30,
+    "tooltip": true
+  },
+  "pulseaudio": {
     "format": "󰕾  {volume}%",
     "format-muted": "󰖁  muted",
     "tooltip": true,
