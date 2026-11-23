@@ -37,7 +37,7 @@ if [[ -r /etc/os-release ]]; then
             echo "Fedora packages: quickshell playerctl pavucontrol NetworkManager-bluetooth blueman lm_sensors SwayNotificationCenter fuzzel cargo rust gtk4-devel gtk4-layer-shell-devel pkgconf-pkg-config matugen awww pipewire wireplumber"
             ;;
         opensuse*|opensuse-tumbleweed|opensuse-leap)
-            echo "openSUSE package names vary by release; search for Waybar, SwayNotificationCenter, Fuzzel, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, awww and WirePlumber."
+            echo "openSUSE package names vary by release; search for SwayNotificationCenter, Fuzzel, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, awww and WirePlumber."
             ;;
         *)
             echo "Install equivalent packages for your distribution: SwayNC, Fuzzel, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, PipeWire/WirePlumber and awww or swaybg."
