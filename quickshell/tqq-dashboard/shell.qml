@@ -243,8 +243,6 @@ PanelWindow {
                         spacing: 12
                         RowLayout {
                             Layout.fillWidth: true
-                        RowLayout {
-                            Layout.fillWidth: true
                             spacing: 12
                             ColumnLayout {
                                 spacing: 2
@@ -255,6 +253,8 @@ PanelWindow {
                             Item { Layout.fillWidth: true }
                             Button { text: "Change region"; onClicked: regionDialog.open() }
                         }
+                        RowLayout {
+                            Layout.fillWidth: true
                             Text { text: "CALENDAR"; color: "#e7a4b7"; font.pixelSize: 11; font.bold: true }
                             Item { Layout.fillWidth: true }
                             Button { text: "‹"; onClicked: root.shiftMonth(-1) }
