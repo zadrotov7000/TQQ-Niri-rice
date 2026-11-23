@@ -128,7 +128,7 @@ git pull --ff-only
 ./scripts/update-squishy
 ```
 
-The updater compiles the two Qt Shader Baker (`qsb`) shaders first and backs up the old QML and shader binaries before replacing them in `~/.config/quickshell/tqq-squishy/`. If `qsb` is missing on Debian 13, install the `qt6-shader-baker` package. No Rust rebuild, Niri config edit, Waybar reload or change to your language bindings is needed. The installer selects a free Mod+F-family shortcut; check the actual binding in your Niri config. Draw a lasso with LMB, hold RMB **inside** it and drag; release RMB for the elastic rebound. Backspace clears, Escape exits.
+The updater compiles the two Qt Shader Baker (`qsb`) shaders first and backs up the old QML and shader binaries before replacing them in `~/.config/quickshell/tqq-squishy/`. If `qsb` is missing on Debian 13, install the `qt6-shader-baker` package. No Rust rebuild, Niri config edit, Waybar reload or change to your language bindings is needed. The installer selects a free Mod+F-family shortcut; check the actual binding in your Niri config. Draw a lasso with LMB, hold RMB **inside** it and drag; release RMB for the elastic rebound. During dragging a faint circle shows the grab territory (about 55–92 logical pixels depending on screen size): the virtual handle and wallpaper deformation stop at its edge even when you move the actual cursor farther. This does not lock or warp your real mouse pointer. Backspace clears, Escape exits.
 
 ## Keybindings
 
