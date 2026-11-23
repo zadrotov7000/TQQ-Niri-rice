@@ -173,7 +173,7 @@ def main() -> int:
     wifi_menu = json.dumps(str(local_bin / "wifi-menu.py"), ensure_ascii=False)
     dashboard_key = choose(["Mod+Shift+Space", "Mod+Alt+Space", "Mod+Ctrl+Space"])
     dashboard = json.dumps(str(local_bin / "tqq-dashboard"), ensure_ascii=False)
-    lock_key = choose(["Mod+L", "Mod+Shift+L"])
+    lock_key = choose(["Mod+L", "Mod+Shift+L", "Mod+Ctrl+L", "Mod+Alt+L", "Mod+Ctrl+Shift+L", "Mod+Alt+Shift+L"])
     lock_screen = json.dumps(str(local_bin / "tqq-lock-screen"), ensure_ascii=False)
     managed_binds = (
         "\n    // BEGIN TQQ NIRI BINDS\n"
