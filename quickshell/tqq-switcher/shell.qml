@@ -18,6 +18,8 @@ PanelWindow {
     property var windows: []
     property int selectedIndex: 0
     property bool loading: true
+    property real reveal: 0
+    property real backdropOpacity: 0
     property color bg: "#151219"
     property color surface: "#211d26"
     property color surfaceHigh: "#302a36"
@@ -51,7 +53,28 @@ PanelWindow {
 
     Component.onCompleted: {
         paletteProcess.running = true;
+        openAnimation.start();
         loadWindows();
+    }
+
+    ParallelAnimation {
+        id: openAnimation
+        NumberAnimation {
+            target: root
+            property: "reveal"
+            from: 0
+            to: 1
+            duration: 390
+            easing.type: Easing.OutCubic
+        }
+        NumberAnimation {
+            target: root
+            property: "backdropOpacity"
+            from: 0
+            to: 0.72
+            duration: 280
+            easing.type: Easing.OutCubic
+        }
     }
 
     IpcHandler {
@@ -139,7 +162,7 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         color: "#99070a10"
-        opacity: root.loading ? 0.45 : 0.72
+        opacity: root.backdropOpacity
         MouseArea { anchors.fill: parent; onClicked: root.commitSelection() }
     }
 
@@ -147,6 +170,9 @@ PanelWindow {
         anchors.centerIn: parent
         width: 760
         height: 540
+        opacity: root.reveal
+        scale: 0.94 + (0.06 * root.reveal)
+        transformOrigin: Item.Center
 
         Rectangle {
             anchors.centerIn: parent
@@ -154,6 +180,9 @@ PanelWindow {
             height: 520
             radius: 260
             color: Qt.alpha(root.bg, 0.84)
+            opacity: root.reveal
+            scale: 0.88 + (0.12 * root.reveal)
+            transformOrigin: Item.Center
             border.width: 1
             border.color: Qt.alpha(root.accent, 0.45)
         }
@@ -165,10 +194,13 @@ PanelWindow {
                 required property int index
                 property real angle: (index / Math.max(1, root.windows.length)) * Math.PI * 2 - Math.PI / 2
                 property real orbitRadius: root.windows.length <= 4 ? 165 : 208
+                opacity: root.reveal
+                scale: 0.82 + (0.18 * root.reveal)
+                transformOrigin: Item.Center
                 width: 172
                 height: 78
-                x: 380 + Math.cos(angle) * orbitRadius - width / 2
-                y: 270 + Math.sin(angle) * orbitRadius - height / 2
+                x: 380 + Math.cos(angle) * orbitRadius * root.reveal - width / 2
+                y: 270 + Math.sin(angle) * orbitRadius * root.reveal - height / 2
                 radius: 16
                 color: index === root.selectedIndex ? Qt.alpha(root.accent, 0.23) : Qt.alpha(root.surface, 0.92)
                 border.width: index === root.selectedIndex ? 2 : 1
@@ -195,6 +227,9 @@ PanelWindow {
             width: 214
             height: 214
             radius: 107
+            opacity: root.reveal
+            scale: 0.9 + (0.1 * root.reveal)
+            transformOrigin: Item.Center
             color: root.surfaceHigh
             border.width: 2
             border.color: root.accent
