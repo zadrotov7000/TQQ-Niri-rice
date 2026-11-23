@@ -7,7 +7,7 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 - **Control Center:** the animated Quickshell dashboard with calendar, clock, weather, media, network, system information, volume and brightness controls. Its Niri shortcut (usually Mod+Shift+Space) and the Waybar clock **toggle** the panel: press again to close with the existing animation; Escape and the X button also close it. The power menu is in its top-right corner beside the close button.
 - **Application launcher:** the Waybar magnifying-glass button opens the Quickshell application search. Results use application icons from their desktop entries and the active icon theme; entries with missing icons fall back to a letter. The panel expands from a compact box under the launcher icon. The installer assigns `Mod+D` when free and chooses a documented fallback if it is already used.
 - **Wi-Fi panel:** `Mod+N` (or the installer's free fallback) opens a Quickshell network panel. It scans NetworkManager, shows signal strength and security, prompts for a password when needed, and connects through NetworkManager.
-- **Lock screen:** Quickshell uses the native Wayland `WlSessionLock` protocol and PAM authentication, with the current wallpaper blurred behind the clock/date and a password form revealed by Enter. The lock remains held by the compositor if Quickshell exits unexpectedly.
+- **Lock screen:** the secure Quickshell `WlSessionLock` and PAM screen places the clock/date at upper left, local weather at lower left, a navigable calendar at right, and a centered profile avatar with the password field beneath it. The avatar can be changed through Control Center. The compositor holds the lock even if Quickshell exits unexpectedly.
 - **Radial window switcher:** `Alt+Tab` opens a circular window selector. Repeated `Alt+Tab` moves forward; `Alt+Shift+Tab` moves backward. The highlighted window is focused when the switcher times out, and Escape cancels.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens above the desktop. **Mod+B toggles** the gallery: first press opens, second closes, without spawning extra copies. Escape closes it too. Browse with Left/Right or the mouse wheel, click a side card to move, and press Enter to apply.
 - **Wallpaper transition:** the repository uses `awww` when available. Wallpaper changes use a circular center-out reveal; `swaybg` remains the fallback. Wallpaper changes regenerate Matugen colors and do not reload the Niri config.
@@ -131,6 +131,22 @@ To explicitly choose one when both are installed:
 
 The updater backs up `~/.config/niri/config.kdl`, changes only the `Mod+Return` shortcut, and runs `niri validate --config` before applying it. If the existing Niri config is a symlink, the updater leaves it untouched and requires manual integration. Other shortcuts, the Russian/English keyboard layout and terminal settings are preserved.
 
+## Lock screen layout and avatar
+
+The lock screen uses the existing Quickshell Wayland session-lock protocol and PAM authentication. Its four regions are arranged as follows: **clock/date on the upper left**, **weather on the lower left** (from the same `tqq-region weather` source as Control Center), **calendar on the right**, and a **central user avatar, account name and password field**. The calendar supports changing months; weather refreshes every 15 minutes while locked, with a fallback message when unavailable.
+
+To customize the profile avatar, open **Control Center → PROFILE / AVATAR** (or click the gear icon). Enter an absolute image path and press **Save**, or choose **BROWSE IMAGE**. Browsing needs optional `zenity` or `kdialog` installed: on Debian, `sudo apt install zenity`. Browsing closes the Control Center before opening the native picker. Accepted images are PNG, JPEG or WebP and at most 12 MB. The image is copied into `~/.local/share/tqq-niri-rice/`, and the lock screen reads its location through `tqq-avatar get`. No credentials are stored in the avatar helper; PAM still handles the password.
+
+To update **only** the lock screen and Control Center (without reinstalling TQQ or altering Niri bindings):
+
+```bash
+cd ~/TQQ-Niri-rice
+git pull --ff-only
+./scripts/update-lockscreen
+```
+
+Close and reopen Control Center after applying. The updater backs up the previous QML files and helper under `~/.local/state/tqq-niri-rice/backups/lock-screen-*`. **Important:** because this is a real session lock, test the design while you know your working account password; a Quickshell error can leave the compositor's lock active until the session is recovered.
+
 ## Optional Kitty / Ghostty terminal themes
 
 Two independent terminal themes ship with TQQ:
@@ -211,7 +227,7 @@ The installer preserves existing Niri settings and unrelated keybindings. It res
 - `quickshell/tqq-dashboard/` — Control Center and embedded power menu.
 - `quickshell/tqq-launcher/` — expanding application launcher.
 - `quickshell/tqq-wifi/` — Wi-Fi picker.
-- `quickshell/tqq-lock/` — PAM-authenticated lock screen.
+- `quickshell/tqq-lock/` — secure PAM-authenticated lock screen with profile, clock, weather and calendar.
 - `quickshell/tqq-switcher/` — radial Alt+Tab selector.
 - `wallpaper-gallery/` — native Rust/GTK4 wallpaper gallery.
 - `config/kitty/` and `config/ghostty/` — optional terminal themes and starter palettes.
