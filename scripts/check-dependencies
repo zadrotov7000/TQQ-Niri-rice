@@ -7,11 +7,18 @@ for command_name in "${required[@]}"; do
     command -v "$command_name" >/dev/null 2>&1 || missing+=("$command_name")
 done
 has_qsb() {
-    command -v qsb >/dev/null 2>&1 \\
-        || command -v qsb-qt6 >/dev/null 2>&1 \\
-        || [[ -x /usr/lib/qt6/bin/qsb ]] \\
-        || [[ -x /usr/lib64/qt6/bin/qsb ]] \\
-        || [[ -x /usr/lib/x86_64-linux-gnu/qt6/bin/qsb ]]
+    local candidate
+    for candidate in qsb qsb-qt6; do
+        if command -v "$candidate" >/dev/null 2>&1; then
+            return 0
+        fi
+    done
+    for candidate in /usr/lib/qt6/bin/qsb /usr/lib64/qt6/bin/qsb /usr/lib/x86_64-linux-gnu/qt6/bin/qsb; do
+        if [[ -x "$candidate" ]]; then
+            return 0
+        fi
+    done
+    return 1
 }
 if ! has_qsb; then
     missing+=("Qt Shader Baker (qsb)")
