@@ -89,7 +89,8 @@ def ensure_russian_keyboard(text: str) -> str:
                 contents = contents[:current.start(1)] + updated + contents[current.end(1):]
         else:
             contents += f'\n            options "{toggle}"'
-        return contents
+        # Keep the closing KDL brace on its own line.
+        return contents if contents.endswith("\n") else contents + "\n"
 
     input_match = re.search(r"(?m)^[ \t]*input[ \t]*\{", text)
     if not input_match:
