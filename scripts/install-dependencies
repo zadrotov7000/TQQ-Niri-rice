@@ -79,8 +79,11 @@ install_matugen() {
 
 case "${ID:-}" in
     debian|ubuntu|linuxmint|pop)
+        if ! grep -Rqs "trixie-backports" /etc/apt/sources.list /etc/apt/sources.list.d 2>/dev/null; then
+            echo "deb http://deb.debian.org/debian trixie-backports main" | run_privileged tee /etc/apt/sources.list.d/tqq-trixie-backports.list >/dev/null
+        fi
         run_privileged apt-get update
-        packages=(waybar sway-notification-center fuzzel swaybg fonts-font-awesome fonts-jetbrains-mono hicolor-icon-theme python3 cargo rustc pkg-config libgtk-4-dev libgtk4-layer-shell-dev)
+        packages=(waybar sway-notification-center fuzzel swaybg fonts-font-awesome fonts-jetbrains-mono hicolor-icon-theme python3 cargo rustc pkg-config libgtk-4-dev libgtk4-layer-shell-dev playerctl pavucontrol network-manager blueman lm-sensors)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire-bin wireplumber)
         fi
@@ -93,7 +96,10 @@ case "${ID:-}" in
                 packages+=(cargo build-essential)
             fi
         fi
-        run_privileged apt-get install "${packages[@]}"\n        if ! command -v quickshell >/dev/null 2>&1; then\n            run_privileged apt-get install -y -t trixie-backports quickshell\n        fi
+        run_privileged apt-get install -y "${packages[@]}"
+        if ! command -v quickshell >/dev/null 2>&1; then
+            run_privileged apt-get install -y -t trixie-backports quickshell
+        fi
         install_matugen
         ;;
     arch|endeavouros|manjaro|cachyos)
