@@ -191,6 +191,13 @@ def main() -> int:
     )
     text = text.replace('hotkey-overlay-title="Miku Quick Settings"', 'hotkey-overlay-title="TQQ Quick Settings"')
 
+    # Replace the legacy stock swaylock shortcut, not the user's navigation binds.
+    text = re.sub(
+        r'(?m)^[ \t]*(?:Mod|Super)\+Alt\+L[ \t]+hotkey-overlay-title="Lock the Screen: swaylock"[ \t]*\{[ \t]*spawn[ \t]+"swaylock";[ \t]*\}[ \t]*(?:\n|$)',
+        "",
+        text,
+    )
+
     # TQQ owns Alt+Tab for the radial switcher and Win+Enter for the selected
     # Kitty/Ghostty terminal. Remove only those explicit user-requested binds.
     text = remove_keybindings(text, [
@@ -232,7 +239,7 @@ def main() -> int:
     wifi_menu = json.dumps(str(local_bin / "tqq-wifi"), ensure_ascii=False)
     dashboard_key = choose(["Mod+Shift+Space", "Mod+Alt+Space", "Mod+Ctrl+Space"])
     dashboard = json.dumps(str(local_bin / "tqq-dashboard"), ensure_ascii=False)
-    lock_key = choose(["Mod+L", "Mod+Shift+L", "Mod+Ctrl+L", "Mod+Alt+L", "Mod+Ctrl+Shift+L", "Mod+Alt+Shift+L"])
+    lock_key = choose(["Mod+Alt+L", "Mod+L", "Mod+Alt+Shift+L", "Mod+Shift+L", "Mod+Ctrl+L", "Mod+Ctrl+Shift+L"])
     lock_screen = json.dumps(str(local_bin / "tqq-lock-screen"), ensure_ascii=False)
 
     # Niri does not supply default keybindings once a binds block is customized.
