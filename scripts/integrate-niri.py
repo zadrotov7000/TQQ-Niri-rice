@@ -162,10 +162,13 @@ def main() -> int:
     wallpaper = json.dumps(str(local_bin / "select-wallpaper"), ensure_ascii=False)
     wifi_key = choose(["Mod+N", "Mod+Shift+N", "Mod+Ctrl+N"])
     wifi_menu = json.dumps(str(local_bin / "wifi-menu.py"), ensure_ascii=False)
+    dashboard_key = choose(["Mod+Shift+Space", "Mod+Alt+Space", "Mod+Ctrl+Space"])
+    dashboard = json.dumps(str(local_bin / "tqq-dashboard"), ensure_ascii=False)
     managed_binds = (
         "\n    // BEGIN TQQ NIRI BINDS\n"
         f'    {wallpaper_key} hotkey-overlay-title="TQQ Wallpaper Picker" {{ spawn {wallpaper}; }}\n'
         f'    {wifi_key} hotkey-overlay-title="TQQ Wi-Fi" {{ spawn {wifi_menu}; }}\n'
+        f'    {dashboard_key} hotkey-overlay-title="TQQ Dashboard" {{ spawn {dashboard}; }}\n'
         f'    {launcher_key} hotkey-overlay-title="TQQ App Launcher" {{ spawn "fuzzel"; }}\n'
         "    // END TQQ NIRI BINDS\n"
     )
@@ -175,7 +178,7 @@ def main() -> int:
         text = text.rstrip() + "\n\nbinds {" + managed_binds + "}\n"
 
     startup_entries = []
-    for app in ("waybar", "swaync"):
+    for app in ("swaync",):
         if not re.search(
             r"(?m)^\s*(?:spawn-at-startup|spawn-sh-at-startup)\b[^\n]*\b" + app + r"\b",
             text,
@@ -210,7 +213,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper ({wallpaper_key}), Wi-Fi ({wifi_key}), and launcher ({launcher_key}) shortcuts."
+        f"and added TQQ wallpaper ({wallpaper_key}), Wi-Fi ({wifi_key}), dashboard ({dashboard_key}), and launcher ({launcher_key}) shortcuts."
     )
     return 0
 
