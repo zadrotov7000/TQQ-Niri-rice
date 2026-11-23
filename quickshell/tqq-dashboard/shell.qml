@@ -32,6 +32,8 @@ PanelWindow {
     property string mediaInfo: "No active player"
     property string volumeText: "—"
     property real volumeLevel: 0.5
+    property int brightnessLevel: 50
+    property bool brightnessAvailable: false
 
     property color bg: "#111014"
     property color surface: "#211e25"
@@ -68,6 +70,7 @@ PanelWindow {
         bluetooth.running = false; bluetooth.running = true;
         media.running = false; media.running = true;
         audio.running = false; audio.running = true;
+        brightness.running = false; brightness.running = true;
     }
 
     function loadWeather() {
@@ -200,6 +203,18 @@ PanelWindow {
                     root.volumeLevel = Math.max(0, Math.min(1, Number(match[1])));
                     root.volumeText = Math.round(root.volumeLevel * 100) + "%";
                 }
+            }
+        }
+    }
+    Process {
+        id: brightness
+        command: ["bash", "-lc", "brightnessctl -m 2>/dev/null | head -n1 | cut -d, -f5 | tr -d '%'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const value = parseInt(text.trim(), 10);
+                root.brightnessAvailable = !isNaN(value);
+                if (!isNaN(value))
+                    root.brightnessLevel = Math.max(0, Math.min(100, value));
             }
         }
     }
@@ -524,22 +539,121 @@ PanelWindow {
                     }
                 }
                 Rectangle {
-                    Layout.preferredWidth: 260
+                    Layout.preferredWidth: 205
                     Layout.preferredHeight: 72
-                    radius: 13
-                    color: Qt.alpha(root.surface, 0.8)
+                    radius: 14
+                    color: Qt.alpha(root.surface, 0.88)
+                    border.width: 1
+                    border.color: Qt.alpha(root.accent, 0.16)
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 10
-                        Text { text: "VOLUME  " + root.volumeText; color: root.fg; font.pixelSize: 10 }
-                        Slider {
+                        anchors.margins: 11
+                        spacing: 5
+                        RowLayout {
                             Layout.fillWidth: true
+                            Text { text: "◖"; color: root.accent; font.pixelSize: 15 }
+                            Text { text: "VOLUME"; color: root.fg; font.pixelSize: 9; font.bold: true; font.letterSpacing: 0.8 }
+                            Item { Layout.fillWidth: true }
+                            Text { text: root.volumeText; color: root.muted; font.pixelSize: 10 }
+                        }
+                        Slider {
+                            id: volumeSlider
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 22
                             from: 0
                             to: 1
                             value: root.volumeLevel
                             onMoved: {
                                 root.volumeLevel = value;
                                 Quickshell.execDetached(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", value.toFixed(2)]);
+                            }
+                            background: Rectangle {
+                                x: volumeSlider.leftPadding
+                                y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                                width: volumeSlider.availableWidth
+                                height: 5
+                                radius: 3
+                                color: root.surfaceHigh
+                                Rectangle {
+                                    width: volumeSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    radius: 3
+                                    gradient: Gradient {
+                                        GradientStop { position: 0; color: "#82d9e5" }
+                                        GradientStop { position: 1; color: root.accent }
+                                    }
+                                }
+                            }
+                            handle: Rectangle {
+                                x: volumeSlider.leftPadding + volumeSlider.visualPosition * (volumeSlider.availableWidth - width)
+                                y: volumeSlider.topPadding + volumeSlider.availableHeight / 2 - height / 2
+                                width: 13
+                                height: 13
+                                radius: 7
+                                color: root.fg
+                                border.width: 2
+                                border.color: root.accent
+                            }
+                        }
+                    }
+                }
+                Rectangle {
+                    Layout.preferredWidth: 205
+                    Layout.preferredHeight: 72
+                    radius: 14
+                    color: Qt.alpha(root.surface, 0.88)
+                    border.width: 1
+                    border.color: Qt.alpha(root.accent, 0.16)
+                    opacity: root.brightnessAvailable ? 1 : 0.62
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: 11
+                        spacing: 5
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text { text: "☼"; color: root.accent; font.pixelSize: 17 }
+                            Text { text: "BRIGHTNESS"; color: root.fg; font.pixelSize: 9; font.bold: true; font.letterSpacing: 0.8 }
+                            Item { Layout.fillWidth: true }
+                            Text { text: root.brightnessAvailable ? root.brightnessLevel + "%" : "N/A"; color: root.muted; font.pixelSize: 10 }
+                        }
+                        Slider {
+                            id: brightnessSlider
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 22
+                            from: 1
+                            to: 100
+                            value: root.brightnessLevel
+                            enabled: root.brightnessAvailable
+                            onMoved: {
+                                root.brightnessLevel = Math.round(value);
+                                Quickshell.execDetached(["brightnessctl", "set", Math.round(value) + "%"]);
+                            }
+                            background: Rectangle {
+                                x: brightnessSlider.leftPadding
+                                y: brightnessSlider.topPadding + brightnessSlider.availableHeight / 2 - height / 2
+                                width: brightnessSlider.availableWidth
+                                height: 5
+                                radius: 3
+                                color: root.surfaceHigh
+                                Rectangle {
+                                    width: brightnessSlider.visualPosition * parent.width
+                                    height: parent.height
+                                    radius: 3
+                                    gradient: Gradient {
+                                        GradientStop { position: 0; color: "#f4d58d" }
+                                        GradientStop { position: 1; color: root.accent }
+                                    }
+                                }
+                            }
+                            handle: Rectangle {
+                                x: brightnessSlider.leftPadding + brightnessSlider.visualPosition * (brightnessSlider.availableWidth - width)
+                                y: brightnessSlider.topPadding + brightnessSlider.availableHeight / 2 - height / 2
+                                width: 13
+                                height: 13
+                                radius: 7
+                                color: root.fg
+                                border.width: 2
+                                border.color: root.accent
                             }
                         }
                     }
