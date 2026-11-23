@@ -19,6 +19,11 @@ if [[ -n "$ipc_command" ]] && "$ipc_command" ipc call tqq-switcher "$action" >/d
     exit 0
 fi
 
+# Closing an inactive switcher must never open a new one.
+if [[ "$action" == "close" ]]; then
+    exit 0
+fi
+
 if ! command -v quickshell >/dev/null 2>&1; then
     echo "Quickshell is not installed." >&2
     exit 1
