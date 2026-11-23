@@ -59,6 +59,70 @@ for arg in "$@"; do
     esac
 done
 
+# One in-place progress bar. Percentages mean completed install stages, not elapsed time.
+PROGRESS=0
+PROGRESS_SPINNER_PID=""
+INSTALL_LOG=""
+
+progress_render() {
+    local percent="$1" label="$2" pulse="${3:-}"
+    local filled=$((percent * 24 / 100))
+    local full empty
+    printf -v full '%*s' "$filled" ''
+    full="${full// /#}"
+    printf -v empty '%*s' "$((24 - filled))" ''
+    empty="${empty// /-}"
+    if [[ -t 2 ]]; then
+        printf '\r\033[2K[TQQ] [%s%s] %3d%% %s %s' "$full" "$empty" "$percent" "$label" "$pulse" >&2
+    else
+        printf '[TQQ] [%s%s] %3d%% %s\n' "$full" "$empty" "$percent" "$label" >&2
+    fi
+}
+progress_mark() {
+    PROGRESS="$1"
+    progress_render "$PROGRESS" "$2"
+}
+progress_stop_spinner() {
+    if [[ -n "$PROGRESS_SPINNER_PID" ]]; then
+        kill "$PROGRESS_SPINNER_PID" 2>/dev/null || true
+        wait "$PROGRESS_SPINNER_PID" 2>/dev/null || true
+        PROGRESS_SPINNER_PID=""
+    fi
+}
+progress_run() {
+    local percent="$1" label="$2"
+    shift 2
+    progress_render "$PROGRESS" "$label"
+    if [[ -t 2 ]]; then
+        (
+            local frames=('|' '/' '-' '\') index=0
+            while :; do
+                progress_render "$PROGRESS" "$label" "${frames[index % ${#frames[@]}]}"
+                index=$((index + 1))
+                sleep 0.25
+            done
+        ) &
+        PROGRESS_SPINNER_PID=$!
+    fi
+    if "$@" >> "$INSTALL_LOG" 2>&1; then
+        progress_stop_spinner
+        progress_mark "$percent" "$label"
+    else
+        local status=$?
+        progress_stop_spinner
+        printf '\n[TQQ] Failed at: %s (exit %s). Last 40 log lines:\n' "$label" "$status" >&2
+        tail -n 40 "$INSTALL_LOG" >&2
+        return "$status"
+    fi
+}
+progress_finish() {
+    progress_stop_spinner
+    if [[ -t 2 ]]; then printf '\n' >&2; fi
+}
+trap progress_finish EXIT
+
+progress_mark 10 "Checking dependencies"
+
 if ((INSTALL_DEPS)); then
     "$ROOT/scripts/install-dependencies"
 elif ((!SKIP_DEPS)) && ! "$ROOT/scripts/check-dependencies"; then
@@ -73,10 +137,14 @@ elif ((!SKIP_DEPS)) && ! "$ROOT/scripts/check-dependencies"; then
     fi
 fi
 
+progress_mark 20 "Dependencies checked"
 mkdir -p "$BACKUP" "$LOCAL_BIN" "$DATA_HOME/tqq-niri-rice/wallpapers" "$CONFIG_HOME/tqq-niri-rice"
+INSTALL_LOG="$BACKUP/install.log"
+: > "$INSTALL_LOG"
+progress_mark 25 "Preparing installation"
 
 # Compile Quickshell GPU shaders before changing the installed configuration.
-bash "$ROOT/scripts/build-squishy-shaders" \
+progress_run 35 "Compiling GPU shaders" bash "$ROOT/scripts/build-squishy-shaders" \
     "$ROOT/quickshell/tqq-squishy" \
     "$BACKUP/squishy-shaders"
 
@@ -93,6 +161,7 @@ for config_name in fetch matugen swaync waybar; do
     mkdir -p "$target_config"
     cp -a "$source_config/." "$target_config/"
 done
+progress_mark 45 "Installing desktop configs"
 
 # Install the Quickshell applications into their standard config directory.
 # Existing TQQ app configs are backed up before project files are updated.
@@ -112,15 +181,17 @@ done
 # ShaderEffect loads these compiled files relative to the installed Squishy config.
 install -m 0644 "$BACKUP/squishy-shaders/squishy.vert.qsb" "$QUICKSHELL_CONFIG/tqq-squishy/squishy.vert.qsb"
 install -m 0644 "$BACKUP/squishy-shaders/squishy.frag.qsb" "$QUICKSHELL_CONFIG/tqq-squishy/squishy.frag.qsb"
+progress_mark 52 "Installing Quickshell apps"
 
 # Build and install the native Rust wallpaper gallery.
 if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
     mkdir -p "$BACKUP/local-bin"
     cp -a "$LOCAL_BIN/tqq-wallpaper-gallery" "$BACKUP/local-bin/tqq-wallpaper-gallery"
 fi
-bash "$ROOT/scripts/build-wallpaper-gallery" "$LOCAL_BIN/tqq-wallpaper-gallery"
+progress_run 75 "Building Rust wallpaper gallery" bash "$ROOT/scripts/build-wallpaper-gallery" "$LOCAL_BIN/tqq-wallpaper-gallery"
 
 cp -an "$ROOT/wallpapers/." "$DATA_HOME/tqq-niri-rice/wallpapers/"
+progress_mark 79 "Copying wallpapers"
 
 # Install only the launchers and helpers used by the current Quickshell setup.
 for script_name in \
@@ -144,6 +215,7 @@ if [[ -e "$LOCAL_BIN/integrate-niri.py" ]]; then
     cp -a "$LOCAL_BIN/integrate-niri.py" "$BACKUP/local-bin/integrate-niri.py"
 fi
 install -m 0755 "$ROOT/scripts/integrate-niri.py" "$LOCAL_BIN/integrate-niri.py"
+progress_mark 85 "Installing launchers"
 
 NIRI_CONFIG="$CONFIG_HOME/niri/config.kdl"
 NIRI_CONFIG_BACKED_UP=0
@@ -194,6 +266,7 @@ if command -v niri >/dev/null 2>&1 && ! niri validate; then
     echo "Niri validation failed; restored the previous config when available." >&2
     exit 1
 fi
+progress_mark 91 "Validating Niri config"
 
 # Seed the first wallpaper only if the user has not selected one before.
 STATE_FILE="$STATE_HOME/tqq-niri-rice/current-wallpaper"
@@ -207,13 +280,19 @@ fi
 
 "$LOCAL_BIN/configure-swaync.py" "$CONFIG_HOME/swaync/config.json"
 "$LOCAL_BIN/configure-fetch-autostart"
+progress_mark 95 "Configuring desktop services"
 
 if [[ -s "$STATE_FILE" ]]; then
-    if ! "$LOCAL_BIN/select-wallpaper" --restore; then
+    if ! progress_run 99 "Applying wallpaper and colors" "$LOCAL_BIN/select-wallpaper" --restore; then
         echo "Warning: saved wallpaper could not be applied. Check awww/swaybg and Matugen." >&2
     fi
 fi
 
+progress_mark 100 "Installation complete"
+progress_finish
+trap - EXIT
+
 echo "TQQ Niri rice installed. Dashboard: $LOCAL_BIN/tqq-dashboard (Super+Shift+Space)."
 echo "Backup: $BACKUP"
+echo "Installation log: $INSTALL_LOG"
 echo "Run $LOCAL_BIN/check-dependencies to check required commands."
