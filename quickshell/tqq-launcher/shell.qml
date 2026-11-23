@@ -150,6 +150,7 @@ PanelWindow {
                 spacing: 5
                 model: DesktopEntries.applications
                 currentIndex: 0
+                onCurrentIndexChanged: if (currentItem) root.selectedEntry = currentItem.entry
                 boundsBehavior: Flickable.StopAtBounds
                 ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
                 delegate: Rectangle {
