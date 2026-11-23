@@ -4,7 +4,7 @@
     "source": "debian",
     "padding": {
       "top": 1,
-      "right": 3
+      "right": 2
     }
   },
   "display": {
@@ -22,109 +22,126 @@
   "modules": [
     {
       "type": "custom",
-      "format": "╭──────────────────────────────────────────────────────╮",
-      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}"
+      "format": "╭───────────────────────────────────────────╮",
+      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
+      "key": " "
     },
     {
       "type": "os",
-      "key": "│ OS      → ",
-      "format": "{pretty-name<-42} {#keys}│{#}",
+      "key": "│ OS       → ",
+      "format": "{pretty-name<30} {#keys}│{#}",
       "keyColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
-      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}"
+      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}",
+      "keyWidth": 0
     },
     {
       "type": "kernel",
-      "key": "│ Kernel  → ",
-      "format": "{release<-42} {#keys}│{#}",
+      "key": "│ Kernel   → ",
+      "format": "{release<30} {#keys}│{#}",
       "keyColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
-      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}"
+      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}",
+      "keyWidth": 0
     },
     {
       "type": "shell",
-      "key": "│ Shell   → ",
-      "format": "{pretty-name<16}{version<-26} {#keys}│{#}",
+      "key": "│ Shell    → ",
+      "format": "{pretty-name<8}{version<22} {#keys}│{#}",
       "keyColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
-      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}"
+      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}",
+      "keyWidth": 0
     },
     {
       "type": "custom",
-      "format": "╰──────────────────────────────────────────────────────╯",
-      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}"
+      "format": "╰───────────────────────────────────────────╯",
+      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
+      "key": " "
     },
     "break",
     {
       "type": "custom",
-      "format": "╭──────────────────────────────────────────────────────╮",
-      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}"
+      "format": "╭───────────────────────────────────────────╮",
+      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
+      "key": " "
     },
     {
       "type": "terminal",
-      "key": "│ Terminal→ ",
-      "format": "{pretty-name<16}{version<-26} {#keys}│{#}",
+      "key": "│ Terminal → ",
+      "format": "{pretty-name<12}{version<18} {#keys}│{#}",
       "keyColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
-      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}"
+      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}",
+      "keyWidth": 0
     },
     {
       "type": "wm",
-      "key": "│ WM      → ",
-      "format": "{pretty-name<-42} {#keys}│{#}",
+      "key": "│ WM       → ",
+      "format": "{pretty-name<30} {#keys}│{#}",
       "keyColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
-      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}"
+      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}",
+      "keyWidth": 0
     },
     {
       "type": "custom",
-      "format": "╰──────────────────────────────────────────────────────╯",
-      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}"
+      "format": "╰───────────────────────────────────────────╯",
+      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
+      "key": " "
     },
     "break",
     {
       "type": "custom",
-      "format": "╭──────────────────────────────────────────────────────╮",
-      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}"
+      "format": "╭───────────────────────────────────────────╮",
+      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
+      "key": " "
     },
     {
       "type": "cpu",
-      "key": "│ CPU     → ",
-      "format": "{name<-42} {#keys}│{#}",
+      "key": "│ CPU      → ",
+      "format": "{name<30} {#keys}│{#}",
       "keyColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
-      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}"
+      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}",
+      "keyWidth": 0
     },
     {
       "type": "gpu",
-      "key": "│ GPU     → ",
-      "format": "{name<-42} {#keys}│{#}",
+      "key": "│ GPU      → ",
+      "format": "{name<30} {#keys}│{#}",
       "keyColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
-      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}"
+      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}",
+      "keyWidth": 0
     },
     {
       "type": "custom",
-      "format": "╰──────────────────────────────────────────────────────╯",
-      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}"
+      "format": "╰───────────────────────────────────────────╯",
+      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
+      "key": " "
     },
     "break",
     {
       "type": "custom",
-      "format": "╭──────────────────────────────────────────────────────╮",
-      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}"
+      "format": "╭───────────────────────────────────────────╮",
+      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
+      "key": " "
     },
     {
       "type": "memory",
-      "key": "│ RAM     → ",
-      "format": "{used<10} / {total<10} ({percentage<8})         {#keys}│{#}",
+      "key": "│ RAM      → ",
+      "format": "{used<10} / {total<10} {percentage<7} {#keys}│{#}",
       "keyColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
-      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}"
+      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}",
+      "keyWidth": 0
     },
     {
       "type": "swap",
-      "key": "│ Swap    → ",
-      "format": "{used<10} / {total<10} ({percentage<8})         {#keys}│{#}",
+      "key": "│ Swap     → ",
+      "format": "{used<10} / {total<10} {percentage<7} {#keys}│{#}",
       "keyColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
-      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}"
+      "outputColor": "38;2;{{colors.on_surface.default.red}};{{colors.on_surface.default.green}};{{colors.on_surface.default.blue}}",
+      "keyWidth": 0
     },
     {
       "type": "custom",
-      "format": "╰──────────────────────────────────────────────────────╯",
-      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}"
+      "format": "╰───────────────────────────────────────────╯",
+      "outputColor": "38;2;{{colors.primary.default.red}};{{colors.primary.default.green}};{{colors.primary.default.blue}}",
+      "key": " "
     }
   ]
 }
