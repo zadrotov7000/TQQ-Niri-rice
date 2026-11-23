@@ -10,7 +10,7 @@ Actual performance depends on the hardware, graphics drivers, display resolution
 
 ## Included
 
-- **Island Waybar:** a dark translucent top bar with compact burgundy-edged capsules, workspaces, a centered clock, notifications, network, audio, battery, tray, and a launcher icon. The launcher opens Fuzzel.
+- **Island Waybar:** a dark translucent top bar with compact burgundy-edged capsules, workspaces, a centered clock, CPU, memory and disk usage, notifications, network, audio, battery, tray, and a launcher icon. The launcher opens Fuzzel with `Mod+D` (Win+D; if occupied, the installer tries modified D shortcuts and never uses Win+Space).
 - **SwayNC quick settings:** volume and brightness sliders, media controls, Do Not Disturb, a Wi-Fi picker, and notifications. The installer enables brightness only when it finds a backlight device.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens on the Wayland overlay layer; it is not managed as a normal desktop window. The desktop wallpaper and Waybar stay visible through its transparent background. The gallery appears immediately and decodes the selected wallpaper plus nearby previews in a background worker, caching them for the session. Floating wallpaper cards slide smoothly when browsing, with angled side previews and a live five-color palette sampled from the selected image. Character wallpapers show the character's name instead of the raw filename. Use Left/Right or the mouse wheel to browse, click a side card to move to it, click the centered card or press Enter to apply, and press Escape to close.
 - **Fuzzel:** application launcher styled as a compact dark search panel near the top of the screen, with fuzzy matching. Reboot and power-off ask for confirmation.
@@ -40,7 +40,7 @@ Then run the installer:
 ./install.sh
 ```
 
-The installer keeps existing Niri settings and keybindings, saves a dated backup, migrates known leftover Itsuki/Miku labels, removes the duplicate legacy Kitty blur rule, and adds TQQ startup entries plus wallpaper, Wi-Fi, and application-launcher shortcuts.
+The installer keeps existing Niri settings and keybindings, removes the old TQQ Win+Space-to-Fuzzel binding, saves a dated backup, migrates known leftover Itsuki/Miku labels, removes the duplicate legacy Kitty blur rule, and adds TQQ startup entries plus wallpaper, Wi-Fi, and application-launcher shortcuts.
 
 To install dependencies explicitly:
 
@@ -83,6 +83,7 @@ The rice adds wallpaper and Wi-Fi shortcuts to the existing Niri config and leav
 | Action | Preferred key |
 | --- | --- |
 | Open wallpaper gallery, apply wallpaper, and update colors | `Mod+B` (Win+B) |
+| Open the Fuzzel application search | `Mod+D` (Win+D; modified D fallback if occupied) |
 | Open the TQQ Wi-Fi picker | `Mod+N` (Win+N; fallback `Mod+Shift+N` or `Mod+Ctrl+N`) |
 
 Waybar's audio capsule opens the SwayNC quick-settings panel. Right-clicking the notification capsule toggles Do Not Disturb.
