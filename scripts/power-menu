@@ -11,10 +11,11 @@ choice="$(printf '%s\n' \
 
 case "$choice" in
     "Lock screen")
-        if command -v swaylock >/dev/null 2>&1; then
-            exec swaylock
+        if command -v tqq-lock-screen >/dev/null 2>&1; then
+            exec tqq-lock-screen
         fi
-        exec loginctl lock-session
+        echo "TQQ lock screen helper is missing. Re-run the TQQ installer." >&2
+        exit 1
         ;;
     "Log out of Niri") exec niri msg action quit ;;
     "Suspend") exec systemctl suspend ;;
