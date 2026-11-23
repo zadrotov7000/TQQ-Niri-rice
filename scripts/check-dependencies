@@ -35,9 +35,11 @@ if { ! command -v awww >/dev/null 2>&1 || ! command -v awww-daemon >/dev/null 2>
     missing+=("awww or swaybg")
 fi
 
-# Font Awesome does not provide all the Nerd Font icons used in the bar.
-if command -v fc-list >/dev/null 2>&1 && ! fc-list -f '%{family}\n' | grep -F 'Symbols Nerd Font' >/dev/null; then
-    missing+=("Symbols Nerd Font (run scripts/install-icon-fonts)")
+# Font Awesome is the default Waybar glyph font; Nerd Font is optional fallback.
+if command -v fc-list >/dev/null 2>&1; then
+    if ! fc-list -f '%{family}\n' | grep -E 'FontAwesome|Font Awesome' >/dev/null; then
+        missing+=("FontAwesome icons (install fonts-font-awesome)")
+    fi
 fi
 
 if ((${#missing[@]} == 0)); then
@@ -67,5 +69,5 @@ if [[ -r /etc/os-release ]]; then
             ;;
     esac
 fi
-echo "Install the missing icons via scripts/install-icon-fonts."
+echo "For Waybar icons, install the Font Awesome font (Debian: fonts-font-awesome)."
 exit 1

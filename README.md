@@ -57,10 +57,10 @@ mkdir -p ~/.config/waybar
 cp ~/.config/waybar/config ~/.config/waybar/config.before-tqq-island 2>/dev/null || true
 cp ~/.config/waybar/style.css ~/.config/waybar/style.css.before-tqq-island 2>/dev/null || true
 cp config/waybar/config config/waybar/style.css ~/.config/waybar/
-pkill -SIGUSR2 -x waybar || waybar >/dev/null 2>&1 &
+pkill -SIGUSR2 -x waybar
 ```
 
-The border cycles using lightweight GTK3 CSS keyframes; it does not affect Niri window borders, Kitty or other applications. If icons remain empty, check `fc-match FontAwesome` and restart Waybar after installing the font.
+The border cycles using lightweight GTK3 CSS keyframes; it does not affect Niri window borders, Kitty or other applications. If Waybar is not running, start it with `waybar &` from your Niri session. If icons remain empty, check `fc-match FontAwesome` and restart Waybar after installing the font.
 
 ## Keybindings
 
