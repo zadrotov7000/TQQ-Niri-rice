@@ -16,3 +16,7 @@ output_path = '~/.config/swaync/colors.css'
 [templates.fuzzel]
 input_path = '~/.config/matugen/templates/fuzzel-colors.ini'
 output_path = '~/.config/fuzzel/colors.ini'
+
+[templates.gtklock]
+input_path = '~/.config/matugen/templates/gtklock-colors.css'
+output_path = '~/.config/gtklock/colors.css'
