@@ -24,3 +24,7 @@ output_path = '~/.config/kitty/tqq-colors.conf'
 [templates.ghostty]
 input_path = '~/.config/matugen/templates/ghostty-colors.conf'
 output_path = '~/.config/ghostty/tqq-colors.conf'
+
+[templates.fastfetch]
+input_path = '~/.config/matugen/templates/fastfetch.jsonc'
+output_path = '~/.config/fastfetch/tqq.jsonc'
