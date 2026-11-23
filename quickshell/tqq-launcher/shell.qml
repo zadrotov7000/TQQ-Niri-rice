@@ -33,8 +33,9 @@ PanelWindow {
         closeAnimation.start();
     }
     function launchSelected() {
-        if (!selectedEntry) return;
-        selectedEntry.execute();
+        const entry = selectedEntry || (appList.currentItem ? appList.currentItem.entry : null);
+        if (!entry) return;
+        entry.execute();
         closeLauncher();
     }
 
@@ -179,6 +180,7 @@ PanelWindow {
                     }
                     currentIndex: 0
                     onCurrentIndexChanged: if (currentItem) root.selectedEntry = currentItem.entry
+                    onCurrentItemChanged: if (currentItem) root.selectedEntry = currentItem.entry
                     boundsBehavior: Flickable.StopAtBounds
                     ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
                     delegate: Rectangle {
