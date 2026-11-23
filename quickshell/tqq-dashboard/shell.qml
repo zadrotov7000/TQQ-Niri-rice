@@ -248,10 +248,10 @@ PanelWindow {
 
     Rectangle {
         id: panel
-        anchors.centerIn: parent
-        width: parent.width - 24
-        height: parent.height - 48
-        radius: 22
+        anchors.fill: parent
+        width: parent.width
+        height: parent.height
+        radius: 0
         color: root.bg
         border.width: 1
         border.color: Qt.alpha(root.accent, 0.55)
