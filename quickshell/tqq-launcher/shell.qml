@@ -5,15 +5,19 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-PanelWindow {
+//@ pragma AppId tqq-launcher
+
+FloatingWindow {
     id: root
-    anchors { top: true; bottom: true; left: true; right: true }
+    title: "TQQ App Launcher"
+    width: 620
+    height: 510
+    minimumSize.width: 620
+    minimumSize.height: 510
+    maximumSize.width: 620
+    maximumSize.height: 510
     color: "transparent"
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.namespace: "tqq-app-launcher"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    focusable: true
+    visible: true
 
     property color bg: "#17131a"
     property color surface: "#28212c"
@@ -25,7 +29,6 @@ PanelWindow {
     property bool closing: false
     property var selectedEntry: null
     property bool shown: false
-    property real panelOffset: -600
 
     function closeLauncher() {
         if (closing) return;
@@ -41,21 +44,19 @@ PanelWindow {
     Component.onCompleted: {
         paletteProcess.running = true;
         searchField.forceActiveFocus();
-        panelOffset = -panel.height;
+        panel.y = -panel.height;
         openAnimation.start();
     }
 
     ParallelAnimation {
         id: openAnimation
-        NumberAnimation { target: root; property: "panelOffset"; to: 0; duration: 520; easing.type: Easing.OutCubic }
+        NumberAnimation { target: panel; property: "y"; to: 0; duration: 520; easing.type: Easing.OutCubic }
         NumberAnimation { target: panel; property: "opacity"; to: 1; duration: 420; easing.type: Easing.OutCubic }
-        NumberAnimation { target: backdrop; property: "opacity"; to: 1; duration: 420; easing.type: Easing.OutCubic }
     }
     ParallelAnimation {
         id: closeAnimation
-        NumberAnimation { target: root; property: "panelOffset"; to: -panel.height; duration: 380; easing.type: Easing.InCubic }
+        NumberAnimation { target: panel; property: "y"; to: -panel.height; duration: 380; easing.type: Easing.InCubic }
         NumberAnimation { target: panel; property: "opacity"; to: 0; duration: 320; easing.type: Easing.InCubic }
-        NumberAnimation { target: backdrop; property: "opacity"; to: 0; duration: 320; easing.type: Easing.InCubic }
         onFinished: Qt.quit()
     }
 
@@ -87,19 +88,9 @@ PanelWindow {
     }
 
     Rectangle {
-        id: backdrop
-        anchors.fill: parent
-        color: "#44000000"
-        opacity: 0
-        MouseArea { anchors.fill: parent; onClicked: root.closeLauncher() }
-    }
-
-    Rectangle {
         id: panel
-        width: Math.min(620, parent.width * 0.72)
-        height: Math.min(510, parent.height * 0.72)
-        anchors.horizontalCenter: parent.horizontalCenter
-        y: Math.max(74, parent.height * 0.13) + root.panelOffset
+        anchors.fill: parent
+        y: -height
         radius: 20
         color: root.bg
         border.width: 1
