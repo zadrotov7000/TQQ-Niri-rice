@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+STATE_FILE="$STATE_HOME/tqq-niri-rice/current-wallpaper"
+LOCK_CACHE="$CACHE_HOME/tqq-niri-rice/lock-background.jpg"
+STYLE="$CONFIG_HOME/gtklock/style.css"
+
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+if ! command -v gtklock >/dev/null 2>&1; then
+    echo "gtklock is missing. Run ./install.sh --install-deps." >&2
+    exit 1
+fi
+
+wallpaper=""
+if [[ -r "$STATE_FILE" ]]; then
+    IFS= read -r wallpaper < "$STATE_FILE" || true
+fi
+
+if [[ -n "$wallpaper" && -r "$wallpaper" ]]; then
+    mkdir -p "$(dirname "$LOCK_CACHE")"
+    if command -v magick >/dev/null 2>&1; then
+        magick "$wallpaper" -auto-orient -resize '1600x900^' -gravity center -extent 1600x900 -blur 0x26 -fill '#08070b55' -colorize 35 "$LOCK_CACHE"
+    elif command -v convert >/dev/null 2>&1; then
+        convert "$wallpaper" -auto-orient -resize '1600x900^' -gravity center -extent 1600x900 -blur 0x26 -fill '#08070b55' -colorize 35 "$LOCK_CACHE"
+    else
+        echo "ImageMagick is missing; cannot prepare the blurred lock background." >&2
+        exit 1
+    fi
+    exec gtklock --config "$CONFIG_HOME/gtklock/config.ini" --style "$STYLE" --background "$LOCK_CACHE"
+fi
+
+exec gtklock --config "$CONFIG_HOME/gtklock/config.ini" --style "$STYLE"
