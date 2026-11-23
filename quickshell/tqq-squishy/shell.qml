@@ -33,7 +33,10 @@ PanelWindow {
     property real velocityX: 0
     property real velocityY: 0
     property double lastTick: 0
-    property real influenceRadius: Math.max(260, Math.min(width, height) * 0.38)
+    property real influenceRadius: Math.min(250, Math.max(105, Math.min(width, height) * 0.25))
+    property real maxPullDistance: Math.min(165, Math.max(90, Math.min(width, height) * 0.20))
+    property real ripplePhase: 0
+    property real rippleStrength: 0
     property color accent: "#d8a6c2"
     property color fg: "#f5f0f5"
     property color muted: "#aaa0ad"
@@ -54,7 +57,22 @@ PanelWindow {
         const distance = Math.hypot(x - dragOriginX, y - dragOriginY);
         const t = Math.max(0, Math.min(1, distance / Math.max(1, influenceRadius)));
         const radial = 1.0 - t * t * (3.0 - 2.0 * t);
-        return 0.22 + 0.78 * radial;
+        return 0.12 + 0.88 * Math.pow(radial, 1.2);
+    }
+
+    function setPullTarget(x, y) {
+        // Nonlinear resistance: the cheek stretches less the harder it is pulled.
+        const rawX = x - dragStartX;
+        const rawY = y - dragStartY;
+        const length = Math.hypot(rawX, rawY);
+        const resisted = maxPullDistance * Math.tanh(length / maxPullDistance);
+        const scale = length > 0.001 ? resisted / length : 1.0;
+        const newX = rawX * scale;
+        const newY = rawY * scale;
+        const impulse = Math.hypot(newX - targetX, newY - targetY);
+        rippleStrength = Math.max(rippleStrength, Math.min(0.95, impulse / 45.0));
+        targetX = newX;
+        targetY = newY;
     }
 
     function visiblePolygon() {
@@ -87,12 +105,17 @@ PanelWindow {
         offsetY = 0;
         velocityX = 0;
         velocityY = 0;
+        ripplePhase = 0;
+        rippleStrength = 0;
         physicsTimer.stop();
         refreshSelectionTextures();
     }
 
     function finishDrag() {
         dragging = false;
+        // Preserve momentum when released, for a small elastic overshoot.
+        rippleStrength = Math.max(rippleStrength,
+                                  Math.min(1.0, Math.hypot(velocityX, velocityY) / 550.0));
         targetX = 0;
         targetY = 0;
         physicsActive = true;
@@ -143,7 +166,7 @@ PanelWindow {
         cache: true
         asynchronous: true
         visible: false
-        onStatusChanged: if (status === Image.Ready) selectionTexture.scheduleUpdate()
+        onStatusChanged: if (status === Image.Ready) wallpaperTexture.scheduleUpdate()
     }
 
     ShaderEffectSource {
@@ -151,13 +174,16 @@ PanelWindow {
         anchors.fill: parent
         sourceItem: wallpaperImage
         hideSource: true
-        live: true
+        // Static texture: refresh only when the wallpaper file changes.
+        live: false
         smooth: true
+        visible: false
     }
 
     Canvas {
         id: selectionMask
         anchors.fill: parent
+        visible: false
         renderStrategy: Canvas.Threaded
         onPaint: {
             const ctx = getContext("2d");
@@ -195,6 +221,8 @@ PanelWindow {
         property vector2d dragOrigin: Qt.vector2d(root.dragOriginX, root.dragOriginY)
         property vector2d displacement: Qt.vector2d(root.offsetX, root.offsetY)
         property real influenceRadius: root.influenceRadius
+        property real ripplePhase: root.ripplePhase
+        property real rippleStrength: root.rippleStrength
         vertexShader: "squishy.vert.qsb"
         fragmentShader: "squishy.frag.qsb"
         blending: true
@@ -249,6 +277,7 @@ PanelWindow {
 
         onPressed: function(mouse) {
             if (mouse.button === Qt.LeftButton) {
+                root.resetSelection();
                 root.selecting = true;
                 root.points = [Qt.point(mouse.x, mouse.y)];
                 outlineCanvas.requestPaint();
@@ -277,8 +306,7 @@ PanelWindow {
                     outlineCanvas.requestPaint();
                 }
             } else if (root.dragging) {
-                root.targetX = mouse.x - root.dragStartX;
-                root.targetY = mouse.y - root.dragStartY;
+                root.setPullTarget(mouse.x, mouse.y);
                 outlineCanvas.requestPaint();
             }
         }
@@ -318,25 +346,35 @@ PanelWindow {
                 : 0.016;
             root.lastTick = now;
 
-            const stiffness = 185.0;
-            const damping = 22.0;
+            // Semi-implicit spring: firm grip, gentle underdamped release.
+            const stiffness = root.dragging ? 245.0 : 188.0;
+            const dampingRatio = root.dragging ? 0.92 : 0.57;
+            const damping = 2.0 * Math.sqrt(stiffness) * dampingRatio;
             root.velocityX += ((root.targetX - root.offsetX) * stiffness - root.velocityX * damping) * dt;
             root.velocityY += ((root.targetY - root.offsetY) * stiffness - root.velocityY * damping) * dt;
             root.offsetX += root.velocityX * dt;
             root.offsetY += root.velocityY * dt;
+
+            // The ripple fades with motion; no always-running physics loop.
+            const speed = Math.hypot(root.velocityX, root.velocityY);
+            root.ripplePhase += dt * 21.0;
+            root.rippleStrength = Math.min(1.0,
+                Math.max(root.rippleStrength * Math.exp(-5.0 * dt), speed / 1900.0));
             outlineCanvas.requestPaint();
 
             if (!root.dragging
                     && Math.abs(root.targetX - root.offsetX) < 0.16
                     && Math.abs(root.targetY - root.offsetY) < 0.16
                     && Math.abs(root.velocityX) < 0.8
-                    && Math.abs(root.velocityY) < 0.8) {
+                    && Math.abs(root.velocityY) < 0.8
+                    && root.rippleStrength < 0.02) {
                 root.targetX = 0;
                 root.targetY = 0;
                 root.offsetX = 0;
                 root.offsetY = 0;
                 root.velocityX = 0;
                 root.velocityY = 0;
+                root.rippleStrength = 0;
                 root.physicsActive = false;
                 stop();
                 outlineCanvas.requestPaint();
@@ -360,7 +398,7 @@ PanelWindow {
             anchors.margins: 12
             spacing: 4
             Text {
-                text: "TQQ  /  SQUISHY PHYSICS"
+                text: "SQUISHY PHYSICS"
                 color: root.accent
                 font.pixelSize: 9
                 font.bold: true
@@ -368,8 +406,8 @@ PanelWindow {
             }
             Text {
                 text: root.hasSelection
-                    ? "ПКМ — потянуть область · отпусти — пружинный возврат"
-                    : "ЛКМ — обвести область · ПКМ — потянуть её"
+                    ? "ПКМ — потянуть · отпусти — мягкий отскок"
+                    : "ЛКМ — обвести щёчку · ПКМ — потянуть"
                 color: root.fg
                 font.pixelSize: 10
             }
