@@ -9,7 +9,7 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 - **Wi-Fi panel:** `Mod+N` (or the installer's free fallback) opens a Quickshell network panel. It scans NetworkManager, shows signal strength and security, prompts for a password when needed, and connects through NetworkManager.
 - **Lock screen:** Quickshell uses the native Wayland `WlSessionLock` protocol and PAM authentication, with the current wallpaper blurred behind the clock/date and a password form revealed by Enter. The lock remains held by the compositor if Quickshell exits unexpectedly.
 - **Radial window switcher:** `Alt+Tab` opens a circular window selector. Repeated `Alt+Tab` moves forward; `Alt+Shift+Tab` moves backward. The highlighted window is focused when the switcher times out, and Escape cancels.
-- **Squishy Physics:** a free `Mod+F`-family shortcut opens an interactive wallpaper overlay. Draw a lasso with the left mouse button, then hold the right mouse button and drag inside the selected area. The selected patch is rendered on a 128×72 GPU mesh and follows the pointer with a damped spring response, elastic tension ripple, and spring-back on release. Canvas is used only to rasterize the lasso mask and draw its outline; image deformation is rendered by Qt Quick `ShaderEffect` shaders. This is the native Qt graphics pipeline (OpenGL/Vulkan and other Qt RHI backends), not an embedded browser/WebGL2 context. Backspace clears the selection and Escape closes the overlay.
+- **Squishy Physics:** a free `Mod+F`-family shortcut opens an interactive wallpaper overlay. Draw a lasso around a cheek (or another small part of the artwork) with the left mouse button, then hold the right mouse button and pull inside the selection. The GPU mesh keeps the **entire wallpaper visible** while locally deforming the masked region using feathered edges, nonlinear rubber resistance, a damped spring, a small travelling ripple and an elastic rebound. Physics stops when motion settles. Canvas draws the lasso/mask; native Qt Quick `ShaderEffect` shaders deform the pixels. Backspace clears the selection and Escape closes the overlay.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens above the desktop. **Mod+B toggles** the gallery: first press opens, second closes, without spawning extra copies. Escape closes it too. Browse with Left/Right or the mouse wheel, click a side card to move, and press Enter to apply.
 - **Wallpaper transition:** the repository uses `awww` when available. Wallpaper changes use a circular center-out reveal; `swaybg` remains the fallback. Wallpaper changes regenerate Matugen colors and do not reload the Niri config.
 - **Wallpaper persistence:** the selected image is restored when Niri starts.
@@ -117,6 +117,18 @@ done
 ```
 
 Close open panels with Escape, then reopen. No Niri or Rust rebuild is needed.
+
+## Update only Squishy Physics
+
+Run this **without reinstalling the rice**. Close the existing Squishy window with Escape before installing:
+
+```bash
+cd ~/TQQ-Niri-rice
+git pull --ff-only
+./scripts/update-squishy
+```
+
+The updater compiles the two Qt Shader Baker (`qsb`) shaders first and backs up the old QML and shader binaries before replacing them in `~/.config/quickshell/tqq-squishy/`. If `qsb` is missing on Debian 13, install the `qt6-shader-baker` package. No Rust rebuild, Niri config edit, Waybar reload or change to your language bindings is needed. The installer selects a free Mod+F-family shortcut; check the actual binding in your Niri config. Draw a lasso with LMB, hold RMB **inside** it and drag; release RMB for the elastic rebound. Backspace clears, Escape exits.
 
 ## Keybindings
 
