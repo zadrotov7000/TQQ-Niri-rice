@@ -27,14 +27,11 @@ for script in \
     "$ROOT/scripts/restore-niri-default" \
     "$ROOT/scripts/apply-windowfx" \
     "$ROOT/scripts/build-wallpaper-gallery" \
-    "$ROOT/scripts/build-squishy-shaders" \
-    "$ROOT/scripts/update-squishy" \
     "$ROOT/scripts/select-wallpaper" \
     "$ROOT/scripts/tqq-dashboard" \
     "$ROOT/scripts/tqq-launcher" \
     "$ROOT/scripts/tqq-wifi" \
     "$ROOT/scripts/tqq-switcher" \
-    "$ROOT/scripts/tqq-squishy" \
     "$ROOT/scripts/tqq-lock-screen" \
     "$ROOT/scripts/configure-fetch-autostart"; do
     if ! bash -n "$script"; then
@@ -157,11 +154,6 @@ INSTALL_LOG="$BACKUP/install.log"
 : > "$INSTALL_LOG"
 progress_mark 25 "Preparing installation"
 
-# Compile Quickshell GPU shaders before changing the installed configuration.
-progress_run 35 "Compiling GPU shaders" bash "$ROOT/scripts/build-squishy-shaders" \
-    "$ROOT/quickshell/tqq-squishy" \
-    "$BACKUP/squishy-shaders"
-
 # Install the shipped desktop configs (Dunst, Matugen, Waybar and Fetch).
 # Existing config directories are backed up before TQQ files are merged in.
 mkdir -p "$BACKUP/config"
@@ -192,9 +184,6 @@ for source_config in "$ROOT"/quickshell/*; do
     cp -a "$source_config/." "$target_config/"
 done
 
-# ShaderEffect loads these compiled files relative to the installed Squishy config.
-install -m 0644 "$BACKUP/squishy-shaders/squishy.vert.qsb" "$QUICKSHELL_CONFIG/tqq-squishy/squishy.vert.qsb"
-install -m 0644 "$BACKUP/squishy-shaders/squishy.frag.qsb" "$QUICKSHELL_CONFIG/tqq-squishy/squishy.frag.qsb"
 progress_mark 52 "Installing Quickshell apps"
 
 # Build and install the native Rust wallpaper gallery.
@@ -210,7 +199,7 @@ progress_mark 79 "Copying wallpapers"
 # Install only the launchers and helpers used by the current Quickshell setup.
 for script_name in \
     select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher \
-    tqq-squishy tqq-region tqq-lock-screen configure-fetch-autostart \
+    tqq-region tqq-lock-screen configure-fetch-autostart \
     check-dependencies install-dependencies install-icon-fonts restore-niri-default; do
     source_file="$ROOT/scripts/$script_name"
     if [[ ! -f "$source_file" ]]; then
