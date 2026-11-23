@@ -80,6 +80,44 @@ for legacy_config in fuzzel gtklock; do
     fi
 done
 
+# Remove the old launcher package itself, not only its config directory.
+run_privileged() {
+    if ((EUID == 0)); then
+        "$@"
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo "$@"
+    else
+        echo "Fuzzel is installed but sudo is unavailable; remove it with your package manager." >&2
+        return 1
+    fi
+}
+
+remove_legacy_fuzzel_package() {
+    if command -v dpkg-query >/dev/null 2>&1 \
+        && [[ "$(dpkg-query -W -f='${db:Status-Status}' fuzzel 2>/dev/null || true)" == "installed" ]]; then
+        echo "Removing legacy Fuzzel package with apt…"
+        run_privileged apt-get remove -y fuzzel
+    elif command -v pacman >/dev/null 2>&1 && pacman -Q fuzzel >/dev/null 2>&1; then
+        echo "Removing legacy Fuzzel package with pacman…"
+        run_privileged pacman -R --noconfirm fuzzel
+    elif command -v rpm >/dev/null 2>&1 && rpm -q fuzzel >/dev/null 2>&1; then
+        if command -v dnf >/dev/null 2>&1; then
+            echo "Removing legacy Fuzzel package with dnf…"
+            run_privileged dnf remove -y fuzzel
+        elif command -v zypper >/dev/null 2>&1; then
+            echo "Removing legacy Fuzzel package with zypper…"
+            run_privileged zypper --non-interactive remove fuzzel
+        else
+            echo "Fuzzel is installed, but no supported package manager was found to remove it." >&2
+            return 1
+        fi
+    else
+        echo "Legacy Fuzzel package not installed; Quickshell launcher is already used."
+    fi
+}
+
+remove_legacy_fuzzel_package
+
 # Copy only config directories that actually exist in the repository. Quickshell
 # lives at the repository root (./quickshell), not under ./config/quickshell.
 for config_name in matugen swaync fetch waybar; do
