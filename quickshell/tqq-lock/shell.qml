@@ -315,13 +315,29 @@ WlSessionLock {
                     border.color: "#e3a8c8"
 
                     Image {
+                        id: lockAvatarImage
                         anchors.fill: parent
                         anchors.margins: 3
-                        visible: sessionLock.profileAvatar.length > 0
+                        visible: false
                         source: sessionLock.profileAvatar.length > 0 ? "file://" + sessionLock.profileAvatar : ""
                         fillMode: Image.PreserveAspectCrop
                         cache: false
                         asynchronous: true
+                    }
+                    Rectangle {
+                        id: lockAvatarMask
+                        anchors.fill: lockAvatarImage
+                        radius: width / 2
+                        color: "white"
+                        visible: false
+                        layer.enabled: true
+                    }
+                    MultiEffect {
+                        anchors.fill: lockAvatarImage
+                        source: lockAvatarImage
+                        maskEnabled: true
+                        maskSource: lockAvatarMask
+                        visible: sessionLock.profileAvatar.length > 0
                     }
                     Text {
                         anchors.centerIn: parent
