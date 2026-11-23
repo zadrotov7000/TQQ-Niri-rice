@@ -50,7 +50,7 @@ To install dependencies explicitly:
 
 The installer backs up the existing SwayNC, Fuzzel, Matugen, Fetch, Quickshell, and Niri configs under `~/.local/state/tqq-niri-rice/backups/`. It copies the included wallpapers to `${XDG_DATA_HOME:-~/.local/share}/tqq-niri-rice/wallpapers/` and installs helpers to `~/.local/bin/`. Existing Niri bindings are preserved; Win+B is reserved for wallpaper selection and palette generation, and Win+N (falling back to Win+Shift+N or Win+Ctrl+N if occupied) opens the TQQ Wi-Fi picker.
 
-The regular installer does not change the display manager or install SDDM. Existing Niri and component configs are backed up before the rice files are installed. If an older version of this rice replaced the Niri config, the installer tries to restore the newest original config backup first.
+The regular installer does not change or configure the display manager. Existing Niri and component configs are backed up before the rice files are installed. If an older version of this rice replaced the Niri config, the installer tries to restore the newest original config backup first.
 
 ### Dependencies
 
