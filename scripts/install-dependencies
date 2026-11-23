@@ -135,7 +135,7 @@ case "${ID:-}" in
         install_matugen
         ;;
     opensuse*|opensuse-tumbleweed|opensuse-leap)
-        packages=(quickshell playerctl pavucontrol NetworkManager-bluetooth blueman lm_sensors SwayNotificationCenter fuzzel swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust pkg-config gtk4-devel gtklock ImageMagick)
+        packages=(curl quickshell playerctl pavucontrol NetworkManager-bluetooth blueman lm_sensors SwayNotificationCenter fuzzel swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust pkg-config gtk4-devel gtklock ImageMagick)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire wireplumber)
         fi
