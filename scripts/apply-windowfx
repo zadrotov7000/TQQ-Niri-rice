@@ -78,5 +78,13 @@ if ! cmp -s "$candidate" "$NIRI_CONFIG"; then
 fi
 trap - EXIT
 rm -f -- "$candidate"
+
+# The installed wallpaper helper must know to refresh the Rust palette.
+# Back up the prior helper rather than silently discarding user modifications.
+if [[ -f "$BIN_DIR/select-wallpaper" ]]; then
+    cp -p -- "$BIN_DIR/select-wallpaper" "$BACKUP/select-wallpaper"
+fi
+install -m 0755 "$ROOT/scripts/select-wallpaper" "$BIN_DIR/select-wallpaper"
+
 printf 'TQQ WindowFX enabled. Backup: %s\n' "$BACKUP"
 printf 'The focus border now follows Matugen, with Niri-native window animations.\n'

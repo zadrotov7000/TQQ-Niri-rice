@@ -46,7 +46,7 @@ git pull --ff-only
 ./scripts/restore-niri-default
 ```
 
-**This is an explicit recovery command**, not part of the normal installer. It replaces the current Niri config only after downloading official **Niri v26.04** defaults, applying TQQ binds to a temporary file and running `niri --config <candidate> validate`. It keeps a timestamped backup of your previous `config.kdl`, does not reinstall Niri, and refuses to run for other Niri versions. It does not alter personal keyboard layout preferences: edit `input.keyboard.xkb` in your own config for those.
+**This is an explicit recovery command**, not part of the normal installer. It replaces the current Niri config only after downloading official **Niri v26.04** defaults, applying TQQ binds to a temporary file and running `niri validate --config <candidate>`. It keeps a timestamped backup of your previous `config.kdl`, does not reinstall Niri, and refuses to run for other Niri versions. It does not alter personal keyboard layout preferences: edit `input.keyboard.xkb` in your own config for those.
 
 ## Update only Waybar (no rice rebuild)
 
@@ -77,7 +77,7 @@ git pull --ff-only
 ./scripts/apply-windowfx
 ```
 
-This compiles a small, **dependency-free Rust** color generator to `~/.local/bin/tqq-windowfx`, creates `~/.config/niri/tqq-windowfx.kdl` from the existing Matugen `~/.config/waybar/colors.css`, and adds one `include "tqq-windowfx.kdl"` to your Niri configuration (only if not already present). It saves a dated backup and runs `niri validate --config` before changing your main config. **Your language, shortcuts, and installed applications are preserved.** On validation failure it restores the previous theme and leaves the main config alone.
+This compiles a small, **dependency-free Rust** color generator to `~/.local/bin/tqq-windowfx`, creates `~/.config/niri/tqq-windowfx.kdl` from the existing Matugen `~/.config/waybar/colors.css`, and adds one `include "tqq-windowfx.kdl"` to your Niri configuration (only if not already present). It saves a dated backup and runs `niri validate --config` before changing your main config. It also backs up and refreshes the installed TQQ `select-wallpaper` helper, so changing wallpapers updates the window border colors. **Your language, shortcuts, and installed applications are preserved.** On validation failure it restores the previous theme and leaves the main config alone.
 
 Appearance: a 3px primary-to-tertiary gradient for focused windows, subtle secondary borders on others, 14px rounded/clipped corners, soft drop shadows and native GPU-accelerated Niri opening/closing/movement animations. The Rust program is **not** a background daemon; it runs once after each TQQ wallpaper change to regenerate colors. Niri watches the included file and reloads it automatically. This is not a continuously rotating RGB border; there is no per-frame Rust process.
 
