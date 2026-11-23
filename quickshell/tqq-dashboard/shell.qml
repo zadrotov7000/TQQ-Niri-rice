@@ -359,7 +359,7 @@ PanelWindow {
                             }
                         }
                         Item { Layout.fillHeight: true }
-                        Text { text: "LOCAL CALENDAR"; color: root.muted; font.pixelSize: 9; letterSpacing: 1.2 }
+                        Text { text: "LOCAL CALENDAR"; color: root.muted; font.pixelSize: 9; font.font.letterSpacing: 1.2 }
                     }
                 }
 
@@ -422,7 +422,7 @@ PanelWindow {
                         Text { text: root.weatherDescription; color: root.fg; font.pixelSize: 17 }
                         Text { text: "Feels like " + root.feelsLike; color: root.muted; font.pixelSize: 11 }
                         Item { Layout.fillHeight: true }
-                        Text { text: "HOURLY FORECAST"; color: root.muted; font.pixelSize: 9; font.bold: true; letterSpacing: 1 }
+                        Text { text: "HOURLY FORECAST"; color: root.muted; font.pixelSize: 9; font.bold: true; font.letterSpacing: 1 }
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 6
@@ -510,7 +510,7 @@ PanelWindow {
 
             RowLayout {
                 Layout.fillWidth: true
-                Text { text: "TQQ  /  CONTROL CENTER"; color: root.muted; font.pixelSize: 9; letterSpacing: 1 }
+                Text { text: "TQQ  /  CONTROL CENTER"; color: root.muted; font.pixelSize: 9; font.letterSpacing: 1 }
                 Item { Layout.fillWidth: true }
                 Text { text: "ESC TO CLOSE"; color: root.muted; font.pixelSize: 9 }
             }
