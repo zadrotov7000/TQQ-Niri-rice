@@ -16,3 +16,11 @@ output_path = '~/.config/dunst/dunstrc'
 [templates.tqq]
 input_path = '~/.config/matugen/templates/tqq-colors.json'
 output_path = '~/.config/tqq-niri-rice/colors.json'
+
+[templates.kitty]
+input_path = '~/.config/matugen/templates/kitty-colors.conf'
+output_path = '~/.config/kitty/tqq-colors.conf'
+
+[templates.ghostty]
+input_path = '~/.config/matugen/templates/ghostty-colors.conf'
+output_path = '~/.config/ghostty/tqq-colors.conf'
