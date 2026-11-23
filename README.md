@@ -85,7 +85,8 @@ The rice adds wallpaper, Wi-Fi, dashboard, and lock-screen shortcuts to the exis
 | Open wallpaper gallery, apply wallpaper, and update colors | `Mod+B` (Win+B) |
 | Open the TQQ dashboard | `Mod+Shift+Space` (fallback to another free modified Space binding) |
 | Open the Fuzzel application search | `Mod+D` (Win+D; modified D fallback if occupied) |
-| Open the TQQ Wi-Fi picker | `Mod+N` (Win+N; fallback `Mod+Shift+N` or `Mod+Ctrl+N`) |\n| Lock the session | `Mod+L` (Win+L; fallback `Mod+Shift+L` if occupied) |
+| Open the TQQ Wi-Fi picker | `Mod+N` (Win+N; fallback `Mod+Shift+N` or `Mod+Ctrl+N`) |
+| Lock the session | `Mod+L` (Win+L; fallback `Mod+Shift+L` if occupied) |
 
 Waybar is optional but auto-starts when present. SwayNC provides notifications and quick settings independently of the dashboard.
 
