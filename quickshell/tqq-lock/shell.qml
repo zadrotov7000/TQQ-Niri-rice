@@ -396,7 +396,7 @@ WlSessionLock {
         Rectangle {
             id: calendarPanel
             width: Math.min(330, parent.width * 0.25)
-            height: 384
+            height: 430
             anchors.right: parent.right
             anchors.rightMargin: Math.max(40, parent.width * 0.046)
             anchors.verticalCenter: parent.verticalCenter
