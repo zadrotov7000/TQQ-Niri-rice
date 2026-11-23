@@ -26,37 +26,18 @@
   "text-empty": "No notifications",
   "keyboard-shortcuts": true,
   "widgets": [
-    "buttons-grid",
     "backlight",
-    "volume",
     "mpris",
     "title",
     "dnd",
     "notifications"
   ],
   "widget-config": {
-    "buttons-grid": {
-      "buttons-per-row": 2,
-      "actions": [
-        {
-          "label": "Wi-Fi",
-          "type": "normal",
-          "command": "sh -c 'python3 \"$HOME/.local/bin/wifi-menu.py\"'"
-        }
-      ]
-    },
     "backlight": {
       "label": "Brightness",
       "device": "auto",
       "subsystem": "backlight",
       "min": 0
-    },
-    "volume": {
-      "label": "Volume",
-      "show-per-app": true,
-      "show-per-app-icon": true,
-      "show-per-app-label": false,
-      "expand-per-app": false
     },
     "mpris": {
       "autohide": true,
