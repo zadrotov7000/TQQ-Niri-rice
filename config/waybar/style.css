@@ -1,9 +1,11 @@
 @import "colors.css";
 
+/* TQQ Island: only Waybar elements are styled or animated here.
+   FontAwesome icons use glyphs shipped by Debian's fonts-font-awesome. */
 * {
     border: none;
     border-radius: 0;
-    font-family: "JetBrains Mono", "Symbols Nerd Font Mono", "Symbols Nerd Font", sans-serif;
+    font-family: "JetBrains Mono", "FontAwesome", "Symbols Nerd Font Mono", sans-serif;
     font-size: 12px;
     font-weight: 600;
     min-height: 0;
@@ -11,112 +13,125 @@
 
 window#waybar {
     background: transparent;
-    color: #f3eeee;
+    color: #f3f5fd;
+}
+
+/* A single slow border-color animation, no blur or background re-rendering. */
+@keyframes tqq-island-border {
+    0%   { border-color: #77b8ff; }
+    25%  { border-color: #ae8dff; }
+    50%  { border-color: #f4a0cf; }
+    75%  { border-color: #7cdecf; }
+    100% { border-color: #77b8ff; }
 }
 
 #custom-launcher,
-#cpu,
-#memory,
-#disk,
 #workspaces,
 #clock,
+#disk,
 #custom-notification,
 #network,
 #pulseaudio,
-#battery,
 #tray {
-    background: rgba(13, 10, 13, 0.88);
-    border: 1px solid rgba(190, 74, 88, 0.34);
-    border-radius: 15px;
-    margin: 5px 2px;
-    padding: 0 11px;
-    color: #f3eeee;
+    background: rgba(15, 17, 30, 0.91);
+    color: #eef2ff;
+    border: 2px solid #77b8ff;
+    border-radius: 17px;
+    margin: 4px 2px;
+    padding: 0 12px;
+    animation-name: tqq-island-border;
+    animation-duration: 16s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
 }
 
 #custom-launcher {
-    color: #f0a1a9;
-    padding: 0 13px;
-    font-size: 15px;
+    font-family: "FontAwesome", sans-serif;
+    font-size: 16px;
+    color: #b9caff;
+    padding: 0 14px;
 }
 
-#custom-launcher:hover,
-#cpu:hover,
-#memory:hover,
-#disk:hover,
-#custom-notification:hover,
-#network:hover,
-#pulseaudio:hover,
-#battery:hover,
-#tray:hover {
-    background: rgba(45, 20, 26, 0.96);
-    border-color: rgba(220, 93, 111, 0.72);
+#clock {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 16px;
+    color: #f3f5ff;
 }
 
 #workspaces {
-    padding: 0 5px;
+    padding: 0 6px;
 }
 
 #workspaces button {
-    color: rgba(243, 238, 238, 0.56);
+    min-width: 12px;
     background: transparent;
+    color: rgba(228, 233, 249, 0.54);
     border-radius: 12px;
-    margin: 4px 2px;
+    margin: 4px 1px;
     padding: 0 7px;
-    transition: color 140ms ease, background 140ms ease;
+    transition: background-color 160ms ease, color 160ms ease;
 }
 
 #workspaces button:hover {
+    background: rgba(147, 157, 238, 0.22);
     color: #ffffff;
-    background: rgba(174, 62, 78, 0.20);
 }
 
 #workspaces button.focused,
 #workspaces button.active {
+    background: rgba(163, 143, 247, 0.31);
     color: #ffffff;
-    background: rgba(174, 62, 78, 0.42);
 }
 
-#workspaces button.urgent,
-#battery.critical:not(.charging) {
-    color: #ff7888;
+#workspaces button.urgent {
+    color: #ff94ad;
 }
 
-#clock {
-    font-weight: 700;
-    padding: 0 18px;
-    letter-spacing: 0.2px;
-}
-
-#cpu,
-#memory,
 #disk,
 #custom-notification,
 #network,
-#pulseaudio,
-#battery {
+#pulseaudio {
     padding: 0 11px;
+}
+
+#custom-launcher:hover,
+#disk:hover,
+#custom-notification:hover,
+#network:hover,
+#pulseaudio:hover,
+#tray:hover,
+#clock:hover {
+    background: rgba(35, 38, 62, 0.97);
+    color: #ffffff;
 }
 
 #pulseaudio.muted,
 #network.disconnected {
-    color: rgba(243, 238, 238, 0.52);
+    color: #aeb4c7;
 }
 
-#battery.warning {
-    color: #e9b36f;
+#tray {
+    padding: 0 11px;
 }
 
-#tray > .passive { opacity: 0.65; }
-#tray > .active { opacity: 1; }
+#tray > .passive {
+    opacity: 0.65;
+}
+
 #tray > .needs-attention {
-    background: rgba(174, 62, 78, 0.28);
+    background: rgba(244, 160, 207, 0.20);
     border-radius: 9px;
 }
 
 tooltip {
-    background: rgba(13, 10, 13, 0.97);
-    color: #f3eeee;
-    border: 1px solid rgba(190, 74, 88, 0.48);
-    border-radius: 9px;
-    padding: 5px 8px;
+    background: rgba(16, 18, 30, 0.98);
+    color: #eef2ff;
+    border: 1px solid #a88ce2;
+    border-radius: 10px;
+    padding: 6px 9px;
+}
+
+tooltip label {
+    color: #eef2ff;
 }

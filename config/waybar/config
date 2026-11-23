@@ -1,18 +1,29 @@
 {
   "layer": "top",
   "position": "top",
-  "height": 38,
-  "margin-top": 7,
-  "margin-left": 10,
-  "margin-right": 10,
-  "spacing": 5,
-  "modules-left": ["custom/launcher", "niri/workspaces"],
-  "modules-center": ["clock"],
-  "modules-right": ["disk", "custom/notification", "network", "pulseaudio", "tray"],
+  "height": 40,
+  "margin-top": 8,
+  "margin-left": 12,
+  "margin-right": 12,
+  "spacing": 7,
+  "modules-left": [
+    "custom/launcher",
+    "niri/workspaces"
+  ],
+  "modules-center": [
+    "clock"
+  ],
+  "modules-right": [
+    "disk",
+    "custom/notification",
+    "network",
+    "pulseaudio",
+    "tray"
+  ],
   "custom/launcher": {
-    "format": "󰍉",
+    "format": "",
     "tooltip": true,
-    "tooltip-format": "Search applications",
+    "tooltip-format": "TQQ Application Launcher",
     "on-click": "$HOME/.local/bin/tqq-launcher"
   },
   "niri/workspaces": {
@@ -29,46 +40,47 @@
     "on-click": "activate"
   },
   "clock": {
-    "format": "󰥔  {:%H:%M  ·  %d %b}",
+    "format": "  {:%H:%M  ·  %d %b}",
     "tooltip-format": "<big>{:%A, %d %B %Y}</big>\\n<tt>{:%H:%M:%S}</tt>",
     "on-click": "$HOME/.local/bin/tqq-dashboard"
   },
   "disk": {
     "path": "/",
-    "format": "󰋊  {percentage_used}%",
+    "format": "  {percentage_used}%",
     "interval": 30,
     "tooltip": true
   },
   "pulseaudio": {
-    "format": "󰕾  {volume}%",
-    "format-muted": "󰖁  muted",
+    "format": "  {volume}%",
+    "format-muted": "  muted",
     "tooltip": true,
     "scroll-step": 5,
     "on-click": "pavucontrol",
     "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
   },
   "network": {
-    "format-wifi": "󰖩  {signalStrength}%",
-    "format-ethernet": "󰈀  LAN",
-    "format-disconnected": "󰖪  offline",
+    "format-wifi": "  {signalStrength}%",
+    "format-ethernet": "  LAN",
+    "format-disconnected": "  offline",
     "tooltip-format": "{essid}: {ipaddr}/{cidr}",
     "on-click": "$HOME/.local/bin/tqq-wifi",
     "interval": 5
   },
   "tray": {
-    "icon-size": 16,
-    "spacing": 7,
+    "icon-size": 15,
+    "spacing": 8,
     "show-passive-items": true,
     "tooltip": true
   },
   "custom/notification": {
     "tooltip": true,
     "tooltip-format": "Left: show last notification | Right: toggle Do Not Disturb",
-    "format": "󰂚  {}",
+    "format": "  {}",
     "exec-if": "command -v dunstctl",
     "exec": "dunstctl count history",
     "interval": 5,
     "on-click": "dunstctl history-pop",
     "on-click-right": "dunstctl set-paused toggle"
-  }
+  },
+  "reload_style_on_change": true
 }

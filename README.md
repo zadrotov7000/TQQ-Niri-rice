@@ -13,7 +13,7 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens above the desktop. Browse with Left/Right or the mouse wheel, click a side card to move, click the centered card or press Enter to apply, and press Escape to close.
 - **Wallpaper transition:** the repository uses `awww` when available. Wallpaper changes use a circular center-out reveal; `swaybg` remains the fallback. Wallpaper changes regenerate Matugen colors and do not reload the Niri config.
 - **Wallpaper persistence:** the selected image is restored when Niri starts.
-- **Waybar icons and tray:** the installer installs Waybar and Nerd Font symbols for Wi-Fi, sound, notification and launcher icons. NetworkManager and Blueman applets start with Niri when present. Clicking Waybar's Wi-Fi icon opens TQQ Wi-Fi.
+- **Waybar Island:** compact dark pills with smooth blue/purple/pink/teal animated borders (Waybar only). The launcher, clock, network, volume, disk and notification icons use Font Awesome 4 glyphs, provided by Debian's `fonts-font-awesome` package, with Nerd Fonts as optional fallback. NetworkManager and Blueman applets start with Niri when present. Clicking Waybar's Wi-Fi icon opens TQQ Wi-Fi.
 - **Dunst:** lightweight notifications and notification history; the Waybar bell restores the latest notification and right-click toggles Do Not Disturb. Media, network, brightness and volume controls stay in the Quickshell dashboard.
 - **3D Fetch support:** optional config for [areofyl/fetch](https://github.com/areofyl/fetch). Existing Fetch/Fastfetch startup is preserved.
 
@@ -47,6 +47,20 @@ git pull --ff-only
 ```
 
 **This is an explicit recovery command**, not part of the normal installer. It replaces the current Niri config only after downloading official **Niri v26.04** defaults, applying TQQ binds to a temporary file and running `niri --config <candidate> validate`. It keeps a timestamped backup of your previous `config.kdl`, does not reinstall Niri, and refuses to run for other Niri versions. It does not alter personal keyboard layout preferences: edit `input.keyboard.xkb` in your own config for those.
+
+## Update only Waybar (no rice rebuild)
+
+```bash
+sudo apt install fonts-font-awesome
+cd ~/TQQ-Niri-rice && git pull --ff-only
+mkdir -p ~/.config/waybar
+cp ~/.config/waybar/config ~/.config/waybar/config.before-tqq-island 2>/dev/null || true
+cp ~/.config/waybar/style.css ~/.config/waybar/style.css.before-tqq-island 2>/dev/null || true
+cp config/waybar/config config/waybar/style.css ~/.config/waybar/
+pkill -SIGUSR2 -x waybar || waybar >/dev/null 2>&1 &
+```
+
+The border cycles using lightweight GTK3 CSS keyframes; it does not affect Niri window borders, Kitty or other applications. If icons remain empty, check `fc-match FontAwesome` and restart Waybar after installing the font.
 
 ## Keybindings
 
