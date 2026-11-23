@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Install TQQ Fastfetch appearance without reinstalling the rice.
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice"
+BACKUP="$STATE_HOME/backups/fastfetch-$(date +%Y%m%d-%H%M%S)-$$"
+TARGET="$CONFIG_HOME/fastfetch"
+MAIN="$TARGET/config.jsonc"
+THEME="$TARGET/tqq.jsonc"
+MATUGEN_CONFIG="$CONFIG_HOME/matugen/config.toml"
+mkdir -p "$TARGET" "$CONFIG_HOME/matugen/templates" "$BACKUP"
+chmod 700 "$BACKUP"
+
+install_owned() {
+    local from="$1" to="$2" name="$3"
+    if [[ -L "$to" ]]; then
+        echo "Not overwriting symlink: $to" >&2
+        return 1
+    fi
+    if [[ -f "$to" ]]; then
+        if cmp -s -- "$from" "$to"; then return 0; fi
+        cp -p -- "$to" "$BACKUP/$name"
+    fi
+    install -m 0644 -- "$from" "$to"
+}
+install_owned "$ROOT/config/fastfetch/tqq.jsonc" "$THEME" "previous-tqq.jsonc"
+install_owned "$ROOT/config/matugen/templates/fastfetch.jsonc" \
+    "$CONFIG_HOME/matugen/templates/fastfetch.jsonc" "previous-template.jsonc"
+
+# Register Matugen template without replacing the existing configuration.
+if [[ -L "$MATUGEN_CONFIG" ]]; then
+    echo "Matugen config is symlink-managed: add [templates.fastfetch] yourself." >&2
+elif [[ ! -e "$MATUGEN_CONFIG" ]]; then
+    install -m 0644 "$ROOT/config/matugen/config.toml" "$MATUGEN_CONFIG"
+else
+    python3 - "$MATUGEN_CONFIG" "$BACKUP" <<'PY'
+import pathlib
+import sys
+import tomllib
+
+path, backup = map(pathlib.Path, sys.argv[1:])
+source = path.read_text(encoding="utf-8")
+settings = tomllib.loads(source)
+if "fastfetch" not in settings.get("templates", {}):
+    (backup / "previous-matugen-config.toml").write_text(source, encoding="utf-8")
+    addition = (
+        "\n[templates.fastfetch]\n"
+        "input_path = '~/.config/matugen/templates/fastfetch.jsonc'\n"
+        "output_path = '~/.config/fastfetch/tqq.jsonc'\n"
+    )
+    path.write_text(source.rstrip("\n") + "\n" + addition, encoding="utf-8")
+PY
+fi
+
+# Make the fastfetch command use the theme. Back up any personal default config.
+if [[ -L "$MAIN" ]]; then
+    if [[ "$(readlink -- "$MAIN")" != "tqq.jsonc" ]]; then
+        echo "Leaving your symlink-managed default Fastfetch config unchanged." >&2
+    fi
+else
+    if [[ -e "$MAIN" ]]; then
+        cp -p -- "$MAIN" "$BACKUP/previous-config.jsonc"
+    fi
+    temp_link="$TARGET/.tqq-config-link.$$"
+    ln -s "tqq.jsonc" "$temp_link"
+    mv -fT -- "$temp_link" "$MAIN"
+fi
+
+# Refresh dynamic colors from saved wallpaper; never change the wallpaper.
+saved="$STATE_HOME/current-wallpaper"
+if [[ -r "$saved" ]] && command -v matugen >/dev/null 2>&1; then
+    IFS= read -r wallpaper < "$saved" || true
+    if [[ -r "${wallpaper:-}" && -f "$MATUGEN_CONFIG" ]]; then
+        matugen -c "$MATUGEN_CONFIG" image "$wallpaper" -m dark --source-color-index 0 \
+            >/dev/null || echo "Matugen failed; starter palette remains available." >&2
+    fi
+fi
+echo "TQQ Fastfetch theme ready. Backups: $BACKUP"
+echo "Run: fastfetch"
