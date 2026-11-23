@@ -338,7 +338,7 @@ PanelWindow {
                                     required property string modelData
                                     Layout.fillWidth: true
                                     text: modelData
-                                    color: root.muted
+                                    color: "#FFFFFF"
                                     font.pixelSize: 9
                                     horizontalAlignment: Text.AlignHCenter
                                 }
@@ -354,7 +354,7 @@ PanelWindow {
                                     Text {
                                         anchors.centerIn: parent
                                         text: modelData > 0 ? modelData : ""
-                                        color: parent.color === "transparent" ? root.fg : root.accentForeground
+                                        color: parent.color === "transparent" ? "#FFFFFF" : root.accentForeground
                                         font.pixelSize: 11
                                     }
                                 }
