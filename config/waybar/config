@@ -30,8 +30,7 @@
   },
   "clock": {
     "format": "󰥔  {:%H:%M}   󰃭  {:%d %b}",
-    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\
-<tt>{:%H:%M:%S}</tt>"
+    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\\n<tt>{:%H:%M:%S}</tt>"
   },
   "cpu": {
     "format": "󰍛  {usage}%",
