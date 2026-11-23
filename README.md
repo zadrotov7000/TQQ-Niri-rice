@@ -14,8 +14,8 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 - **Wallpaper persistence:** the selected image is restored when Niri starts.
 - **Waybar Island:** compact dark pills with smooth borders cycling through the wallpaper-derived Matugen `primary`, `secondary` and `tertiary` colors (Waybar only). The launcher, clock, network, volume, disk and notification icons use Font Awesome 4 glyphs, provided by Debian's `fonts-font-awesome` package, with Nerd Fonts as optional fallback. NetworkManager and Blueman applets start with Niri when present. Clicking Waybar's Wi-Fi icon opens TQQ Wi-Fi.
 - **Dunst:** lightweight notifications and notification history; the Waybar bell restores the latest notification and right-click toggles Do Not Disturb. Media, network, brightness and volume controls stay in the Quickshell dashboard.
-- **TQQ Fastfetch:** Debian ASCII logo on the left, exactly four outlined information boxes on the right: OS/Kernel/Shell, Terminal/WM, CPU/GPU, RAM/Swap. Matugen recolors the borders and labels from the selected wallpaper. All detected values come from Fastfetch.
-- **Kitty and Ghostty terminals:** optional matching dark-glass terminal themes with wallpaper-driven Matugen colors, understated transparency, padded text, cursor accents, and a coordinated ANSI palette. Existing user configs are backed up and extended with a single include; Ghostty is not installed automatically.
+- **TQQ Fastfetch:** Debian ASCII logo on the left, exactly four compact 45-column information boxes on the right: OS/Kernel/Shell, Terminal/WM, CPU/GPU, RAM/Swap. Fixed-width labels and shorter values prevent frame wrapping in an ordinary terminal window. Matugen recolors the borders and labels when the wallpaper changes.
+- **Kitty and Ghostty terminals:** optional matching dark-glass themes with Matugen colors. The installer selects the available terminal for **Win+Enter**; when both are installed, it lets you choose (Kitty by default without an interactive terminal). It stores the preference and keeps it until you change it; neither terminal is installed automatically.
 
 ## Install
 
@@ -69,7 +69,7 @@ The animated border uses the active Matugen palette, not a fixed RGB/rainbow cyc
 
 ## TQQ Fastfetch — four info boxes
 
-The default profile shows a Debian ASCII logo on the left. On the right are **exactly four compact bordered groups**, with each value formatted as `Label → value`:
+The default profile shows a Debian ASCII logo on the left. On the right are **exactly four compact 45-character bordered groups**, with each value formatted as `Label → value`:
 
 1. `OS`, `Kernel`, `Shell`
 2. `Terminal`, `WM`
@@ -108,6 +108,28 @@ This compiles a small, **dependency-free Rust** color generator to `~/.local/bin
 Appearance: a 3px primary-to-tertiary gradient for focused windows, subtle secondary borders on others, 14px rounded/clipped corners, soft drop shadows and native GPU-accelerated Niri opening/closing/movement animations. The Rust program is **not** a background daemon; it runs once after each TQQ wallpaper change to regenerate colors. Niri watches the included file and reloads it automatically. This is not a continuously rotating RGB border; there is no per-frame Rust process.
 
 To disable it without losing your backups, remove only the block between `// BEGIN TQQ WINDOWFX` and `// END TQQ WINDOWFX` in your Niri config. No packages are uninstalled.
+
+## Win+Enter — choose Kitty or Ghostty
+
+TQQ supports **exactly two** terminals for its main shortcut: Kitty and Ghostty. The installer detects which are installed and saves the default to `~/.config/tqq-niri-rice/default-terminal`. If both are available, it offers a choice when running interactively and remembers that selection. If the selected terminal is removed, the launcher falls back to the other installed terminal. No terminal package is installed by this feature.
+
+To add or update **only Win+Enter** on an existing TQQ installation, without reinstalling the rice or replacing unrelated Niri binds:
+
+```bash
+cd ~/TQQ-Niri-rice
+git pull --ff-only
+./scripts/apply-terminal-bind
+```
+
+To explicitly choose one when both are installed:
+
+```bash
+./scripts/apply-terminal-bind --ghostty
+# Or choose Kitty:
+./scripts/apply-terminal-bind --kitty
+```
+
+The updater backs up `~/.config/niri/config.kdl`, changes only the `Mod+Return` shortcut, and runs `niri validate --config` before applying it. If the existing Niri config is a symlink, the updater leaves it untouched and requires manual integration. Other shortcuts, the Russian/English keyboard layout and terminal settings are preserved.
 
 ## Optional Kitty / Ghostty terminal themes
 
@@ -171,6 +193,7 @@ Close open panels with Escape, then reopen. No Niri or Rust rebuild is needed.
 
 | Action | Shortcut |
 | --- | --- |
+| Terminal (automatically selected Kitty or Ghostty) | `Mod+Return` / **Win+Enter** |
 | Wallpaper gallery and Matugen palette | `Mod+B` |
 | Dashboard / Control Center | `Mod+Shift+Space` (free fallback if occupied) |
 | Application launcher | Waybar magnifying glass, or `Mod+D` |
