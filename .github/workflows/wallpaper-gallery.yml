@@ -19,6 +19,8 @@ on:
       - "wallpaper-gallery/**"
       - "config/waybar/**"
       - "config/swaync/**"
+      - "config/matugen/**"
+      - "config/gtklock/**"
       - "quickshell/**"
       - "scripts/**"
       - "install.sh"
