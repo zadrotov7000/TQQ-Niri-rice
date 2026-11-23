@@ -25,6 +25,7 @@ for script in \
     "$ROOT/scripts/install-dependencies" \
     "$ROOT/scripts/install-icon-fonts" \
     "$ROOT/scripts/restore-niri-default" \
+    "$ROOT/scripts/apply-windowfx" \
     "$ROOT/scripts/build-wallpaper-gallery" \
     "$ROOT/scripts/build-squishy-shaders" \
     "$ROOT/scripts/select-wallpaper" \
@@ -279,6 +280,12 @@ if command -v niri >/dev/null 2>&1 && ! niri validate; then
     exit 1
 fi
 progress_mark 91 "Validating Niri config"
+
+# Enable native Niri borders and animations using a tiny Rust palette generator.
+# This is optional so a visual enhancement cannot break the basic rice install.
+if ! bash "$ROOT/scripts/apply-windowfx"; then
+    echo "Warning: TQQ WindowFX could not be enabled; your working Niri config was preserved." >&2
+fi
 
 # Seed the first wallpaper only if the user has not selected one before.
 STATE_FILE="$STATE_HOME/tqq-niri-rice/current-wallpaper"

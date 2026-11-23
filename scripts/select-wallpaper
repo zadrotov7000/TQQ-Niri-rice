@@ -119,6 +119,13 @@ PYFETCH
             sleep 0.1
         done
     fi
+    # Update the Niri border include from the same Matugen colors.
+    # One Rust process per wallpaper change; no permanently running daemon.
+    if [[ -x "$HOME/.local/bin/tqq-windowfx" ]]; then
+        if ! "$HOME/.local/bin/tqq-windowfx" "$config_home/waybar/colors.css" "$config_home/niri/tqq-windowfx.kdl"; then
+            notify "Window borders could not be recolored. Check Matugen palette."
+        fi
+    fi
     pkill -SIGUSR2 -x waybar >/dev/null 2>&1 || true
     # Dunst reads its updated Matugen theme without blocking installation.
     if command -v dunstctl >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then

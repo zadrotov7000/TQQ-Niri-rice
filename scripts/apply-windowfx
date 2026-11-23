@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Apply only window visuals. Preserve keyboard layout, keybindings and user apps.
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+NIRI_CONFIG="$CONFIG_HOME/niri/config.kdl"
+THEME="$CONFIG_HOME/niri/tqq-windowfx.kdl"
+PALETTE="$CONFIG_HOME/waybar/colors.css"
+BIN_DIR="$HOME/.local/bin"
+BIN="$BIN_DIR/tqq-windowfx"
+RUST_SOURCE="$ROOT/windowfx/src/main.rs"
+
+for command_name in rustc niri python3; do
+    if ! command -v "$command_name" >/dev/null 2>&1; then
+        echo "TQQ WindowFX requires $command_name." >&2
+        exit 1
+    fi
+done
+
+if [[ ! -s "$NIRI_CONFIG" ]]; then
+    echo "A complete Niri config is required at $NIRI_CONFIG; refusing to create a minimal one." >&2
+    exit 1
+fi
+if [[ ! -s "$PALETTE" ]]; then
+    echo "Matugen palette is missing: $PALETTE" >&2
+    echo "Apply your wallpaper once with TQQ first, then retry." >&2
+    exit 1
+fi
+
+mkdir -p "$BIN_DIR"
+if [[ ! -x "$BIN" || "$RUST_SOURCE" -nt "$BIN" ]]; then
+    temp_bin="$(mktemp "$BIN_DIR/.tqq-windowfx-build.XXXXXXXX")"
+    trap 'rm -f -- "$temp_bin"' EXIT
+    echo "Building lightweight Rust window theme generator..."
+    rustc --edition=2021 -O "$RUST_SOURCE" -o "$temp_bin"
+    chmod 0755 "$temp_bin"
+    mv -f -- "$temp_bin" "$BIN"
+    trap - EXIT
+fi
+
+BACKUP="$STATE_HOME/tqq-niri-rice/backups/windowfx-$(date +%Y%m%d-%H%M%S)-$$"
+mkdir -p "$BACKUP"
+cp -p -- "$NIRI_CONFIG" "$BACKUP/config.kdl"
+theme_existed=0
+if [[ -f "$THEME" ]]; then
+    cp -p -- "$THEME" "$BACKUP/tqq-windowfx.kdl"
+    theme_existed=1
+fi
+
+# Rebuild the include from Matugen's live palette. Niri watches included files.
+if ! "$BIN" "$PALETTE" "$THEME"; then
+    echo "Palette generation failed; your Niri config was not changed." >&2
+    exit 1
+fi
+
+candidate="$(mktemp "$CONFIG_HOME/niri/.tqq-windowfx-config.XXXXXXXX")"
+trap 'rm -f -- "$candidate"' EXIT
+cp -- "$NIRI_CONFIG" "$candidate"
+if ! grep -Eq '^[[:space:]]*include[[:space:]]+"tqq-windowfx\.kdl"' "$candidate"; then
+    printf '\n// BEGIN TQQ WINDOWFX\ninclude "tqq-windowfx.kdl"\n// END TQQ WINDOWFX\n' >> "$candidate"
+fi
+
+if ! niri validate --config "$candidate"; then
+    echo "Niri rejected the new appearance. Restoring the previous files." >&2
+    if ((theme_existed)); then
+        cp -p -- "$BACKUP/tqq-windowfx.kdl" "$THEME"
+    else
+        rm -f -- "$THEME"
+    fi
+    exit 1
+fi
+
+if ! cmp -s "$candidate" "$NIRI_CONFIG"; then
+    chmod --reference="$NIRI_CONFIG" "$candidate"
+    mv -f -- "$candidate" "$NIRI_CONFIG"
+fi
+trap - EXIT
+rm -f -- "$candidate"
+printf 'TQQ WindowFX enabled. Backup: %s\n' "$BACKUP"
+printf 'The focus border now follows Matugen, with Niri-native window animations.\n'

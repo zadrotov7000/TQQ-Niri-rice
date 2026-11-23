@@ -67,6 +67,22 @@ pkill -SIGUSR2 -x waybar
 
 The animated border uses the active Matugen palette, not a fixed RGB/rainbow cycle. When the wallpaper is changed using TQQ, Matugen regenerates `~/.config/waybar/colors.css` and TQQ reloads Waybar. It does not affect Niri window borders, Kitty or other applications. If Waybar is not running, start it with `waybar &` from your Niri session. If icons remain empty, check `fc-match FontAwesome` and restart Waybar after installing the font.
 
+## TQQ WindowFX — windows and animations (Niri 26.04)
+
+Run this **separate** script when the Niri desktop and Waybar's Matugen theme are already installed; it does not rebuild the wallpaper gallery or replace your keyboard setup:
+
+```bash
+cd ~/TQQ-Niri-rice
+git pull --ff-only
+./scripts/apply-windowfx
+```
+
+This compiles a small, **dependency-free Rust** color generator to `~/.local/bin/tqq-windowfx`, creates `~/.config/niri/tqq-windowfx.kdl` from the existing Matugen `~/.config/waybar/colors.css`, and adds one `include "tqq-windowfx.kdl"` to your Niri configuration (only if not already present). It saves a dated backup and runs `niri validate --config` before changing your main config. **Your language, shortcuts, and installed applications are preserved.** On validation failure it restores the previous theme and leaves the main config alone.
+
+Appearance: a 3px primary-to-tertiary gradient for focused windows, subtle secondary borders on others, 14px rounded/clipped corners, soft drop shadows and native GPU-accelerated Niri opening/closing/movement animations. The Rust program is **not** a background daemon; it runs once after each TQQ wallpaper change to regenerate colors. Niri watches the included file and reloads it automatically. This is not a continuously rotating RGB border; there is no per-frame Rust process.
+
+To disable it without losing your backups, remove only the block between `// BEGIN TQQ WINDOWFX` and `// END TQQ WINDOWFX` in your Niri config. No packages are uninstalled.
+
 ## Keybindings
 
 | Action | Shortcut |
