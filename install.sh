@@ -70,7 +70,7 @@ backup_config_dir() {
 
 # Copy only config directories that actually exist in the repository. Quickshell
 # lives at the repository root (./quickshell), not under ./config/quickshell.
-for config_name in matugen swaync fuzzel fetch; do
+for config_name in matugen swaync fuzzel fetch gtklock; do
     source_dir="$ROOT/config/$config_name"
     [[ -d "$source_dir" ]] || continue
     backup_config_dir "$config_name"
