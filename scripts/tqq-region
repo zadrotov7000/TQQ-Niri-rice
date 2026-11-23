@@ -49,8 +49,9 @@ case "${1:-get}" in
         fi
         [[ -n "$region" ]] || { echo "No region configured." >&2; exit 1; }
         command -v curl >/dev/null 2>&1 || { echo "curl is required for weather." >&2; exit 1; }
+        region_path="${region// /+}"
         exec curl --fail --silent --show-error --location --max-time 12 --get \
-            --data-urlencode "format=j1" "https://wttr.in/$region"
+            --data-urlencode "format=j1" "https://wttr.in/$region_path"
         ;;
     *)
         echo "Usage: tqq-region [get|set CITY|weather]" >&2
