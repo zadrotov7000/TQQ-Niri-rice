@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -u
 
-required=(niri dunst dunstctl matugen quickshell playerctl wpctl pavucontrol nmcli blueman-manager brightnessctl curl python3 cargo rustc pkg-config pgrep pkill)
+required=(niri dunst dunstctl waybar nm-applet blueman-applet fc-list fc-cache matugen quickshell playerctl wpctl pavucontrol nmcli blueman-manager brightnessctl curl python3 cargo rustc pkg-config pgrep pkill)
 missing=()
 for command_name in "${required[@]}"; do
     command -v "$command_name" >/dev/null 2>&1 || missing+=("$command_name")
@@ -35,6 +35,11 @@ if { ! command -v awww >/dev/null 2>&1 || ! command -v awww-daemon >/dev/null 2>
     missing+=("awww or swaybg")
 fi
 
+# Font Awesome does not provide all the Nerd Font icons used in the bar.
+if command -v fc-list >/dev/null 2>&1 && ! fc-list -f '%{family}\n' | grep -F 'Symbols Nerd Font' >/dev/null; then
+    missing+=("Symbols Nerd Font (run scripts/install-icon-fonts)")
+fi
+
 if ((${#missing[@]} == 0)); then
     echo "All required TQQ rice commands are available."
     exit 0
@@ -45,21 +50,22 @@ if [[ -r /etc/os-release ]]; then
     . /etc/os-release
     case "${ID:-}" in
         debian|ubuntu|linuxmint|pop)
-            echo "Debian-family packages: quickshell (from trixie-backports), qt6-shader-baker, playerctl pavucontrol network-manager blueman brightnessctl lm-sensors, dunst cargo rustc pkg-config libgtk-4-dev libgtk4-layer-shell-dev pipewire-bin wireplumber swaybg fonts-font-awesome fonts-jetbrains-mono"
+            echo "Debian-family packages: quickshell (from trixie-backports), qt6-shader-baker, playerctl pavucontrol network-manager blueman brightnessctl lm-sensors, dunst cargo rustc pkg-config libgtk-4-dev libgtk4-layer-shell-dev pipewire-bin wireplumber swaybg waybar network-manager-applet adwaita-icon-theme fontconfig fonts-font-awesome fonts-jetbrains-mono"
             echo "Matugen and awww may need their upstream release/package for your Debian version."
             ;;
         arch|endeavouros|manjaro)
-            echo "Arch packages: quickshell qt6-shadertools playerctl pavucontrol networkmanager blueman brightnessctl lm_sensors dunst rust cargo pkgconf gtk4 gtk4-layer-shell matugen awww pipewire wireplumber"
+            echo "Arch packages: quickshell qt6-shadertools playerctl pavucontrol networkmanager blueman brightnessctl lm_sensors dunst waybar ttf-nerd-fonts-symbols rust cargo pkgconf gtk4 gtk4-layer-shell matugen awww pipewire wireplumber"
             ;;
         fedora)
-            echo "Fedora packages: quickshell qt6-qtshadertools playerctl pavucontrol NetworkManager-bluetooth blueman brightnessctl lm_sensors dunst cargo rust gtk4-devel gtk4-layer-shell-devel pkgconf-pkg-config matugen awww pipewire wireplumber"
+            echo "Fedora packages: quickshell qt6-qtshadertools playerctl pavucontrol NetworkManager-bluetooth blueman brightnessctl lm_sensors dunst waybar network-manager-applet adwaita-icon-theme fontconfig cargo rust gtk4-devel gtk4-layer-shell-devel pkgconf-pkg-config matugen awww pipewire wireplumber"
             ;;
         opensuse*|opensuse-tumbleweed|opensuse-leap)
-            echo "openSUSE packages: qt6-shadertools plus NetworkManager-applet, blueman, pavucontrol, dunst, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, awww and WirePlumber."
+            echo "openSUSE packages: qt6-shadertools plus NetworkManager-applet, blueman, pavucontrol, dunst, Waybar, network applet, Nerd Font symbols, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, awww and WirePlumber."
             ;;
         *)
-            echo "Install equivalent packages for your distribution: Qt 6 ShaderTools (qsb), Dunst, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, PipeWire/WirePlumber and awww or swaybg."
+            echo "Install equivalent packages for your distribution: Qt 6 ShaderTools (qsb), Dunst, Waybar, network applet, Nerd Font symbols, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, PipeWire/WirePlumber and awww or swaybg."
             ;;
     esac
 fi
+echo "Install the missing icons via scripts/install-icon-fonts."
 exit 1

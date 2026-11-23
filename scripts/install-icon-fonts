@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# The status icons in TQQ Waybar require Nerd Font private-use glyphs.
+if ! command -v fc-list >/dev/null 2>&1 || ! command -v fc-cache >/dev/null 2>&1; then
+    echo "Install fontconfig (fc-list and fc-cache) first." >&2
+    exit 1
+fi
+if fc-list -f '%{family}\n' | grep -F 'Symbols Nerd Font' >/dev/null; then
+    echo "Nerd Font symbols are already installed."
+    exit 0
+fi
+command -v curl >/dev/null 2>&1 || { echo "Install curl first." >&2; exit 1; }
+
+FONT_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/fonts"
+TEMP_DIR="$(mktemp -d)"
+trap 'rm -rf -- "$TEMP_DIR"' EXIT
+FONT_NAME="SymbolsNerdFontMono-Regular.ttf"
+URL="https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/patched-fonts/NerdFontsSymbolsOnly/$FONT_NAME"
+
+echo "Installing Nerd Fonts v3.4.0 symbols for Waybar..."
+curl --fail --location --show-error --silent --retry 2 --connect-timeout 10 --max-time 120 \
+    "$URL" --output "$TEMP_DIR/$FONT_NAME"
+if [[ ! -s "$TEMP_DIR/$FONT_NAME" ]] || [[ "$(wc -c < "$TEMP_DIR/$FONT_NAME")" -lt 100000 ]]; then
+    echo "Nerd Font download is missing or too small." >&2
+    exit 1
+fi
+header="$(od -An -tx1 -N4 "$TEMP_DIR/$FONT_NAME" | tr -d '[:space:]')"
+if [[ "$header" != "00010000" && "$header" != "4f54544f" ]]; then
+    echo "Downloaded file is not a TrueType/OpenType font." >&2
+    exit 1
+fi
+mkdir -p "$FONT_DIR"
+install -m 0644 "$TEMP_DIR/$FONT_NAME" "$FONT_DIR/$FONT_NAME"
+fc-cache -f "$FONT_DIR"
+if ! fc-list -f '%{family}\n' | grep -F 'Symbols Nerd Font' >/dev/null; then
+    echo "Font installed but fontconfig cannot detect it. Log in again." >&2
+    exit 1
+fi
+echo "Nerd Font icons installed. Restart Waybar to refresh them."

@@ -236,12 +236,18 @@ def main() -> int:
     startup_apps = ["dunst"]
     if shutil.which("waybar"):
         startup_apps.append("waybar")
+        # These applets supply the network and Bluetooth status tray icons.
+        if shutil.which("nm-applet"):
+            startup_apps.append("nm-applet")
+        if shutil.which("blueman-applet"):
+            startup_apps.append("blueman-applet")
     for app in startup_apps:
         if not re.search(
             r"(?m)^\s*(?:spawn-at-startup|spawn-sh-at-startup)\b[^\n]*\b" + app + r"\b",
             text,
         ):
-            startup_entries.append(f"spawn-at-startup {json.dumps(app)}")
+            args = ' "--indicator"' if app == "nm-applet" else ""
+            startup_entries.append(f"spawn-at-startup {json.dumps(app)}{args}")
     restore_cmd = json.dumps(str(local_bin / "select-wallpaper"), ensure_ascii=False)
     if not re.search(r"(?m)^\s*spawn-at-startup\s+\"[^\"]*select-wallpaper\"[^\n]*--restore", text):
         startup_entries.append(f"spawn-at-startup {restore_cmd} \"--restore\"")
@@ -272,7 +278,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper, Quickshell Wi-Fi, radial Alt+Tab, Squishy Physics ({squishy_key}), dashboard, lock, launcher, and Dunst/available Waybar startup."
+        f"and added TQQ wallpaper, Quickshell Wi-Fi, radial Alt+Tab, Squishy Physics ({squishy_key}), dashboard, lock, launcher, and Dunst/Waybar/network applet startup when available."
     )
     return 0
 

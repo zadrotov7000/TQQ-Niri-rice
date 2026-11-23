@@ -52,6 +52,7 @@
     "format-ethernet": "󰈀  LAN",
     "format-disconnected": "󰖪  offline",
     "tooltip-format": "{essid}: {ipaddr}/{cidr}",
+    "on-click": "$HOME/.local/bin/tqq-wifi",
     "interval": 5
   },
   "tray": {

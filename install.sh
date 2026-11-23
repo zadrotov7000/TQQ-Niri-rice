@@ -23,6 +23,7 @@ for script in \
     "$ROOT/install.sh" \
     "$ROOT/scripts/check-dependencies" \
     "$ROOT/scripts/install-dependencies" \
+    "$ROOT/scripts/install-icon-fonts" \
     "$ROOT/scripts/build-wallpaper-gallery" \
     "$ROOT/scripts/build-squishy-shaders" \
     "$ROOT/scripts/select-wallpaper" \
@@ -197,7 +198,7 @@ progress_mark 79 "Copying wallpapers"
 for script_name in \
     select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher \
     tqq-squishy tqq-region tqq-lock-screen configure-fetch-autostart \
-    check-dependencies install-dependencies; do
+    check-dependencies install-dependencies install-icon-fonts; do
     source_file="$ROOT/scripts/$script_name"
     if [[ ! -f "$source_file" ]]; then
         echo "Required project script is missing: $source_file" >&2
