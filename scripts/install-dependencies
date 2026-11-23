@@ -93,11 +93,11 @@ case "${ID:-}" in
                 packages+=(cargo build-essential)
             fi
         fi
-        run_privileged apt-get install "${packages[@]}"
+        run_privileged apt-get install "${packages[@]}"\n        if ! command -v quickshell >/dev/null 2>&1; then\n            run_privileged apt-get install -y -t trixie-backports quickshell\n        fi
         install_matugen
         ;;
     arch|endeavouros|manjaro|cachyos)
-        packages=(waybar swaync fuzzel swaybg ttf-font-awesome ttf-jetbrains-mono hicolor-icon-theme python rust cargo pkgconf gtk4 gtk4-layer-shell)
+        packages=(quickshell playerctl pavucontrol networkmanager blueman lm_sensors waybar swaync fuzzel swaybg ttf-font-awesome ttf-jetbrains-mono hicolor-icon-theme python rust cargo pkgconf gtk4 gtk4-layer-shell)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire wireplumber)
         fi
@@ -112,7 +112,7 @@ case "${ID:-}" in
         fi
         ;;
     fedora)
-        packages=(waybar SwayNotificationCenter fuzzel swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust gtk4-devel gtk4-layer-shell-devel pkgconf-pkg-config)
+        packages=(quickshell playerctl pavucontrol NetworkManager-bluetooth blueman lm_sensors waybar SwayNotificationCenter fuzzel swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust gtk4-devel gtk4-layer-shell-devel pkgconf-pkg-config)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire-utils wireplumber)
         fi
@@ -129,7 +129,7 @@ case "${ID:-}" in
         install_matugen
         ;;
     opensuse*|opensuse-tumbleweed|opensuse-leap)
-        packages=(waybar SwayNotificationCenter fuzzel swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust pkg-config gtk4-devel)
+        packages=(quickshell playerctl pavucontrol NetworkManager-bluetooth blueman lm_sensors waybar SwayNotificationCenter fuzzel swaybg fontawesome-fonts jetbrains-mono-fonts hicolor-icon-theme python3 cargo rust pkg-config gtk4-devel)
         if ! command -v wpctl >/dev/null 2>&1; then
             packages+=(pipewire wireplumber)
         fi
