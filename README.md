@@ -48,8 +48,12 @@ The desktop requires Niri, Quickshell (including its PAM service module), Dunst 
 | Lock screen | First free key from `Mod+L`, `Mod+Shift+L`, `Mod+Ctrl+L`, `Mod+Alt+L`, `Mod+Ctrl+Shift+L`, `Mod+Alt+Shift+L` |
 | Radial window switcher | `Alt+Tab` / `Alt+Shift+Tab` |
 | Squishy Physics overlay | First free key from `Mod+F`, `Mod+Shift+F`, `Mod+Alt+F`, `Mod+Ctrl+F` |
+| Workspaces | `Mod+1` through `Mod+9`; move the focused column with `Mod+Ctrl+1` through `Mod+Ctrl+9` |
+| Screenshot | `Print`: select area; `Ctrl+Print`: full screen; `Alt+Print`: window; free fallback `Mod+Shift+S` |
+| Volume | Laptop volume keys (`XF86AudioRaiseVolume`, `XF86AudioLowerVolume`, `XF86AudioMute`) through `wpctl` |
+| Russian keyboard | Adds `ru` to the configured XKB layout(s), retaining the original layout and any existing group-switch option; otherwise `Alt+Shift` toggles languages |
 
-The installer preserves existing Niri settings and unrelated keybindings. It reserves Alt+Tab and Alt+Shift+Tab for the TQQ radial switcher.
+The installer preserves existing Niri settings and unrelated keybindings. It reserves Alt+Tab and Alt+Shift+Tab for the TQQ radial switcher. It restores missing workspace, screenshot and volume binds, but leaves existing shortcuts in place. Niri uses dynamic workspaces, so `Mod+9` goes to the last available workspace rather than creating nine fixed desktops. To apply new keybindings without rebuilding Rust, update the repository, back up `~/.config/niri/config.kdl`, run `python3 scripts/integrate-niri.py ~/.config/niri/config.kdl ~/.local/bin` and then `niri validate`.
 
 ## Project layout
 
