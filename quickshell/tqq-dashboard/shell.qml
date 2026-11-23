@@ -250,7 +250,7 @@ PanelWindow {
         id: panel
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        anchors.topMargin: Math.max(88, parent.height * 0.12)
+        anchors.topMargin: Math.max(58, parent.height * 0.075)
         width: Math.min(parent.width * 0.62, 1040)
         height: Math.min(parent.height * 0.76, parent.height - anchors.topMargin - 28)
         radius: 22
