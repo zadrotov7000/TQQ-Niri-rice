@@ -154,7 +154,8 @@ def main() -> int:
                 return candidate
         raise ValueError("No free keybinding among: " + ", ".join(candidates))
 
-    # Reserve Win+B for wallpaper selection. Never fall back to Win+Space: that is a common input/language-switch shortcut.\n    # The launcher uses Win+D, then modified D combinations only.
+    # Reserve Win+B for wallpaper selection. Never fall back to Win+Space: that is a common input/language-switch shortcut.
+    # The launcher uses Win+D, then modified D combinations only.
     wallpaper_key = choose(["Mod+B"])
     launcher_key = choose(["Mod+D", "Mod+Shift+D", "Mod+Alt+D", "Mod+Ctrl+D"])
 
