@@ -61,6 +61,20 @@ bash "$ROOT/scripts/build-squishy-shaders" \
     "$ROOT/quickshell/tqq-squishy" \
     "$BACKUP/squishy-shaders"
 
+# Install the shipped desktop configs (SwayNC, Matugen, Waybar and Fetch).
+# Existing config directories are backed up before TQQ files are merged in.
+mkdir -p "$BACKUP/config"
+for config_name in fetch matugen swaync waybar; do
+    source_config="$ROOT/config/$config_name"
+    target_config="$CONFIG_HOME/$config_name"
+    [[ -d "$source_config" ]] || continue
+    if [[ -e "$target_config" ]]; then
+        cp -a "$target_config" "$BACKUP/config/$config_name"
+    fi
+    mkdir -p "$target_config"
+    cp -a "$source_config/." "$target_config/"
+done
+
 # Install the Quickshell applications into their standard config directory.
 # Existing TQQ app configs are backed up before project files are updated.
 QUICKSHELL_CONFIG="$CONFIG_HOME/quickshell"
