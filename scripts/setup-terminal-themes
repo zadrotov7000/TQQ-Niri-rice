@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Install only the optional TQQ terminal theme includes, not the terminals.
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice"
+BACKUP="$STATE_HOME/backups/terminals-$(date +%Y%m%d-%H%M%S)-$$"
+mode="${1:---auto}"
+
+case "$mode" in
+    --auto|--all|--kitty|--ghostty) ;;
+    *) echo "Usage: $0 [--auto|--all|--kitty|--ghostty]" >&2; exit 2 ;;
+esac
+
+# These directories must exist even if neither terminal is installed:
+# Matugen writes both palette files every time the wallpaper changes.
+mkdir -p "$CONFIG_HOME/kitty" "$CONFIG_HOME/ghostty" "$CONFIG_HOME/matugen/templates" "$BACKUP"
+chmod 700 "$BACKUP"
+
+install_theme_file() {
+    local source="$1" dest="$2"
+    if [[ -L "$dest" ]]; then
+        echo "Skipping symlink, not overwriting: $dest" >&2
+        return 1
+    fi
+    if [[ -f "$dest" ]] && cmp -s -- "$source" "$dest"; then
+        return 0
+    fi
+    if [[ -e "$dest" ]]; then
+        local rel="${dest#"$CONFIG_HOME"/}"
+        cp -p -- "$dest" "$BACKUP/${rel//\//__}"
+    fi
+    install -m 0644 -- "$source" "$dest"
+}
+
+# Register templates without replacing the user's existing Matugen config.
+for terminal in kitty ghostty; do
+    install_theme_file "$ROOT/config/matugen/templates/$terminal-colors.conf" \
+        "$CONFIG_HOME/matugen/templates/$terminal-colors.conf"
+done
+
+matugen_conf="$CONFIG_HOME/matugen/config.toml"
+if [[ ! -e "$matugen_conf" ]]; then
+    install -m 0644 "$ROOT/config/matugen/config.toml" "$matugen_conf"
+else
+    if [[ -L "$matugen_conf" ]]; then
+        echo "Matugen config is a symlink; manage terminal template registration yourself: $matugen_conf" >&2
+        exit 1
+    fi
+    # Verify TOML before modifying it; leave all existing template entries intact.
+    python3 - "$matugen_conf" "$BACKUP" <<'PY'
+import pathlib
+import sys
+import tomllib
+
+path = pathlib.Path(sys.argv[1])
+backup = pathlib.Path(sys.argv[2])
+original = path.read_text()
+data = tomllib.loads(original)
+existing = data.get("templates", {})
+missing = [name for name in ("kitty", "ghostty") if name not in existing]
+if missing:
+    (backup / "matugen-config.toml").write_text(original)
+    suffix = "".join(
+        f"\n[templates.{name}]\n"
+        f"input_path = '~/.config/matugen/templates/{name}-colors.conf'\n"
+        f"output_path = '~/.config/{name}/tqq-colors.conf'\n"
+        for name in missing
+    )
+    path.write_text(original.rstrip("\n") + "\n" + suffix)
+PY
+fi
+
+enable_terminal() {
+    local terminal="$1" main
+    if [[ "$terminal" == kitty ]]; then
+        main="$CONFIG_HOME/kitty/kitty.conf"
+    else
+        # Ghostty loads config after config.ghostty if both exist.
+        # Prefer the legacy config if present so the theme wins consistently.
+        if [[ -f "$CONFIG_HOME/ghostty/config" ]]; then
+            main="$CONFIG_HOME/ghostty/config"
+        else
+            main="$CONFIG_HOME/ghostty/config.ghostty"
+        fi
+    fi
+
+    local target="$CONFIG_HOME/$terminal"
+    install_theme_file "$ROOT/config/$terminal/tqq.conf" "$target/tqq.conf"
+    if [[ ! -e "$target/tqq-colors.conf" ]]; then
+        install_theme_file "$ROOT/config/$terminal/tqq-colors.conf" \
+            "$target/tqq-colors.conf"
+    fi
+
+    if [[ -L "$main" ]]; then
+        echo "Main config is a symlink. Add the TQQ include manually: $main" >&2
+        return 0
+    fi
+    local include
+    if [[ "$terminal" == kitty ]]; then
+        include="include tqq.conf"
+    else
+        include="config-file = tqq.conf"
+    fi
+    if [[ -f "$main" ]] && grep -Eq "^[[:space:]]*${include}[[:space:]]*$" "$main"; then
+        echo "TQQ $terminal already enabled."
+        return 0
+    fi
+    if [[ -e "$main" ]]; then
+        cp -p -- "$main" "$BACKUP/$terminal-main.conf"
+    fi
+    printf '\n# BEGIN TQQ TERMINAL THEME\n%s\n# END TQQ TERMINAL THEME\n' "$include" >> "$main"
+    echo "Enabled TQQ $terminal. Backup: $BACKUP"
+}
+
+case "$mode" in
+    --all) enable_terminal kitty; enable_terminal ghostty ;;
+    --kitty) enable_terminal kitty ;;
+    --ghostty) enable_terminal ghostty ;;
+    --auto)
+        if command -v kitty >/dev/null 2>&1; then enable_terminal kitty; fi
+        if command -v ghostty >/dev/null 2>&1; then enable_terminal ghostty; fi
+        ;;
+esac
+
+# Rebuild color files using the currently saved wallpaper if possible.
+# No change to the wallpaper itself, and no system packages installed.
+saved="$STATE_HOME/current-wallpaper"
+if [[ -s "$saved" ]] && command -v matugen >/dev/null 2>&1; then
+    IFS= read -r wallpaper < "$saved" || true
+    if [[ -r "${wallpaper:-}" ]]; then
+        matugen -c "$matugen_conf" image "$wallpaper" -m dark --source-color-index 0 \
+            >/dev/null || echo "Matugen regeneration failed; starter colors remain." >&2
+    fi
+fi
+echo "Terminal theme setup complete. No original configs were deleted."
