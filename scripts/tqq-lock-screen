@@ -30,7 +30,7 @@ if [[ -n "$wallpaper" && -r "$wallpaper" ]]; then
         echo "ImageMagick is missing; cannot prepare the blurred lock background." >&2
         exit 1
     fi
-    exec gtklock --config "$CONFIG_HOME/gtklock/config.ini" --style "$STYLE" --start-hidden --start-hidden --background "$LOCK_CACHE"
+    exec gtklock --config "$CONFIG_HOME/gtklock/config.ini" --style "$STYLE" --start-hidden --background "$LOCK_CACHE"
 fi
 
-exec gtklock --config "$CONFIG_HOME/gtklock/config.ini" --style "$STYLE"
+exec gtklock --config "$CONFIG_HOME/gtklock/config.ini" --style "$STYLE" --start-hidden
