@@ -40,7 +40,7 @@ echo "Integrating TQQ into a separate candidate file..."
 python3 "$ROOT/scripts/integrate-niri.py" "$candidate" "$BIN_DIR"
 
 echo "Validating the candidate without changing the active config..."
-if ! niri --config "$candidate" validate; then
+if ! niri validate --config "$candidate"; then
     echo "Niri rejected the candidate. Your existing config is untouched." >&2
     exit 1
 fi
