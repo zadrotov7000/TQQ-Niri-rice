@@ -37,6 +37,7 @@ for script in \
     "$ROOT/scripts/tqq-wifi" \
     "$ROOT/scripts/tqq-switcher" \
     "$ROOT/scripts/tqq-lock-screen" \
+    "$ROOT/scripts/update-lockscreen" \
     "$ROOT/scripts/setup-fastfetch" \
     "$ROOT/scripts/configure-fastfetch-autostart"; do
     if ! bash -n "$script"; then
@@ -46,7 +47,7 @@ for script in \
 done
 
 # Compile Python helpers in memory so syntax checks do not leave __pycache__ files.
-python3 - "$ROOT/scripts/integrate-niri.py" <<'PYCHECK'
+python3 - "$ROOT/scripts/integrate-niri.py" "$ROOT/scripts/tqq-avatar" <<'PYCHECK'
 from pathlib import Path
 import sys
 
@@ -221,7 +222,7 @@ progress_mark 79 "Copying wallpapers"
 # Install only the launchers and helpers used by the current Quickshell setup.
 for script_name in \
     select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher \
-    tqq-region tqq-lock-screen configure-fastfetch-autostart \
+    tqq-region tqq-lock-screen tqq-avatar configure-fastfetch-autostart \
     check-dependencies install-dependencies install-icon-fonts restore-niri-default; do
     source_file="$ROOT/scripts/$script_name"
     if [[ ! -f "$source_file" ]]; then
