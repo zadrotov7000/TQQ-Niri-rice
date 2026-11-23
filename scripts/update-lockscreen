@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Update lock screen and Control Center only. No Niri or system package edits.
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+LOCAL_BIN="$HOME/.local/bin"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice"
+BACKUP="$STATE_HOME/backups/lock-screen-$(date +%Y%m%d-%H%M%S)-$$"
+
+mkdir -p "$BACKUP" "$LOCAL_BIN"
+chmod 700 "$BACKUP"
+
+python3 - "$ROOT/scripts/tqq-avatar" <<'PY'
+from pathlib import Path
+import sys
+compile(Path(sys.argv[1]).read_text(encoding="utf-8"), sys.argv[1], "exec")
+PY
+
+for panel in tqq-lock tqq-dashboard; do
+    source="$ROOT/quickshell/$panel/shell.qml"
+    target_dir="$CONFIG_HOME/quickshell/$panel"
+    target="$target_dir/shell.qml"
+    if [[ ! -s "$source" || -L "$target" ]]; then
+        echo "Missing source or symlink-managed target: $target" >&2
+        exit 1
+    fi
+done
+if [[ -L "$LOCAL_BIN/tqq-avatar" ]]; then
+    echo "Avatar helper is symlink-managed; refusing to overwrite it." >&2
+    exit 1
+fi
+
+for panel in tqq-lock tqq-dashboard; do
+    source="$ROOT/quickshell/$panel/shell.qml"
+    target_dir="$CONFIG_HOME/quickshell/$panel"
+    mkdir -p "$target_dir"
+    if [[ -f "$target_dir/shell.qml" ]]; then
+        cp -p -- "$target_dir/shell.qml" "$BACKUP/$panel-shell.qml"
+    fi
+    install -m 0644 -- "$source" "$target_dir/shell.qml"
+done
+if [[ -f "$LOCAL_BIN/tqq-avatar" ]]; then
+    cp -p -- "$LOCAL_BIN/tqq-avatar" "$BACKUP/tqq-avatar"
+fi
+install -m 0755 "$ROOT/scripts/tqq-avatar" "$LOCAL_BIN/tqq-avatar"
+
+echo "TQQ lock screen and Control Center avatar UI updated."
+echo "Backup: $BACKUP"
+echo "Close and reopen Control Center to load the new profile settings."
