@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# A single stable command for the Win+Enter Niri binding.
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+choice_file="$config_home/tqq-niri-rice/default-terminal"
+choice=""
+if [[ -r "$choice_file" ]]; then
+    IFS= read -r choice < "$choice_file" || true
+fi
+case "$choice" in
+    kitty|ghostty)
+        if command -v "$choice" >/dev/null 2>&1; then
+            exec "$choice" "$@"
+        fi
+        ;;
+esac
+# Fall back gracefully if the preferred terminal was later uninstalled.
+for candidate in kitty ghostty; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+        exec "$candidate" "$@"
+    fi
+done
+printf 'TQQ: neither Kitty nor Ghostty is installed.\n' >&2
+exit 127
