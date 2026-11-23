@@ -242,16 +242,18 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        color: "#99000000"
+        color: "#33000000"
         MouseArea { anchors.fill: parent; onClicked: Qt.quit() }
     }
 
     Rectangle {
         id: panel
-        anchors.fill: parent
-        width: parent.width
-        height: parent.height
-        radius: 0
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: Math.max(88, parent.height * 0.12)
+        width: Math.min(parent.width * 0.62, 1040)
+        height: Math.min(parent.height * 0.76, parent.height - anchors.topMargin - 28)
+        radius: 22
         color: root.bg
         border.width: 1
         border.color: Qt.alpha(root.accent, 0.55)
