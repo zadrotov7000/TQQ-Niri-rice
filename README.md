@@ -9,7 +9,6 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 - **Wi-Fi panel:** `Mod+N` (or the installer's free fallback) opens a Quickshell network panel. It scans NetworkManager, shows signal strength and security, prompts for a password when needed, and connects through NetworkManager.
 - **Lock screen:** Quickshell uses the native Wayland `WlSessionLock` protocol and PAM authentication, with the current wallpaper blurred behind the clock/date and a password form revealed by Enter. The lock remains held by the compositor if Quickshell exits unexpectedly.
 - **Radial window switcher:** `Alt+Tab` opens a circular window selector. Repeated `Alt+Tab` moves forward; `Alt+Shift+Tab` moves backward. The highlighted window is focused when the switcher times out, and Escape cancels.
-- **Squishy Physics:** a free `Mod+F`-family shortcut opens the wallpaper interaction overlay. Hold the left mouse button to **paint a thick red selection** (66px brush diameter); make several strokes if necessary to cover the full cheek or another portion of the image. Only the painted pixels are changed by the per-pixel GPU warp; the rest of the wallpaper stays intact. Press the right mouse button *inside the red paint* and pull within a small 32–46px capture territory (about 40px at 900p), then release for a soft spring-back. The physical cursor remains free. Backspace clears all paint; Escape closes the overlay.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens above the desktop. **Mod+B toggles** the gallery: first press opens, second closes, without spawning extra copies. Escape closes it too. Browse with Left/Right or the mouse wheel, click a side card to move, and press Enter to apply.
 - **Wallpaper transition:** the repository uses `awww` when available. Wallpaper changes use a circular center-out reveal; `swaybg` remains the fallback. Wallpaper changes regenerate Matugen colors and do not reload the Niri config.
 - **Wallpaper persistence:** the selected image is restored when Niri starts.
@@ -29,13 +28,13 @@ cd TQQ-Niri-rice
 
 The installer checks dependencies and asks whether to install missing packages. Use `./install.sh --install-deps` to install them explicitly or `./install.sh --skip-deps` to skip the prompt.
 
-Before changing the Niri config or replacing installed TQQ helper scripts, the installer stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. It does not uninstall system packages, remove old user config folders, or delete legacy helper files. Removing unused applications is left to the user. Older SwayNC packages and files are not automatically removed; the new installer does not install, configure, start, or invoke SwayNC. The installer backs up and installs the Dunst, Matugen, Waybar, Fetch, and Quickshell configs into their standard locations (under ~/.config or $XDG_CONFIG_HOME), including the compiled Squishy shaders. The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
+Before changing the Niri config or replacing installed TQQ helper scripts, the installer stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. It does not uninstall system packages, remove old user config folders, or delete legacy helper files. Removing unused applications is left to the user. Older SwayNC packages and files are not automatically removed; the new installer does not install, configure, start, or invoke SwayNC. The installer backs up and installs the Dunst, Matugen, Waybar, Fetch, and Quickshell configs into their standard locations (under ~/.config or $XDG_CONFIG_HOME). The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
 
 ## Dependencies
 
-The desktop requires Niri, Quickshell (including its PAM service module), Dunst (`dunst` and `dunstctl`), Waybar, Nerd Font symbols (installed by `scripts/install-icon-fonts`), the NetworkManager and Blueman tray applets, Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, Qt ShaderTools (`qsb`, build-time only, to compile the Squishy vertex/fragment shaders), and common process tools (`pgrep`, `pkill`). For wallpaper display, install `awww` and its daemon or `swaybg`.
+The desktop requires Niri, Quickshell (including its PAM service module), Dunst (`dunst` and `dunstctl`), Waybar, Nerd Font symbols (installed by `scripts/install-icon-fonts`), the NetworkManager and Blueman tray applets, Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, and common process tools (`pgrep`, `pkill`). For wallpaper display, install `awww` and its daemon or `swaybg`.
 
-`scripts/check-dependencies` reports missing commands and package hints. The installer compiles the Squishy `.vert` and `.frag` sources into Qt `.qsb` shader packages before copying the Quickshell configuration. `scripts/install-dependencies` includes package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Quickshell is installed from Debian Backports on Debian 13. Niri and `awww` may need to be installed separately depending on the distribution. Run `./scripts/install-dependencies` after updating the repository to repair missing status icons without rebuilding the Rust wallpaper gallery.
+`scripts/check-dependencies` reports missing commands and package hints. `scripts/install-dependencies` includes package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Quickshell is installed from Debian Backports on Debian 13. Niri and `awww` may need to be installed separately depending on the distribution. Run `./scripts/install-dependencies` after updating the repository to repair missing status icons without rebuilding the Rust wallpaper gallery.
 
 ## Restore full Niri defaults after an older minimal TQQ install
 
@@ -118,18 +117,6 @@ done
 
 Close open panels with Escape, then reopen. No Niri or Rust rebuild is needed.
 
-## Update only Squishy Physics
-
-Run this **without reinstalling the rice**. Close the existing Squishy window with Escape before installing:
-
-```bash
-cd ~/TQQ-Niri-rice
-git pull --ff-only
-./scripts/update-squishy
-```
-
-The updater compiles the two Qt Shader Baker (`qsb`) shaders first and backs up the old QML and shader binaries before replacing them in `~/.config/quickshell/tqq-squishy/`. If `qsb` is missing on Debian 13, install the `qt6-shader-baker` package. No Rust rebuild, Niri config edit, Waybar reload or change to your language bindings is needed. The installer selects a free Mod+F-family shortcut; check the actual binding in your Niri config. Hold LMB to **paint thick red strokes** (a 66px brush). Multiple strokes accumulate into one mask, so everything painted red can deform and pixels outside the red region do not move. Hold RMB *inside* the paint to grab and pull; release for a subtle rebound. A faint circle indicates the smaller 32–46px reach, and the virtual grip cannot move beyond it even when the real mouse pointer does. Backspace clears all paint; Escape exits.
-
 ## Keybindings
 
 | Action | Shortcut |
@@ -140,7 +127,6 @@ The updater compiles the two Qt Shader Baker (`qsb`) shaders first and backs up 
 | Wi-Fi panel | `Mod+N` (free fallback if occupied) |
 | Lock screen | First free key from `Mod+L`, `Mod+Shift+L`, `Mod+Ctrl+L`, `Mod+Alt+L`, `Mod+Ctrl+Shift+L`, `Mod+Alt+Shift+L` |
 | Radial window switcher | `Alt+Tab` / `Alt+Shift+Tab` |
-| Squishy Physics overlay | First free key from `Mod+F`, `Mod+Shift+F`, `Mod+Alt+F`, `Mod+Ctrl+F` |
 | Workspaces | `Mod+1` through `Mod+9`; move the focused column with `Mod+Ctrl+1` through `Mod+Ctrl+9` |
 | Screenshot | `Print`: select area; `Ctrl+Print`: full screen; `Alt+Print`: window; free fallback `Mod+Shift+S` |
 | Volume | Laptop volume keys (`XF86AudioRaiseVolume`, `XF86AudioLowerVolume`, `XF86AudioMute`) through `wpctl` |
@@ -154,7 +140,6 @@ The installer preserves existing Niri settings and unrelated keybindings. It res
 - `quickshell/tqq-wifi/` — Wi-Fi picker.
 - `quickshell/tqq-lock/` — PAM-authenticated lock screen.
 - `quickshell/tqq-switcher/` — radial Alt+Tab selector.
-- `quickshell/tqq-squishy/` — wallpaper lasso and spring-drag overlay.
 - `wallpaper-gallery/` — native Rust/GTK4 wallpaper gallery.
 - `config/matugen/` — wallpaper-derived palette templates.
 - `config/dunst/` and `config/waybar/` — notification and bar styling.
