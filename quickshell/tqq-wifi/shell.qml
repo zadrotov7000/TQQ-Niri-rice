@@ -326,7 +326,7 @@ PanelWindow {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: function(mouse) { mouse.accepted = false }
+            onClicked: function(mouse) { mouse.accepted = true }
         }
 
         ColumnLayout {
