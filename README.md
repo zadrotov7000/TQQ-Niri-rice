@@ -13,7 +13,7 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens above the desktop. Browse with Left/Right or the mouse wheel, click a side card to move, click the centered card or press Enter to apply, and press Escape to close.
 - **Wallpaper transition:** the repository uses `awww` when available. Wallpaper changes use a circular center-out reveal; `swaybg` remains the fallback. Wallpaper changes regenerate Matugen colors and do not reload the Niri config.
 - **Wallpaper persistence:** the selected image is restored when Niri starts.
-- **Waybar Island:** compact dark pills with smooth blue/purple/pink/teal animated borders (Waybar only). The launcher, clock, network, volume, disk and notification icons use Font Awesome 4 glyphs, provided by Debian's `fonts-font-awesome` package, with Nerd Fonts as optional fallback. NetworkManager and Blueman applets start with Niri when present. Clicking Waybar's Wi-Fi icon opens TQQ Wi-Fi.
+- **Waybar Island:** compact dark pills with smooth borders cycling through the wallpaper-derived Matugen `primary`, `secondary` and `tertiary` colors (Waybar only). The launcher, clock, network, volume, disk and notification icons use Font Awesome 4 glyphs, provided by Debian's `fonts-font-awesome` package, with Nerd Fonts as optional fallback. NetworkManager and Blueman applets start with Niri when present. Clicking Waybar's Wi-Fi icon opens TQQ Wi-Fi.
 - **Dunst:** lightweight notifications and notification history; the Waybar bell restores the latest notification and right-click toggles Do Not Disturb. Media, network, brightness and volume controls stay in the Quickshell dashboard.
 - **3D Fetch support:** optional config for [areofyl/fetch](https://github.com/areofyl/fetch). Existing Fetch/Fastfetch startup is preserved.
 
@@ -57,10 +57,15 @@ mkdir -p ~/.config/waybar
 cp ~/.config/waybar/config ~/.config/waybar/config.before-tqq-island 2>/dev/null || true
 cp ~/.config/waybar/style.css ~/.config/waybar/style.css.before-tqq-island 2>/dev/null || true
 cp config/waybar/config config/waybar/style.css ~/.config/waybar/
+mkdir -p ~/.config/matugen/templates
+cp config/matugen/templates/colors.css ~/.config/matugen/templates/colors.css
+# Regenerate the Waybar palette from your saved wallpaper (no wallpaper switch):
+wallpaper="$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice/current-wallpaper")"
+matugen -c ~/.config/matugen/config.toml image "$wallpaper" -m dark --source-color-index 0
 pkill -SIGUSR2 -x waybar
 ```
 
-The border cycles using lightweight GTK3 CSS keyframes; it does not affect Niri window borders, Kitty or other applications. If Waybar is not running, start it with `waybar &` from your Niri session. If icons remain empty, check `fc-match FontAwesome` and restart Waybar after installing the font.
+The animated border uses the active Matugen palette, not a fixed RGB/rainbow cycle. When the wallpaper is changed using TQQ, Matugen regenerates `~/.config/waybar/colors.css` and TQQ reloads Waybar. It does not affect Niri window borders, Kitty or other applications. If Waybar is not running, start it with `waybar &` from your Niri session. If icons remain empty, check `fc-match FontAwesome` and restart Waybar after installing the font.
 
 ## Keybindings
 

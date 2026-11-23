@@ -16,13 +16,13 @@ window#waybar {
     color: #f3f5fd;
 }
 
-/* A single slow border-color animation, no blur or background re-rendering. */
+/* Colors are supplied by Matugen from the currently selected wallpaper.
+   Only the border animates; no fixed rainbow/RGB palette. */
 @keyframes tqq-island-border {
-    0%   { border-color: #77b8ff; }
-    25%  { border-color: #ae8dff; }
-    50%  { border-color: #f4a0cf; }
-    75%  { border-color: #7cdecf; }
-    100% { border-color: #77b8ff; }
+    0%   { border-color: @primary; }
+    33%  { border-color: @secondary; }
+    66%  { border-color: @tertiary; }
+    100% { border-color: @primary; }
 }
 
 #custom-launcher,
@@ -35,7 +35,7 @@ window#waybar {
 #tray {
     background: rgba(15, 17, 30, 0.91);
     color: #eef2ff;
-    border: 2px solid #77b8ff;
+    border: 2px solid @primary;
     border-radius: 17px;
     margin: 4px 2px;
     padding: 0 12px;
@@ -48,7 +48,7 @@ window#waybar {
 #custom-launcher {
     font-family: "FontAwesome", sans-serif;
     font-size: 16px;
-    color: #b9caff;
+    color: @primary;
     padding: 0 14px;
 }
 
@@ -127,7 +127,7 @@ window#waybar {
 tooltip {
     background: rgba(16, 18, 30, 0.98);
     color: #eef2ff;
-    border: 1px solid #a88ce2;
+    border: 1px solid @primary;
     border-radius: 10px;
     padding: 6px 9px;
 }
