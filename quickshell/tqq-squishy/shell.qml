@@ -17,7 +17,10 @@ PanelWindow {
 
     property string wallpaperPath: ""
     property var points: []
-    property var selectedPoints: []
+    property var paintedStrokes: []
+    property real brushRadius: 33
+    property real brushCursorX: 0
+    property real brushCursorY: 0
     property bool selecting: false
     property bool hasSelection: false
     property bool dragging: false
@@ -37,31 +40,51 @@ PanelWindow {
     property real influenceRadius: Math.min(270, Math.max(125, Math.min(width, height) * 0.29))
     // The grab handle is confined to a small circle around the click point.
     // This limits the DEFORMATION, not the real Wayland mouse cursor.
-    property real maxPullDistance: Math.min(92, Math.max(55, Math.min(width, height) * 0.10))
+    property real maxPullDistance: Math.min(46, Math.max(32, Math.min(width, height) * 0.045))
     property real ripplePhase: 0
     property real rippleStrength: 0
     property color accent: "#d8a6c2"
     property color fg: "#f5f0f5"
     property color muted: "#aaa0ad"
 
-    function pointInsidePolygon(x, y, polygon) {
-        let inside = false;
-        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-            const xi = polygon[i].x, yi = polygon[i].y;
-            const xj = polygon[j].x, yj = polygon[j].y;
-            const intersects = ((yi > y) !== (yj > y))
-                && (x < (xj - xi) * (y - yi) / ((yj - yi) || 0.0001) + xi);
-            if (intersects) inside = !inside;
+    // The paint strokes, not a thin lasso outline, define the animated area.
+    // Allow several LMB strokes so a whole cheek can be covered gradually.
+    function brushPath(ctx, stroke, radius) {
+        if (!stroke || stroke.length === 0) return;
+        ctx.beginPath();
+        if (stroke.length === 1) {
+            ctx.arc(stroke[0].x, stroke[0].y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            return;
         }
-        return inside;
+        ctx.moveTo(stroke[0].x, stroke[0].y);
+        for (let i = 1; i < stroke.length; i++)
+            ctx.lineTo(stroke[i].x, stroke[i].y);
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = 2 * radius;
+        ctx.stroke();
     }
 
-    function influenceAt(x, y) {
-        const distance = Math.hypot(x - dragOriginX, y - dragOriginY);
-        const t = Math.max(0, Math.min(1, distance / Math.max(1, influenceRadius)));
-        const radial = 1.0 - t * t * (3.0 - 2.0 * t);
-        // Match the GPU mesh's gradual falloff.
-        return 0.88 * radial * radial * (3.0 - 2.0 * radial);
+    function pointInPaint(x, y) {
+        const radiusSquared = brushRadius * brushRadius;
+        for (const stroke of paintedStrokes) {
+            for (let i = 0; i < stroke.length; i++) {
+                const a = stroke[i];
+                const b = stroke[Math.min(i + 1, stroke.length - 1)];
+                const dx = b.x - a.x;
+                const dy = b.y - a.y;
+                const denom = dx * dx + dy * dy;
+                const t = denom > 0
+                    ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / denom))
+                    : 0;
+                const px = a.x + dx * t;
+                const py = a.y + dy * t;
+                if ((x - px) * (x - px) + (y - py) * (y - py) <= radiusSquared)
+                    return true;
+            }
+        }
+        return false;
     }
 
     function setPullTarget(x, y) {
@@ -79,17 +102,6 @@ PanelWindow {
         targetY = newY;
     }
 
-    function visiblePolygon() {
-        const result = [];
-        const moving = dragging || physicsActive;
-        for (let i = 0; i < selectedPoints.length; i++) {
-            const p = selectedPoints[i];
-            const weight = moving ? influenceAt(p.x, p.y) : 0;
-            result.push(Qt.point(p.x + offsetX * weight, p.y + offsetY * weight));
-        }
-        return result;
-    }
-
     function refreshSelectionTextures() {
         selectionMask.requestPaint();
         selectionTexture.scheduleUpdate();
@@ -98,7 +110,7 @@ PanelWindow {
 
     function resetSelection() {
         points = [];
-        selectedPoints = [];
+        paintedStrokes = [];
         hasSelection = false;
         selecting = false;
         dragging = false;
@@ -188,20 +200,16 @@ PanelWindow {
     Canvas {
         id: selectionMask
         anchors.fill: parent
-        visible: false
+        // The ShaderEffectSource captures this white-on-transparent brush mask.
+        // Its hideSource property prevents drawing it over the wallpaper.
         renderStrategy: Canvas.Threaded
         onPaint: {
             const ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
-            if (!root.hasSelection || root.selectedPoints.length < 3)
-                return;
-            ctx.beginPath();
-            ctx.moveTo(root.selectedPoints[0].x, root.selectedPoints[0].y);
-            for (let i = 1; i < root.selectedPoints.length; i++)
-                ctx.lineTo(root.selectedPoints[i].x, root.selectedPoints[i].y);
-            ctx.closePath();
             ctx.fillStyle = "#ffffff";
-            ctx.fill();
+            ctx.strokeStyle = "#ffffff";
+            for (const stroke of root.paintedStrokes)
+                root.brushPath(ctx, stroke, root.brushRadius);
         }
     }
 
@@ -212,14 +220,15 @@ PanelWindow {
         hideSource: true
         live: true
         smooth: true
-        opacity: 0
+        visible: false
     }
 
     ShaderEffect {
         id: squishySurface
         anchors.fill: parent
         z: 1
-        mesh: GridMesh { resolution: Qt.size(128, 72) }
+        // Precise per-pixel GPU mask replaces the coarse deforming mesh.
+        mesh: GridMesh { resolution: Qt.size(2, 2) }
         property var source: wallpaperTexture
         property var maskSource: selectionTexture
         property vector2d viewportSize: Qt.vector2d(root.width, root.height)
@@ -247,29 +256,29 @@ PanelWindow {
             const ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
 
-            if (root.selecting && root.points.length > 1) {
-                ctx.beginPath();
-                ctx.moveTo(root.points[0].x, root.points[0].y);
-                for (let i = 1; i < root.points.length; i++)
-                    ctx.lineTo(root.points[i].x, root.points[i].y);
-                ctx.strokeStyle = root.accent;
-                ctx.lineWidth = 2;
-                ctx.setLineDash([6, 5]);
-                ctx.stroke();
-            }
+            // What is visibly painted red is exactly the animated mask.
+            // Previously finished strokes remain selectable while adding more.
+            ctx.save();
+            const alpha = root.dragging ? 0.20 : 0.27;
+            ctx.strokeStyle = "rgba(255, 58, 77, " + alpha + ")";
+            ctx.fillStyle = ctx.strokeStyle;
+            for (const stroke of root.paintedStrokes)
+                root.brushPath(ctx, stroke, root.brushRadius);
 
-            if (root.hasSelection && root.selectedPoints.length > 2) {
-                const polygon = root.visiblePolygon();
+            if (root.selecting) {
+                ctx.strokeStyle = "rgba(255, 58, 77, 0.48)";
+                ctx.fillStyle = ctx.strokeStyle;
+                root.brushPath(ctx, root.points, root.brushRadius);
+
+                // Visible brush tip indicates the stroke's real width.
                 ctx.beginPath();
-                ctx.moveTo(polygon[0].x, polygon[0].y);
-                for (let i = 1; i < polygon.length; i++)
-                    ctx.lineTo(polygon[i].x, polygon[i].y);
-                ctx.closePath();
-                ctx.strokeStyle = root.accent;
-                ctx.lineWidth = 1.7;
-                ctx.setLineDash([7, 5]);
+                ctx.arc(root.brushCursorX, root.brushCursorY,
+                        root.brushRadius, 0, Math.PI * 2);
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = "rgba(255, 160, 165, 0.88)";
                 ctx.stroke();
             }
+            ctx.restore();
 
             // Show the mouse's deformation territory only while holding RMB.
             // The handle stops at this boundary although the cursor can
@@ -311,13 +320,25 @@ PanelWindow {
         preventStealing: true
 
         onPressed: function(mouse) {
-            if (mouse.button === Qt.LeftButton) {
-                root.resetSelection();
+            if (mouse.button === Qt.LeftButton && !root.dragging) {
+                // A new brush stroke adds to the previous red-painted region.
+                // Stop any prior spring movement before changing the mask.
+                physicsTimer.stop();
+                root.physicsActive = false;
+                root.offsetX = 0;
+                root.offsetY = 0;
+                root.targetX = 0;
+                root.targetY = 0;
+                root.velocityX = 0;
+                root.velocityY = 0;
+                root.rippleStrength = 0;
                 root.selecting = true;
                 root.points = [Qt.point(mouse.x, mouse.y)];
+                root.brushCursorX = mouse.x;
+                root.brushCursorY = mouse.y;
                 outlineCanvas.requestPaint();
             } else if (mouse.button === Qt.RightButton && root.hasSelection
-                       && root.pointInsidePolygon(mouse.x, mouse.y, root.visiblePolygon())) {
+                       && !root.selecting && root.pointInPaint(mouse.x, mouse.y)) {
                 root.dragging = true;
                 root.physicsActive = true;
                 root.dragOriginX = mouse.x;
@@ -334,8 +355,10 @@ PanelWindow {
 
         onPositionChanged: function(mouse) {
             if (root.selecting) {
+                root.brushCursorX = mouse.x;
+                root.brushCursorY = mouse.y;
                 const last = root.points[root.points.length - 1];
-                if (Math.hypot(mouse.x - last.x, mouse.y - last.y) >= 5) {
+                if (Math.hypot(mouse.x - last.x, mouse.y - last.y) >= 4) {
                     const next = root.points.slice();
                     next.push(Qt.point(mouse.x, mouse.y));
                     root.points = next;
@@ -350,10 +373,17 @@ PanelWindow {
         onReleased: function(mouse) {
             if (mouse.button === Qt.LeftButton && root.selecting) {
                 root.selecting = false;
-                if (root.points.length >= 5) {
-                    root.selectedPoints = root.points.slice();
+                // A click makes one round dab, a drag makes a thick round stroke.
+                // Include the last position even if it moved less than 4px.
+                const stroke = root.points.slice();
+                if (stroke.length > 0) {
+                    const last = stroke[stroke.length - 1];
+                    if (Math.hypot(mouse.x - last.x, mouse.y - last.y) >= 1)
+                        stroke.push(Qt.point(mouse.x, mouse.y));
+                    root.paintedStrokes = root.paintedStrokes.concat([stroke]);
                     root.hasSelection = true;
                 }
+                root.points = [];
                 root.refreshSelectionTextures();
             } else if (mouse.button === Qt.RightButton && root.dragging) {
                 root.finishDrag();
@@ -465,9 +495,11 @@ PanelWindow {
                 font.letterSpacing: 1.1
             }
             Text {
-                text: root.hasSelection
-                    ? "RMB: pull inside the circle · release: soft rebound"
-                    : "LMB: select an area · RMB: gently pull"
+                text: root.selecting
+                    ? "LMB: paint the red area with a thick brush"
+                    : root.hasSelection
+                        ? "LMB: add paint · RMB: pull red area · Backspace: clear"
+                        : "LMB: paint the area · RMB: gently pull"
                 color: root.fg
                 font.pixelSize: 10
             }
