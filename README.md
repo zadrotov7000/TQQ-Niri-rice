@@ -135,9 +135,9 @@ The updater backs up `~/.config/niri/config.kdl`, changes only the `Mod+Return` 
 
 The lock screen uses the existing Quickshell Wayland session-lock protocol and PAM authentication. Its four regions are arranged as follows: **clock/date on the upper left**, **weather on the lower left** (from the same `tqq-region weather` source as Control Center), **calendar on the right**, and a **central user avatar, account name and password field**. The calendar supports changing months; weather refreshes every 15 minutes while locked, with a fallback message when unavailable.
 
-**Control Center recovery:** an avatar-editor QML regression prevented the dashboard from opening. The editor is temporarily disabled and the previous working dashboard has been restored. After `git pull --ff-only`, copy `quickshell/tqq-dashboard/shell.qml` to `~/.config/quickshell/tqq-dashboard/shell.qml` to recover without reinstalling the rice.
+**Control Center:** the stable dashboard now has a compact **LOCK AVATAR / CHOOSE IMAGE** card at the lower right. It launches the external image picker through `tqq-avatar pick` (requires Zenity or KDialog), without adding another QML dialog. Install Zenity on Debian with `sudo apt install zenity`. The preview refreshes after you select a new image.
 
-You can still set the lock-screen avatar using the included helper: `~/.local/bin/tqq-avatar set /absolute/path/to/photo.png` (or `tqq-avatar pick` if Zenity/KDialog is installed). Accepted images are PNG, JPEG or WebP and at most 12 MB. The image is copied into `~/.local/share/tqq-niri-rice/`, and the lock screen reads its location through `tqq-avatar get`. No credentials are stored in the avatar helper; PAM still handles the password.
+You can also set the lock-screen avatar using the included helper: `~/.local/bin/tqq-avatar set /absolute/path/to/photo.png` (or `tqq-avatar pick` if Zenity/KDialog is installed). Accepted images are PNG, JPEG or WebP and at most 12 MB. The image is copied into `~/.local/share/tqq-niri-rice/`, and the lock screen reads its location through `tqq-avatar get`. No credentials are stored in the avatar helper; PAM still handles the password.
 
 To update **only** the lock screen and Control Center (without reinstalling TQQ or altering Niri bindings):
 
@@ -147,7 +147,7 @@ git pull --ff-only
 ./scripts/update-lockscreen
 ```
 
-Close and reopen Control Center after applying. The updater backs up the previous QML files and helper under `~/.local/state/tqq-niri-rice/backups/lock-screen-*`. **Important:** because this is a real session lock, test the design while you know your working account password; a Quickshell error can leave the compositor's lock active until the session is recovered.
+Close and reopen Control Center after applying. The updater backs up the previous QML files and helper under `~/.local/state/tqq-niri-rice/backups/lock-screen-*`. **Important:** The lock QML has been reorganized so the `WlSessionLock` contains exactly one `WlSessionLockSurface`; the wallpaper/weather/PAM services live in an outer `Scope`. The lock launcher writes diagnostics to `~/.local/state/tqq-niri-rice/lockscreen.log`. The script update includes the launcher, both QML files and the avatar helper. Because this is a real session lock, test it only when you know your working account password; a Quickshell error can leave the compositor's lock active until the session is recovered.
 
 ## Optional Kitty / Ghostty terminal themes
 
