@@ -91,7 +91,7 @@ def main() -> int:
     # Remove the old simple Win+Space -> Fuzzel shortcut from earlier TQQ installs.
     # Keep other user-defined Win+Space actions untouched.
     text = re.sub(
-        r'(?m)^[ \\t]*(?:Super|Mod)\\+Space(?:[ \\t]+[^\\n{}]*)?[ \\t]*\\{[ \\t]*spawn[ \\t]+"fuzzel";[ \\t]*\\}[ \\t]*(?:\\n|$)',
+        r'(?m)^[ \t]*(?:Super|Mod)\+Space(?:[ \t]+[^\n{}]*)?[ \t]*\{[ \t]*spawn[ \t]+"fuzzel";[ \t]*\}[ \t]*(?:\n|$)',
         "",
         text,
     )
