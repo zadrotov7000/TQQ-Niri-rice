@@ -34,7 +34,8 @@ for script in \
     "$ROOT/scripts/tqq-wifi" \
     "$ROOT/scripts/tqq-switcher" \
     "$ROOT/scripts/tqq-lock-screen" \
-    "$ROOT/scripts/configure-fetch-autostart"; do
+    "$ROOT/scripts/setup-fastfetch" \
+    "$ROOT/scripts/configure-fastfetch-autostart"; do
     if ! bash -n "$script"; then
         echo "Shell syntax validation failed: $script" >&2
         exit 1
@@ -155,10 +156,10 @@ INSTALL_LOG="$BACKUP/install.log"
 : > "$INSTALL_LOG"
 progress_mark 25 "Preparing installation"
 
-# Install the shipped desktop configs (Dunst, Matugen, Waybar and Fetch).
+# Install the shipped desktop configs (Dunst, Matugen and Waybar).
 # Existing config directories are backed up before TQQ files are merged in.
 mkdir -p "$BACKUP/config"
-for config_name in fetch matugen dunst waybar; do
+for config_name in matugen dunst waybar; do
     source_config="$ROOT/config/$config_name"
     target_config="$CONFIG_HOME/$config_name"
     [[ -d "$source_config" ]] || continue
@@ -193,6 +194,11 @@ if ! bash "$ROOT/scripts/setup-terminal-themes" --auto; then
     echo "Warning: optional terminal theming skipped; TQQ desktop setup continues." >&2
 fi
 
+# Install Fastfetch's four boxed info groups without replacing user data.
+if ! bash "$ROOT/scripts/setup-fastfetch"; then
+    echo "Warning: optional TQQ Fastfetch styling skipped." >&2
+fi
+
 # Build and install the native Rust wallpaper gallery.
 if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
     mkdir -p "$BACKUP/local-bin"
@@ -206,7 +212,7 @@ progress_mark 79 "Copying wallpapers"
 # Install only the launchers and helpers used by the current Quickshell setup.
 for script_name in \
     select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher \
-    tqq-region tqq-lock-screen configure-fetch-autostart \
+    tqq-region tqq-lock-screen configure-fastfetch-autostart \
     check-dependencies install-dependencies install-icon-fonts restore-niri-default; do
     source_file="$ROOT/scripts/$script_name"
     if [[ ! -f "$source_file" ]]; then
@@ -294,7 +300,7 @@ if [[ ! -s "$STATE_FILE" ]]; then
     fi
 fi
 
-"$LOCAL_BIN/configure-fetch-autostart"
+"$LOCAL_BIN/configure-fastfetch-autostart"
 progress_mark 95 "Configuring desktop services"
 
 if [[ -s "$STATE_FILE" ]]; then
