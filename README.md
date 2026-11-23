@@ -1,23 +1,23 @@
 # TQQ Niri rice
 
-A lightweight Niri desktop setup for Linux, themed around *The Quintessential Quintuplets*. It is designed to keep resource usage low while still looking polished, making it a good fit for older and lower-spec laptops. Choose a wallpaper in the visual preview with the arrow keys; Matugen then regenerates the Waybar, SwayNC, and Fuzzel colors from that image, and updates 3D Fetch's label accent to the nearest terminal color.
+A lightweight Niri desktop setup for Linux, themed around *The Quintessential Quintuplets*. It is designed to keep resource usage low while still looking polished, making it a good fit for older and lower-spec laptops. Choose a wallpaper in the visual preview with the arrow keys; Matugen regenerates the SwayNC and Fuzzel colors from that image, and updates 3D Fetch's label accent to the nearest terminal color.
 
 ## Lightweight by design
 
-TQQ focuses on a responsive desktop without relying on a heavyweight widget framework or a pile of always-running background apps. It uses familiar, relatively lightweight components such as Waybar, SwayNC, and Fuzzel, and keeps the desktop features modular. That makes it suitable for modest hardware and older laptops, including systems with limited RAM.
+TQQ focuses on a responsive desktop without relying on a heavyweight widget framework or a pile of always-running background apps. It uses familiar, relatively lightweight components such as SwayNC and Fuzzel, plus an on-demand Quickshell dashboard. Waybar is optional and is not installed or started by the default setup. That makes it suitable for modest hardware and older laptops, including systems with limited RAM.
 
 Actual performance depends on the hardware, graphics drivers, display resolution, wallpaper effects, and which optional components are enabled. For the lightest setup, keep optional effects and background applications to a minimum.
 
 ## Included
 
-- **Island Waybar:** a dark translucent top bar with compact burgundy-edged capsules, workspaces, a centered clock, CPU, memory and disk usage, notifications, network, audio, battery, tray, and a launcher icon. The launcher opens Fuzzel with `Mod+D` (Win+D; if occupied, the installer tries modified D shortcuts and never uses Win+Space).
+- **Optional Waybar theme:** `config/waybar/` contains the former Island bar configuration for users who choose to install Waybar separately. The default installer does not require, install, copy, or autostart Waybar.
 - **SwayNC quick settings:** volume and brightness sliders, media controls, Do Not Disturb, a Wi-Fi picker, and notifications. The installer enables brightness only when it finds a backlight device.
-- **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens on the Wayland overlay layer; it is not managed as a normal desktop window. The desktop wallpaper and Waybar stay visible through its transparent background. The gallery appears immediately and decodes the selected wallpaper plus nearby previews in a background worker, caching them for the session. Floating wallpaper cards slide smoothly when browsing, with angled side previews and a live five-color palette sampled from the selected image. Character wallpapers show the character's name instead of the raw filename. Use Left/Right or the mouse wheel to browse, click a side card to move to it, click the centered card or press Enter to apply, and press Escape to close.
+- **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens on the Wayland overlay layer; it is not managed as a normal desktop window. The desktop wallpaper stays visible through its transparent background. The gallery appears immediately and decodes the selected wallpaper plus nearby previews in a background worker, caching them for the session. Floating wallpaper cards slide smoothly when browsing, with angled side previews and a live five-color palette sampled from the selected image. Character wallpapers show the character's name instead of the raw filename. Use Left/Right or the mouse wheel to browse, click a side card to move to it, click the centered card or press Enter to apply, and press Escape to close.
 - **Fuzzel:** application launcher styled as a compact dark search panel near the top of the screen, with fuzzy matching. Reboot and power-off ask for confirmation.
 - **Wallpaper switching:** `Mod+B` (Win+B) opens the gallery and updates the Matugen palette; `awww` applies the wallpaper with a transition when available, and `swaybg` is the fallback.
 - **Wallpaper persistence:** the chosen image and palette are restored when Niri starts.
 - **3D Fetch support:** an optional config for [areofyl/fetch](https://github.com/areofyl/fetch), with guarded shell autostart. Its label accent follows the wallpaper palette; existing Fetch/Fastfetch startup is preserved.
-- **Niri config:** the installer backs up the existing config, preserves user settings and keybindings, migrates known Itsuki/Miku leftovers, removes the duplicate Kitty blur rule, and adds TQQ startup, wallpaper, Wi-Fi, and application-launcher bindings.
+- **Niri config:** the installer backs up the existing config, preserves user settings and keybindings, migrates known Itsuki/Miku leftovers, removes the duplicate Kitty blur rule, and adds TQQ startup, wallpaper, Wi-Fi, dashboard, and application-launcher bindings.
 
 An optional SDDM theme is included under `config/sddm/TQQ`. It uses `imag1es.jpeg` as its background and follows the supplied reference with a large two-line clock, a dark glass-like panel, and a slow wallpaper zoom. To install and select it, run `./scripts/install-sddm-theme` or pass `--include-sddm` to the main installer. The SDDM theme installer backs up the previous theme and its own config snippet; it does not restart SDDM. It requires SDDM to already be installed.
 
@@ -40,7 +40,7 @@ Then run the installer:
 ./install.sh
 ```
 
-The installer keeps existing Niri settings and keybindings, removes the old TQQ Win+Space-to-Fuzzel binding, saves a dated backup, migrates known leftover Itsuki/Miku labels, removes the duplicate legacy Kitty blur rule, and adds TQQ startup entries plus wallpaper, Wi-Fi, and application-launcher shortcuts.
+The installer keeps existing Niri settings and keybindings, removes the old TQQ Win+Space-to-Fuzzel binding, saves a dated backup, migrates known leftover Itsuki/Miku labels, removes the duplicate legacy Kitty blur rule, and adds TQQ startup entries plus wallpaper, Wi-Fi, dashboard, and application-launcher shortcuts.
 
 To install dependencies explicitly:
 
@@ -48,13 +48,13 @@ To install dependencies explicitly:
 ./install.sh --install-deps
 ```
 
-The installer backs up the existing Waybar, SwayNC, Fuzzel, Matugen, Fetch, and Niri configs under `~/.local/state/tqq-niri-rice/backups/`. It copies the included wallpapers to `${XDG_DATA_HOME:-~/.local/share}/tqq-niri-rice/wallpapers/` and installs helpers to `~/.local/bin/`. Existing Niri bindings are preserved; Win+B is reserved for wallpaper selection and palette generation, and Win+N (falling back to Win+Shift+N or Win+Ctrl+N if occupied) opens the TQQ Wi-Fi picker.
+The installer backs up the existing SwayNC, Fuzzel, Matugen, Fetch, Quickshell, and Niri configs under `~/.local/state/tqq-niri-rice/backups/`. It copies the included wallpapers to `${XDG_DATA_HOME:-~/.local/share}/tqq-niri-rice/wallpapers/` and installs helpers to `~/.local/bin/`. Existing Niri bindings are preserved; Win+B is reserved for wallpaper selection and palette generation, and Win+N (falling back to Win+Shift+N or Win+Ctrl+N if occupied) opens the TQQ Wi-Fi picker.
 
 The regular installer does not change the display manager or install SDDM. Existing Niri and component configs are backed up before the rice files are installed. If an older version of this rice replaced the Niri config, the installer tries to restore the newest original config backup first.
 
 ### Dependencies
 
-Required programs: JetBrainsMono Nerd Font (for icon glyphs), Niri, Waybar, SwayNC (`swaync` and `swaync-client`), Fuzzel, Matugen, PipeWire/WirePlumber (`wpctl`), Python 3 for configuration helpers, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for building the overlay gallery, and the standard process tools `pgrep`/`pkill`. The native gallery is implemented in Rust under `wallpaper-gallery/`; it preloads and caches wallpaper textures and renders a transparent overlay-layer surface. For wallpaper display, install `awww` and its daemon or `swaybg`. NetworkManager (`nmcli`) enables the Wi-Fi picker; `notify-send` and `brightnessctl` are optional.
+Required programs: JetBrainsMono Nerd Font (for icon glyphs), Niri, Quickshell, SwayNC (`swaync` and `swaync-client`), Fuzzel, Matugen, PipeWire/WirePlumber (`wpctl`), Python 3 for configuration helpers, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for building the overlay gallery, and the standard process tools `pgrep`/`pkill`. The native gallery is implemented in Rust under `wallpaper-gallery/`; it preloads and caches wallpaper textures and renders a transparent overlay-layer surface. For wallpaper display, install `awww` and its daemon or `swaybg`. NetworkManager (`nmcli`) enables the Wi-Fi picker; `notify-send` and `brightnessctl` are optional.
 
 `scripts/check-dependencies` reports missing commands and package hints. `scripts/install-dependencies` has package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Package names and availability vary by release. When Matugen is unavailable as a package, the installer uses its checksum-verified upstream x86_64 release; other architectures can build it with Rust 1.88 or newer. Niri itself and optional awww transitions may need to be installed separately. The wallpaper switcher falls back to swaybg.
 
@@ -78,19 +78,20 @@ On other distributions, install the equivalent Git, compiler toolchain, and Make
 
 ## Keybindings
 
-The rice adds wallpaper and Wi-Fi shortcuts to the existing Niri config and leaves the other bindings as they are:
+The rice adds wallpaper, Wi-Fi, and dashboard shortcuts to the existing Niri config and leaves the other bindings as they are:
 
 | Action | Preferred key |
 | --- | --- |
 | Open wallpaper gallery, apply wallpaper, and update colors | `Mod+B` (Win+B) |
+| Open the TQQ dashboard | `Mod+Shift+Space` (fallback to another free modified Space binding) |
 | Open the Fuzzel application search | `Mod+D` (Win+D; modified D fallback if occupied) |
 | Open the TQQ Wi-Fi picker | `Mod+N` (Win+N; fallback `Mod+Shift+N` or `Mod+Ctrl+N`) |
 
-Waybar's audio capsule opens the SwayNC quick-settings panel. Right-clicking the notification capsule toggles Do Not Disturb.
+Waybar is optional. SwayNC provides notifications and quick settings independently of the dashboard.
 
 ## Config layout
 
-- `config/waybar/` — Island layout and CSS that imports Matugen colors.
+- `config/waybar/` — optional Island layout and CSS for users who install Waybar themselves.
 - `config/swaync/` — quick-settings widgets, Wi-Fi button, and matching CSS.
 - `config/fuzzel/` — application and power-menu UI with a dynamic palette include.
 - `config/matugen/` — dark wallpaper-derived templates for Waybar, SwayNC, and Fuzzel.
@@ -101,8 +102,8 @@ Waybar's audio capsule opens the SwayNC quick-settings panel. Right-clicking the
 Rofi is not used by this rice. If an existing `~/.config/rofi/` is present, the installer backs it up and removes it so the old Rofi setup is not left alongside Fuzzel.
 
 
-## Quickshell dashboard (preview)
+## Quickshell dashboard
 
-The installer can add the TQQ Quickshell dashboard. Click the Waybar clock to open it; press Escape or click outside to close. It currently includes a clock/date header, a system information panel, quick links to audio/network/Bluetooth settings, and MPRIS media controls. Temperature is shown when `lm-sensors` detects a supported sensor. The weather card is a placeholder until a weather provider/location setting is added.
+The dashboard is independent of Waybar and opens with `Mod+Shift+Space`; press Escape or click outside to close. It includes a navigable monthly calendar, CPU load/memory/disk/uptime information, media controls through MPRIS/playerctl, audio volume control through PipeWire/wpctl, and network/Bluetooth status with launchers for their settings tools. System and connection information refreshes periodically while the dashboard is open. Weather and a graphical live CPU/RAM history are not implemented yet.
 
-On Debian 13, the installer enables Debian Backports and installs Quickshell from `trixie-backports`. Other distributions use their native package manager. Install or update with `./install.sh --install-deps`.
+The dashboard is based on a review of Serpantinum's Quickshell structure and widget behavior, but its UI and implementation are written for TQQ rather than copying Serpantinum's theme or bundling its shell. Serpantinum is a separate project licensed under AGPL-3.0. On Debian 13, the installer enables Debian Backports and installs Quickshell from `trixie-backports`. Other distributions use their native package manager. Install or update with `./install.sh --install-deps`.
