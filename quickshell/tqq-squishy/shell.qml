@@ -34,7 +34,9 @@ PanelWindow {
     property real velocityY: 0
     property double lastTick: 0
     property real influenceRadius: Math.min(250, Math.max(105, Math.min(width, height) * 0.25))
-    property real maxPullDistance: Math.min(165, Math.max(90, Math.min(width, height) * 0.20))
+    // The grab handle is confined to a small circle around the click point.
+    // This limits the DEFORMATION, not the real Wayland mouse cursor.
+    property real maxPullDistance: Math.min(92, Math.max(55, Math.min(width, height) * 0.10))
     property real ripplePhase: 0
     property real rippleStrength: 0
     property color accent: "#d8a6c2"
@@ -61,12 +63,12 @@ PanelWindow {
     }
 
     function setPullTarget(x, y) {
-        // Nonlinear resistance: the cheek stretches less the harder it is pulled.
+        // Keep the virtual grip inside the capture circle even if the
+        // physical cursor moves outside it. No unbounded stretching.
         const rawX = x - dragStartX;
         const rawY = y - dragStartY;
         const length = Math.hypot(rawX, rawY);
-        const resisted = maxPullDistance * Math.tanh(length / maxPullDistance);
-        const scale = length > 0.001 ? resisted / length : 1.0;
+        const scale = length > maxPullDistance ? maxPullDistance / length : 1.0;
         const newX = rawX * scale;
         const newY = rawY * scale;
         const impulse = Math.hypot(newX - targetX, newY - targetY);
@@ -113,6 +115,7 @@ PanelWindow {
 
     function finishDrag() {
         dragging = false;
+        outlineCanvas.requestPaint();
         // Preserve momentum when released, for a small elastic overshoot.
         rippleStrength = Math.max(rippleStrength,
                                   Math.min(1.0, Math.hypot(velocityX, velocityY) / 550.0));
@@ -265,6 +268,36 @@ PanelWindow {
                 ctx.setLineDash([7, 5]);
                 ctx.stroke();
             }
+
+            // Show the mouse's deformation territory only while holding RMB.
+            // The handle stops at this boundary although the cursor can
+            // freely move beyond it.
+            if (root.dragging) {
+                ctx.save();
+                ctx.strokeStyle = root.accent;
+                ctx.globalAlpha = 0.46;
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([5, 8]);
+                ctx.beginPath();
+                ctx.arc(root.dragOriginX, root.dragOriginY,
+                        root.maxPullDistance, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.globalAlpha = 0.85;
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.moveTo(root.dragOriginX, root.dragOriginY);
+                ctx.lineTo(root.dragOriginX + root.targetX,
+                           root.dragOriginY + root.targetY);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(root.dragOriginX + root.targetX,
+                        root.dragOriginY + root.targetY, 5, 0, Math.PI * 2);
+                ctx.fillStyle = root.accent;
+                ctx.fill();
+                ctx.restore();
+            }
         }
     }
 
@@ -293,6 +326,7 @@ PanelWindow {
                 root.targetY = root.offsetY;
                 root.lastTick = Date.now();
                 physicsTimer.restart();
+                outlineCanvas.requestPaint();
             }
         }
 
@@ -406,7 +440,7 @@ PanelWindow {
             }
             Text {
                 text: root.hasSelection
-                    ? "ПКМ — потянуть · отпусти — мягкий отскок"
+                    ? "ПКМ — тянуть внутри круга · отпусти — отскок"
                     : "ЛКМ — обвести щёчку · ПКМ — потянуть"
                 color: root.fg
                 font.pixelSize: 10
