@@ -389,6 +389,23 @@ PanelWindow {
             root.offsetX += root.velocityX * dt;
             root.offsetY += root.velocityY * dt;
 
+            // Do not let spring inertia carry the cheek past its grab circle
+            // while RMB is held. On release it may overshoot a little.
+            if (root.dragging) {
+                const travel = Math.hypot(root.offsetX, root.offsetY);
+                if (travel > root.maxPullDistance) {
+                    const nx = root.offsetX / travel;
+                    const ny = root.offsetY / travel;
+                    root.offsetX = nx * root.maxPullDistance;
+                    root.offsetY = ny * root.maxPullDistance;
+                    const outwardVelocity = root.velocityX * nx + root.velocityY * ny;
+                    if (outwardVelocity > 0) {
+                        root.velocityX -= outwardVelocity * nx;
+                        root.velocityY -= outwardVelocity * ny;
+                    }
+                }
+            }
+
             // The ripple fades with motion; no always-running physics loop.
             const speed = Math.hypot(root.velocityX, root.velocityY);
             root.ripplePhase += dt * 21.0;
