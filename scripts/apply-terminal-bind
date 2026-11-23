@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Update terminal selection and the Niri binding, not the entire rice.
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice"
+NIRI_CONFIG="$CONFIG_HOME/niri/config.kdl"
+LOCAL_BIN="$HOME/.local/bin"
+MODE="${1:---auto}"
+
+case "$MODE" in --auto|--kitty|--ghostty) ;; *)
+    echo "Usage: $0 [--auto|--kitty|--ghostty]" >&2; exit 2 ;;
+esac
+
+# Verify original before selecting a terminal or writing anything.
+if [[ ! -f "$NIRI_CONFIG" || -L "$NIRI_CONFIG" ]]; then
+    echo "Niri config missing or symlink-managed: $NIRI_CONFIG" >&2
+    exit 1
+fi
+if ! command -v niri >/dev/null 2>&1; then
+    echo "Cannot validate Niri configuration: niri is not installed." >&2
+    exit 1
+fi
+
+bash "$ROOT/scripts/setup-default-terminal" "$MODE"
+
+mkdir -p "$STATE_HOME/backups"
+backup_dir="$STATE_HOME/backups/terminal-bind-$(date +%Y%m%d-%H%M%S)-$$"
+mkdir -p "$backup_dir"
+cp -p -- "$NIRI_CONFIG" "$backup_dir/config.kdl"
+
+# Same-directory candidate preserves relative Niri include resolution.
+candidate="$(mktemp "$CONFIG_HOME/niri/.tqq-terminal-XXXXXXXX.kdl")"
+trap 'rm -f -- "$candidate"' EXIT
+cp -p -- "$NIRI_CONFIG" "$candidate"
+python3 "$ROOT/scripts/integrate-niri.py" "$candidate" "$LOCAL_BIN"
+if ! niri validate --config "$candidate"; then
+    echo "Niri validation failed; the existing config is untouched." >&2
+    exit 1
+fi
+mv -f -- "$candidate" "$NIRI_CONFIG"
+trap - EXIT
+echo "Win+Enter now launches your selected TQQ terminal."
+echo "Niri backup: $backup_dir/config.kdl"
