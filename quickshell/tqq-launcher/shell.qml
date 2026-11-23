@@ -149,7 +149,17 @@ PanelWindow {
                 Layout.fillHeight: true
                 clip: true
                 spacing: 5
-                model: DesktopEntries.applications
+                model: ScriptModel {
+                    values: DesktopEntries.applications.values.filter(function(entry) {
+                        const query = searchField.text.trim().toLowerCase();
+                        if (!query) return true;
+                        const name = (entry.name || "").toLowerCase();
+                        const generic = (entry.genericName || "").toLowerCase();
+                        const comment = (entry.comment || "").toLowerCase();
+                        const keywords = (entry.keywords || []).join(" ").toLowerCase();
+                        return name.includes(query) || generic.includes(query) || comment.includes(query) || keywords.includes(query);
+                    })
+                }
                 currentIndex: 0
                 onCurrentIndexChanged: if (currentItem) root.selectedEntry = currentItem.entry
                 boundsBehavior: Flickable.StopAtBounds
@@ -158,20 +168,10 @@ PanelWindow {
                     required property var modelData
                     property var entry: modelData
                     width: ListView.view.width
-                    height: matches ? 54 : 0
-                    visible: matches
+                    height: 54
                     radius: 11
                     color: ListView.isCurrentItem ? root.surfaceHigh : "transparent"
                     Component.onCompleted: if (ListView.isCurrentItem) root.selectedEntry = entry
-                    property bool matches: {
-                        const query = searchField.text.trim().toLowerCase();
-                        if (!query) return true;
-                        const name = (entry.name || "").toLowerCase();
-                        const generic = (entry.genericName || "").toLowerCase();
-                        const comment = (entry.comment || "").toLowerCase();
-                        const keywords = (entry.keywords || []).join(" ").toLowerCase();
-                        return name.includes(query) || generic.includes(query) || comment.includes(query) || keywords.includes(query);
-                    }
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: 13
