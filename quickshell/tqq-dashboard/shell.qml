@@ -22,6 +22,9 @@ PanelWindow {
     property string bluetoothInfo: "Checking Bluetooth…"
     property string mediaInfo: "No active player"
     property string audioInfo: "Audio status unavailable"
+    property string weatherRegion: "Detecting region…"
+    property string weatherTemperature: "—"
+    property string weatherDescription: "Weather unavailable"
     property real volumeLevel: 0.5
     property var monthCursor: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
     property int selectedDay: new Date().getDate()
@@ -50,6 +53,7 @@ PanelWindow {
         bluetooth.running = false; bluetooth.running = true;
         media.running = false; media.running = true;
         audio.running = false; audio.running = true;
+        weatherProcess.running = false; weatherProcess.running = true;
     }
 
     Timer {
