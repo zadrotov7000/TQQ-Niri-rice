@@ -148,6 +148,7 @@ def main() -> int:
 
     # Reserve Win+B for wallpaper selection and choose the first free Wi-Fi shortcut.
     wallpaper_key = choose(["Mod+B"])
+    launcher_key = choose(["Mod+D", "Mod+Space", "Mod+P"])
 
     wallpaper = json.dumps(str(local_bin / "select-wallpaper"), ensure_ascii=False)
     wifi_key = choose(["Mod+N", "Mod+Shift+N", "Mod+Ctrl+N"])
@@ -156,6 +157,7 @@ def main() -> int:
         "\n    // BEGIN TQQ NIRI BINDS\n"
         f'    {wallpaper_key} hotkey-overlay-title="TQQ Wallpaper Picker" {{ spawn {wallpaper}; }}\n'
         f'    {wifi_key} hotkey-overlay-title="TQQ Wi-Fi" {{ spawn {wifi_menu}; }}\n'
+        f'    {launcher_key} hotkey-overlay-title="TQQ App Launcher" {{ spawn "fuzzel"; }}\n'
         "    // END TQQ NIRI BINDS\n"
     )
     if binds_match:
