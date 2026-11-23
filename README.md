@@ -99,3 +99,10 @@ Waybar's audio capsule opens the SwayNC quick-settings panel. Right-clicking the
 - `wallpapers/` — the TQQ wallpaper collection installed to the rice data directory.
 
 Rofi is not used by this rice. If an existing `~/.config/rofi/` is present, the installer backs it up and removes it so the old Rofi setup is not left alongside Fuzzel.
+
+
+## Quickshell dashboard (preview)
+
+The installer can add the TQQ Quickshell dashboard. Click the Waybar clock to open it; press Escape or click outside to close. It currently includes a clock/date header, a system information panel, quick links to audio/network/Bluetooth settings, and MPRIS media controls. Temperature is shown when `lm-sensors` detects a supported sensor. The weather card is a placeholder until a weather provider/location setting is added.
+
+On Debian 13, the installer enables Debian Backports and installs Quickshell from `trixie-backports`. Other distributions use their native package manager. Install or update with `./install.sh --install-deps`.
