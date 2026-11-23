@@ -29,7 +29,7 @@ cd TQQ-Niri-rice
 
 The installer checks dependencies and asks whether to install missing packages. Use `./install.sh --install-deps` to install them explicitly or `./install.sh --skip-deps` to skip the prompt.
 
-Before changing the Niri config or replacing installed TQQ helper scripts, the installer stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. It does not uninstall system packages, remove old user config folders, or delete legacy helper files. Removing unused applications is left to the user. The installer backs up and installs the Quickshell application configs into ~/.config/quickshell (or $XDG_CONFIG_HOME/quickshell), including the compiled Squishy shaders. The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
+Before changing the Niri config or replacing installed TQQ helper scripts, the installer stores dated backups under `~/.local/state/tqq-niri-rice/backups/`. It does not uninstall system packages, remove old user config folders, or delete legacy helper files. Removing unused applications is left to the user. The installer backs up and installs the SwayNC, Matugen, Waybar, Fetch, and Quickshell configs into their standard locations (under ~/.config or $XDG_CONFIG_HOME), including the compiled Squishy shaders. The Quickshell launcher is wired to the Waybar launcher icon and the Niri launcher shortcut.
 
 ## Dependencies
 
