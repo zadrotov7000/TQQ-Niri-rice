@@ -10,14 +10,14 @@ Actual performance depends on the hardware, graphics drivers, display resolution
 
 ## Included
 
-- **Island Waybar:** transparent bar with floating capsules for workspaces, clock, notifications, network, audio, battery, and tray.
+- **Island Waybar:** a dark translucent top bar with compact burgundy-edged capsules, workspaces, a centered clock, notifications, network, audio, battery, tray, and a launcher icon. The launcher opens Fuzzel.
 - **SwayNC quick settings:** volume and brightness sliders, media controls, Do Not Disturb, a Wi-Fi picker, and notifications. The installer enables brightness only when it finds a backlight device.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens on the Wayland overlay layer; it is not managed as a normal desktop window. The desktop wallpaper and Waybar stay visible through its transparent background. The gallery appears immediately and decodes the selected wallpaper plus nearby previews in a background worker, caching them for the session. Floating wallpaper cards slide smoothly when browsing, with angled side previews and a live five-color palette sampled from the selected image. Character wallpapers show the character's name instead of the raw filename. Use Left/Right or the mouse wheel to browse, click a side card to move to it, click the centered card or press Enter to apply, and press Escape to close.
-- **Fuzzel:** application launcher and plain-text power menu. Reboot and power-off ask for confirmation.
+- **Fuzzel:** application launcher styled as a compact dark search panel near the top of the screen, with fuzzy matching. Reboot and power-off ask for confirmation.
 - **Wallpaper switching:** `Mod+B` (Win+B) opens the gallery and updates the Matugen palette; `awww` applies the wallpaper with a transition when available, and `swaybg` is the fallback.
 - **Wallpaper persistence:** the chosen image and palette are restored when Niri starts.
 - **3D Fetch support:** an optional config for [areofyl/fetch](https://github.com/areofyl/fetch), with guarded shell autostart. Its label accent follows the wallpaper palette; existing Fetch/Fastfetch startup is preserved.
-- **Niri config:** the installer backs up the existing config, preserves user settings and keybindings, migrates known Itsuki/Miku leftovers, removes the duplicate Kitty blur rule, and adds TQQ startup, wallpaper, and Wi-Fi bindings.
+- **Niri config:** the installer backs up the existing config, preserves user settings and keybindings, migrates known Itsuki/Miku leftovers, removes the duplicate Kitty blur rule, and adds TQQ startup, wallpaper, Wi-Fi, and application-launcher bindings.
 
 An optional SDDM theme is included under `config/sddm/TQQ`. It uses `imag1es.jpeg` as its background and follows the supplied reference with a large two-line clock, a dark glass-like panel, and a slow wallpaper zoom. To install and select it, run `./scripts/install-sddm-theme` or pass `--include-sddm` to the main installer. The SDDM theme installer backs up the previous theme and its own config snippet; it does not restart SDDM. It requires SDDM to already be installed.
 
@@ -40,7 +40,7 @@ Then run the installer:
 ./install.sh
 ```
 
-The installer keeps existing Niri settings and keybindings, saves a dated backup, migrates known leftover Itsuki/Miku labels, removes the duplicate legacy Kitty blur rule, and adds TQQ startup entries plus wallpaper and Wi-Fi shortcuts.
+The installer keeps existing Niri settings and keybindings, saves a dated backup, migrates known leftover Itsuki/Miku labels, removes the duplicate legacy Kitty blur rule, and adds TQQ startup entries plus wallpaper, Wi-Fi, and application-launcher shortcuts.
 
 To install dependencies explicitly:
 
