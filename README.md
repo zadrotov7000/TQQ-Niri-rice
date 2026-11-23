@@ -15,6 +15,7 @@ A lightweight Niri desktop setup for Linux, themed around *The Quintessential Qu
 - **Waybar Island:** compact dark pills with smooth borders cycling through the wallpaper-derived Matugen `primary`, `secondary` and `tertiary` colors (Waybar only). The launcher, clock, network, volume, disk and notification icons use Font Awesome 4 glyphs, provided by Debian's `fonts-font-awesome` package, with Nerd Fonts as optional fallback. NetworkManager and Blueman applets start with Niri when present. Clicking Waybar's Wi-Fi icon opens TQQ Wi-Fi.
 - **Dunst:** lightweight notifications and notification history; the Waybar bell restores the latest notification and right-click toggles Do Not Disturb. Media, network, brightness and volume controls stay in the Quickshell dashboard.
 - **3D Fetch support:** optional config for [areofyl/fetch](https://github.com/areofyl/fetch). Existing Fetch/Fastfetch startup is preserved.
+- **Kitty and Ghostty terminals:** optional matching dark-glass terminal themes with wallpaper-driven Matugen colors, understated transparency, padded text, cursor accents, and a coordinated ANSI palette. Existing user configs are backed up and extended with a single include; Ghostty is not installed automatically.
 
 ## Install
 
@@ -82,6 +83,29 @@ Appearance: a 3px primary-to-tertiary gradient for focused windows, subtle secon
 
 To disable it without losing your backups, remove only the block between `// BEGIN TQQ WINDOWFX` and `// END TQQ WINDOWFX` in your Niri config. No packages are uninstalled.
 
+## Optional Kitty / Ghostty terminal themes
+
+Two independent terminal themes ship with TQQ:
+
+- Kitty: `config/kitty/tqq.conf` and `config/kitty/tqq-colors.conf`
+- Ghostty: `config/ghostty/tqq.conf` and `config/ghostty/tqq-colors.conf`
+
+To update an existing TQQ installation **without running the full rice installer**:
+
+```bash
+cd ~/TQQ-Niri-rice
+git pull --ff-only
+./scripts/setup-terminal-themes --all
+```
+
+`--all` prepares **both** terminal configs (even if Ghostty is not yet installed); `--kitty` or `--ghostty` enables just one; `--auto` enables only terminals already installed. The normal TQQ installer uses `--auto`. This tool does not install or uninstall terminal packages.
+
+The script preserves existing `~/.config/kitty/kitty.conf` and Ghostty `config.ghostty` / `config` contents, adds only `include tqq.conf` or `config-file = tqq.conf`, and backs up changed files under `~/.local/state/tqq-niri-rice/backups/terminals-*`. It never follows or overwrites symlinked main configs. If you use a symlink-managed dotfiles setup, add the include yourself. For Ghostty, the older `config` takes precedence when both files exist, so TQQ uses it for the include.
+
+Matugen writes colors to `~/.config/kitty/tqq-colors.conf` and `~/.config/ghostty/tqq-colors.conf` when you change wallpapers through TQQ. Kitty reloads via `SIGUSR1` and Ghostty via its systemd user service or `SIGUSR2`. The theme uses about 90% opaque backgrounds. **Transparency is not blur:** stock Niri does not provide Ghostty's supported KDE/macOS application blur integration, so the theme doesn't claim to provide it. Window border gradients are handled separately by TQQ WindowFX.
+
+To opt out, remove `include tqq.conf` from Kitty's main config or `config-file = tqq.conf` from Ghostty's main config. No user data is deleted.
+
 ## Update hotkey toggles without rebuilding Rust
 
 The existing Niri binds are preserved. The `select-wallpaper` Bash launcher holds a `flock` lock while one picker is open; a second Mod+B closes that picker without applying a wallpaper. The gallery already responds to Escape. The Control Center uses an `IpcHandler` from Quickshell.Io: calling its launcher again closes the current panel gracefully via its existing animation. Escape and the close button still work.
@@ -141,6 +165,7 @@ The installer preserves existing Niri settings and unrelated keybindings. It res
 - `quickshell/tqq-lock/` — PAM-authenticated lock screen.
 - `quickshell/tqq-switcher/` — radial Alt+Tab selector.
 - `wallpaper-gallery/` — native Rust/GTK4 wallpaper gallery.
+- `config/kitty/` and `config/ghostty/` — optional terminal themes and starter palettes.
 - `config/matugen/` — wallpaper-derived palette templates.
 - `config/dunst/` and `config/waybar/` — notification and bar styling.
 - `scripts/` — installers, launchers, wallpaper handling, and Niri integration helpers.
