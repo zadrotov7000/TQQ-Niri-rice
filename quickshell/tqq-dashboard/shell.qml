@@ -359,7 +359,7 @@ PanelWindow {
                             }
                         }
                         Item { Layout.fillHeight: true }
-                        Text { text: "LOCAL CALENDAR"; color: root.muted; font.pixelSize: 9; font.font.letterSpacing: 1.2 }
+                        Text { text: "LOCAL CALENDAR"; color: root.muted; font.pixelSize: 9; font.letterSpacing: 1.2 }
                     }
                 }
 
