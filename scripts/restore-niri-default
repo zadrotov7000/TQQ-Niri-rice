@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Explicit recovery tool: replaces active Niri config only after validation.
+ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+TARGET="$CONFIG_HOME/niri/config.kdl"
+BIN_DIR="$HOME/.local/bin"
+VERSION="v26.04"
+SOURCE_URL="https://raw.githubusercontent.com/niri-wm/niri/$VERSION/resources/default-config.kdl"
+
+if ! command -v niri >/dev/null 2>&1; then
+    echo "Niri must be installed to validate its config." >&2
+    exit 1
+fi
+if ! niri --version | grep -Eq '(^|[^0-9])26\.04([^0-9]|$)'; then
+    echo "This recovery helper uses Niri $VERSION defaults; installed: $(niri --version)" >&2
+    echo "Nothing changed. Use the matching default config for your Niri version." >&2
+    exit 1
+fi
+for cmd in curl python3; do
+    command -v "$cmd" >/dev/null 2>&1 || { echo "Missing $cmd" >&2; exit 1; }
+done
+
+mkdir -p "$(dirname -- "$TARGET")"
+candidate="$(mktemp "$(dirname -- "$TARGET")/.tqq-niri-candidate.XXXXXXXX")"
+trap 'rm -f -- "$candidate"' EXIT
+
+echo "Downloading the official Niri $VERSION config..."
+curl --fail --location --silent --show-error --retry 2 --connect-timeout 10 --max-time 90 \
+    "$SOURCE_URL" --output "$candidate"
+
+# Do not accept a truncated download or a 404 HTML document.
+if [[ ! -s "$candidate" ]] || ! grep -q '^binds {' "$candidate" || ! grep -q '^input {' "$candidate"; then
+    echo "Downloaded config is incomplete; the current config was not changed." >&2
+    exit 1
+fi
+
+echo "Integrating TQQ into a separate candidate file..."
+python3 "$ROOT/scripts/integrate-niri.py" "$candidate" "$BIN_DIR"
+
+echo "Validating the candidate without changing the active config..."
+if ! niri --config "$candidate" validate; then
+    echo "Niri rejected the candidate. Your existing config is untouched." >&2
+    exit 1
+fi
+
+backup=""
+if [[ -e "$TARGET" ]]; then
+    backup="$TARGET.backup-$(date +%Y%m%d-%H%M%S)-$$"
+    cp -p -- "$TARGET" "$backup"
+    echo "Old config backed up to $backup"
+fi
+chmod 0644 "$candidate"
+mv -f -- "$candidate" "$TARGET"
+trap - EXIT
+printf 'Restored the official Niri %s config with TQQ bindings: %s\n' "$VERSION" "$TARGET"
+printf 'Reopen your Niri session if changes are not automatically applied.\n'
+if [[ -n "$backup" ]]; then
+    printf 'To undo: cp %q %q\n' "$backup" "$TARGET"
+fi

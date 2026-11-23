@@ -37,6 +37,17 @@ The desktop requires Niri, Quickshell (including its PAM service module), Dunst 
 
 `scripts/check-dependencies` reports missing commands and package hints. The installer compiles the Squishy `.vert` and `.frag` sources into Qt `.qsb` shader packages before copying the Quickshell configuration. `scripts/install-dependencies` includes package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Quickshell is installed from Debian Backports on Debian 13. Niri and `awww` may need to be installed separately depending on the distribution. Run `./scripts/install-dependencies` after updating the repository to repair missing status icons without rebuilding the Rust wallpaper gallery.
 
+## Restore full Niri defaults after an older minimal TQQ install
+
+If an older install left you with a config containing only `// BEGIN TQQ...` blocks, run:
+
+```bash
+git pull --ff-only
+./scripts/restore-niri-default
+```
+
+**This is an explicit recovery command**, not part of the normal installer. It replaces the current Niri config only after downloading official **Niri v26.04** defaults, applying TQQ binds to a temporary file and running `niri --config <candidate> validate`. It keeps a timestamped backup of your previous `config.kdl`, does not reinstall Niri, and refuses to run for other Niri versions. It does not alter personal keyboard layout preferences: edit `input.keyboard.xkb` in your own config for those.
+
 ## Keybindings
 
 | Action | Shortcut |

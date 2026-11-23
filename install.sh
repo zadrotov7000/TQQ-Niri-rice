@@ -24,6 +24,7 @@ for script in \
     "$ROOT/scripts/check-dependencies" \
     "$ROOT/scripts/install-dependencies" \
     "$ROOT/scripts/install-icon-fonts" \
+    "$ROOT/scripts/restore-niri-default" \
     "$ROOT/scripts/build-wallpaper-gallery" \
     "$ROOT/scripts/build-squishy-shaders" \
     "$ROOT/scripts/select-wallpaper" \
@@ -59,6 +60,16 @@ for arg in "$@"; do
         *) echo "Unknown option: $arg" >&2; usage >&2; exit 2 ;;
     esac
 done
+
+# Niri creates a complete example config when it first starts.
+# Avoid creating a nearly empty TQQ-only config before that happens.
+EXISTING_NIRI_CONFIG="$CONFIG_HOME/niri/config.kdl"
+if [[ ! -s "$EXISTING_NIRI_CONFIG" ]]; then
+    echo "No Niri config found at $EXISTING_NIRI_CONFIG." >&2
+    echo "Start Niri once to generate its complete default config, then rerun the installer." >&2
+    echo "For Niri v26.04, use scripts/restore-niri-default to recover the full config with TQQ." >&2
+    exit 1
+fi
 
 # One in-place progress bar. Percentages mean completed install stages, not elapsed time.
 PROGRESS=0
@@ -198,7 +209,7 @@ progress_mark 79 "Copying wallpapers"
 for script_name in \
     select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher \
     tqq-squishy tqq-region tqq-lock-screen configure-fetch-autostart \
-    check-dependencies install-dependencies install-icon-fonts; do
+    check-dependencies install-dependencies install-icon-fonts restore-niri-default; do
     source_file="$ROOT/scripts/$script_name"
     if [[ ! -f "$source_file" ]]; then
         echo "Required project script is missing: $source_file" >&2
