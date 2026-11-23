@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SOURCE_DIR="$1"
+TARGET_DIR="$2"
+if [[ -z "$SOURCE_DIR" || -z "$TARGET_DIR" ]]; then
+    echo "Usage: build-squishy-shaders SOURCE_DIR TARGET_DIR" >&2
+    exit 2
+fi
+find_qsb() {
+    local candidate
+    for candidate in \
+        "$(command -v qsb 2>/dev/null || true)" \
+        "$(command -v qsb-qt6 2>/dev/null || true)" \
+        /usr/lib/qt6/bin/qsb \
+        /usr/lib64/qt6/bin/qsb \
+        /usr/lib/x86_64-linux-gnu/qt6/bin/qsb; do
+        if [[ -n "$candidate" && -x "$candidate" ]]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
+QSB="$(find_qsb)" || {
+    echo "Qt Shader Baker (qsb) is required to compile the TQQ Squishy GPU shaders." >&2
+    echo "Install qt6-shader-baker (Debian), qt6-shadertools (Arch/openSUSE), or qt6-qtshadertools (Fedora)." >&2
+    exit 1
+}
+mkdir -p "$TARGET_DIR"
+"$QSB" --glsl "100 es,120,150" --hlsl 50 --msl 12 -o "$TARGET_DIR/squishy.vert.qsb" "$SOURCE_DIR/squishy.vert"
+"$QSB" --glsl "100 es,120,150" --hlsl 50 --msl 12 -o "$TARGET_DIR/squishy.frag.qsb" "$SOURCE_DIR/squishy.frag"
+for shader in "$TARGET_DIR/squishy.vert.qsb" "$TARGET_DIR/squishy.frag.qsb"; do
+    [[ -s "$shader" ]] || { echo "Shader compilation did not produce $shader" >&2; exit 1; }
+done
+echo "TQQ Squishy GPU shaders compiled successfully with $QSB."

@@ -44,6 +44,10 @@ fi
 
 mkdir -p "$BACKUP" "$LOCAL_BIN" "$DATA_HOME/tqq-niri-rice/wallpapers" "$CONFIG_HOME/tqq-niri-rice"
 
+# Compile the Quickshell GPU shaders before changing the installed configuration.
+SQUISHY_SHADER_BUILD="$BACKUP/squishy-shaders"
+bash "$ROOT/scripts/build-squishy-shaders" "$ROOT/quickshell/tqq-squishy" "$SQUISHY_SHADER_BUILD"
+
 # Build and install the native Rust wallpaper gallery.
 if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
     mkdir -p "$BACKUP/local-bin"
@@ -91,6 +95,10 @@ if [[ -d "$ROOT/quickshell" ]]; then
     mkdir -p "$CONFIG_HOME/quickshell"
     cp -a "$ROOT/quickshell/." "$CONFIG_HOME/quickshell/"
 fi
+
+# Install the Qt Shader Baker output beside the Squishy QML file.
+install -D -m 0644 "$SQUISHY_SHADER_BUILD/squishy.vert.qsb" "$CONFIG_HOME/quickshell/tqq-squishy/squishy.vert.qsb"
+install -D -m 0644 "$SQUISHY_SHADER_BUILD/squishy.frag.qsb" "$CONFIG_HOME/quickshell/tqq-squishy/squishy.frag.qsb"
 
 # Rofi was used by an earlier setup; retain a backup, then remove the old config.
 if [[ -d "$CONFIG_HOME/rofi" ]]; then

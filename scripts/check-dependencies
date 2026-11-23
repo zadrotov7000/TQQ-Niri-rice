@@ -6,6 +6,17 @@ missing=()
 for command_name in "${required[@]}"; do
     command -v "$command_name" >/dev/null 2>&1 || missing+=("$command_name")
 done
+has_qsb() {
+    command -v qsb >/dev/null 2>&1 \\
+        || command -v qsb-qt6 >/dev/null 2>&1 \\
+        || [[ -x /usr/lib/qt6/bin/qsb ]] \\
+        || [[ -x /usr/lib64/qt6/bin/qsb ]] \\
+        || [[ -x /usr/lib/x86_64-linux-gnu/qt6/bin/qsb ]]
+}
+if ! has_qsb; then
+    missing+=("Qt Shader Baker (qsb)")
+fi
+
 if ! pkg-config --exists gtk4; then
     missing+=("GTK4 development files (gtk4 pkg-config module)")
 fi
@@ -27,20 +38,20 @@ if [[ -r /etc/os-release ]]; then
     . /etc/os-release
     case "${ID:-}" in
         debian|ubuntu|linuxmint|pop)
-            echo "Debian-family packages: quickshell (from trixie-backports), playerctl pavucontrol network-manager blueman brightnessctl lm-sensors, sway-notification-center cargo rustc pkg-config libgtk-4-dev libgtk4-layer-shell-dev pipewire-bin wireplumber swaybg fonts-font-awesome fonts-jetbrains-mono"
+            echo "Debian-family packages: quickshell (from trixie-backports), qt6-shader-baker, playerctl pavucontrol network-manager blueman brightnessctl lm-sensors, sway-notification-center cargo rustc pkg-config libgtk-4-dev libgtk4-layer-shell-dev pipewire-bin wireplumber swaybg fonts-font-awesome fonts-jetbrains-mono"
             echo "Matugen and awww may need their upstream release/package for your Debian version."
             ;;
         arch|endeavouros|manjaro)
-            echo "Arch packages: quickshell playerctl pavucontrol networkmanager blueman brightnessctl lm_sensors swaync rust cargo pkgconf gtk4 gtk4-layer-shell matugen awww pipewire wireplumber"
+            echo "Arch packages: quickshell qt6-shadertools playerctl pavucontrol networkmanager blueman brightnessctl lm_sensors swaync rust cargo pkgconf gtk4 gtk4-layer-shell matugen awww pipewire wireplumber"
             ;;
         fedora)
-            echo "Fedora packages: quickshell playerctl pavucontrol NetworkManager-bluetooth blueman brightnessctl lm_sensors SwayNotificationCenter cargo rust gtk4-devel gtk4-layer-shell-devel pkgconf-pkg-config matugen awww pipewire wireplumber"
+            echo "Fedora packages: quickshell qt6-qtshadertools playerctl pavucontrol NetworkManager-bluetooth blueman brightnessctl lm_sensors SwayNotificationCenter cargo rust gtk4-devel gtk4-layer-shell-devel pkgconf-pkg-config matugen awww pipewire wireplumber"
             ;;
         opensuse*|opensuse-tumbleweed|opensuse-leap)
-            echo "openSUSE package names vary by release; search for NetworkManager-applet, blueman, pavucontrol, SwayNotificationCenter, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, awww and WirePlumber."
+            echo "openSUSE packages: qt6-shadertools plus NetworkManager-applet, blueman, pavucontrol, SwayNotificationCenter, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, awww and WirePlumber."
             ;;
         *)
-            echo "Install equivalent packages for your distribution: SwayNC, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, PipeWire/WirePlumber and awww or swaybg."
+            echo "Install equivalent packages for your distribution: Qt 6 ShaderTools (qsb), SwayNC, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, PipeWire/WirePlumber and awww or swaybg."
             ;;
     esac
 fi
