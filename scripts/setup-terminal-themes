@@ -134,4 +134,16 @@ if [[ -s "$saved" ]] && command -v matugen >/dev/null 2>&1; then
             >/dev/null || echo "Matugen regeneration failed; starter colors remain." >&2
     fi
 fi
+# Update only TQQ's already-installed wallpaper helper so Matugen color changes
+# reach running terminals. Never replace an unrelated user script or a symlink.
+helper="$HOME/.local/bin/select-wallpaper"
+if [[ -f "$helper" && ! -L "$helper" ]] \
+    && grep -q '^wallpaper_dir=' "$helper" \
+    && grep -q '^matugen_config=' "$helper" \
+    && ! cmp -s "$ROOT/scripts/select-wallpaper" "$helper"; then
+    cp -p -- "$helper" "$BACKUP/select-wallpaper"
+    install -m 0755 "$ROOT/scripts/select-wallpaper" "$helper"
+    echo "Updated the TQQ wallpaper helper (previous version backed up)."
+fi
+
 echo "Terminal theme setup complete. No original configs were deleted."
