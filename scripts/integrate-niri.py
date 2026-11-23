@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 import json
 import re
+import shutil
 import sys
 
 
@@ -181,7 +182,10 @@ def main() -> int:
         text = text.rstrip() + "\n\nbinds {" + managed_binds + "}\n"
 
     startup_entries = []
-    for app in ("swaync",):
+    startup_apps = ["swaync"]
+    if shutil.which("waybar"):
+        startup_apps.append("waybar")
+    for app in startup_apps:
         if not re.search(
             r"(?m)^\s*(?:spawn-at-startup|spawn-sh-at-startup)\b[^\n]*\b" + app + r"\b",
             text,
@@ -216,7 +220,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper ({wallpaper_key}), Wi-Fi ({wifi_key}), dashboard ({dashboard_key}), and launcher ({launcher_key}) shortcuts."
+        f"and added TQQ wallpaper ({wallpaper_key}), Wi-Fi ({wifi_key}), dashboard ({dashboard_key}), lock, launcher, and available Waybar startup."
     )
     return 0
 
