@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""User-selectable image for TQQ lock screen (never stores passwords)."""
+from __future__ import annotations
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+
+home = Path.home()
+data = Path(os.getenv("XDG_DATA_HOME", str(home / ".local/share"))) / "tqq-niri-rice"
+pointer = Path(os.getenv("XDG_CONFIG_HOME", str(home / ".config"))) / "tqq-niri-rice/avatar-path"
+
+def image_extension(raw: bytes) -> str:
+    if raw.startswith(b"\x89PNG\r\n\x1a\n"):
+        return ".png"
+    if raw.startswith(b"\xff\xd8\xff"):
+        return ".jpg"
+    if raw[:4] == b"RIFF" and raw[8:12] == b"WEBP":
+        return ".webp"
+    raise ValueError("Choose a PNG, JPEG or WebP image.")
+
+def save(filename: str) -> None:
+    if filename.startswith("file://"):
+        filename = unquote(urlparse(filename).path)
+    source = Path(filename).expanduser()
+    if not source.is_file() or not 0 < source.stat().st_size <= 12 * 1024 * 1024:
+        raise ValueError("Image not found, empty, or over 12 MB.")
+    with source.open("rb") as f:
+        extension = image_extension(f.read(16))
+    data.mkdir(parents=True, exist_ok=True, mode=0o700)
+    pointer.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    destination = data / ("avatar" + extension)
+    temp_name = ""
+    try:
+        with tempfile.NamedTemporaryFile(dir=data, prefix=".avatar-", delete=False) as target:
+            temp_name = target.name
+            os.chmod(temp_name, 0o600)
+            with source.open("rb") as original:
+                shutil.copyfileobj(original, target)
+        os.replace(temp_name, destination)
+    finally:
+        if temp_name and os.path.exists(temp_name):
+            os.unlink(temp_name)
+    tmp_pointer = pointer.with_name("avatar-path.tmp")
+    tmp_pointer.write_text(str(destination) + "\n", encoding="utf-8")
+    os.chmod(tmp_pointer, 0o600)
+    os.replace(tmp_pointer, pointer)
+    print("Avatar updated")
+
+def show() -> None:
+    if pointer.is_file():
+        path = Path(pointer.read_text(encoding="utf-8").strip())
+        if path.is_file() and path.parent == data:
+            print(path)
+
+def pick() -> None:
+    if shutil.which("zenity"):
+        command = ["zenity", "--file-selection", "--title=Choose lock screen avatar"]
+    elif shutil.which("kdialog"):
+        command = ["kdialog", "--getopenfilename", str(home), "Images (*.png *.jpg *.jpeg *.webp)"]
+    else:
+        raise ValueError("Install zenity or kdialog to browse, or enter a path in Control Center.")
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.returncode == 0 and result.stdout.strip():
+        save(result.stdout.strip())
+        if shutil.which("notify-send"):
+            subprocess.Popen(["notify-send", "TQQ", "Lock screen avatar updated."])
+
+def main() -> None:
+    args = sys.argv[1:]
+    if args == ["get"]:
+        show()
+    elif len(args) == 2 and args[0] == "set":
+        save(args[1])
+    elif args == ["pick"]:
+        pick()
+    else:
+        raise ValueError("Usage: tqq-avatar get | set FILE | pick")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except (OSError, ValueError) as exc:
+        print("TQQ avatar: " + str(exc), file=sys.stderr)
+        raise SystemExit(1)
