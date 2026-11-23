@@ -24,11 +24,12 @@ PanelWindow {
     property bool closing: false
     property var selectedEntry: null
     property bool shown: false
+    property real panelOffset: -600
 
     function closeLauncher() {
         if (closing) return;
         closing = true;
-        closeTimer.start();
+        closeAnimation.start();
     }
     function launchSelected() {
         if (!selectedEntry) return;
@@ -39,8 +40,23 @@ PanelWindow {
     Component.onCompleted: {
         paletteProcess.running = true;
         searchField.forceActiveFocus();
+        panelOffset = -panel.height;
+        openAnimation.start();
     }
-    Timer { id: closeTimer; interval: 230; onTriggered: Qt.quit() }
+
+    ParallelAnimation {
+        id: openAnimation
+        NumberAnimation { target: root; property: "panelOffset"; to: 0; duration: 520; easing.type: Easing.OutCubic }
+        NumberAnimation { target: panel; property: "opacity"; to: 1; duration: 420; easing.type: Easing.OutCubic }
+        NumberAnimation { target: backdrop; property: "opacity"; to: 1; duration: 420; easing.type: Easing.OutCubic }
+    }
+    ParallelAnimation {
+        id: closeAnimation
+        NumberAnimation { target: root; property: "panelOffset"; to: -panel.height; duration: 380; easing.type: Easing.InCubic }
+        NumberAnimation { target: panel; property: "opacity"; to: 0; duration: 320; easing.type: Easing.InCubic }
+        NumberAnimation { target: backdrop; property: "opacity"; to: 0; duration: 320; easing.type: Easing.InCubic }
+        onFinished: Qt.quit()
+    }
 
     Process {
         id: paletteProcess
@@ -70,10 +86,10 @@ PanelWindow {
     }
 
     Rectangle {
+        id: backdrop
         anchors.fill: parent
         color: "#44000000"
-        opacity: root.closing ? 0 : 1
-        Behavior on opacity { NumberAnimation { duration: 210; easing.type: Easing.OutCubic } }
+        opacity: 0
         MouseArea { anchors.fill: parent; onClicked: root.closeLauncher() }
     }
 
@@ -82,24 +98,14 @@ PanelWindow {
         width: Math.min(620, parent.width * 0.72)
         height: Math.min(510, parent.height * 0.72)
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: Math.max(74, parent.height * 0.13)
+        y: Math.max(74, parent.height * 0.13) + root.panelOffset
         radius: 20
         color: root.bg
         border.width: 1
         border.color: Qt.alpha(root.accent, 0.58)
-        opacity: root.shown && !root.closing ? 1 : 0
-        scale: root.shown && !root.closing ? 1 : 0.94
+        opacity: 0
+        scale: 1
         transformOrigin: Item.Top
-        Behavior on opacity { NumberAnimation { duration: 230; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 230; easing.type: Easing.OutCubic } }
-        Component.onCompleted: appearTimer.start()
-
-        Timer {
-            id: appearTimer
-            interval: 1
-            onTriggered: root.shown = true
-        }
         MouseArea { anchors.fill: parent; onClicked: function(mouse) { mouse.accepted = false } }
 
         ColumnLayout {
