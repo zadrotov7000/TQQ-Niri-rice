@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if ! command -v quickshell >/dev/null 2>&1; then
+    echo "Quickshell is not installed. Run TQQ install.sh --install-deps first." >&2
+    exit 1
+fi
+exec quickshell --no-duplicate --config tqq-dashboard
