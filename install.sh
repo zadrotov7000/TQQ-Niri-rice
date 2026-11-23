@@ -146,10 +146,10 @@ fi
 # Seed the first wallpaper only if the user has not selected one before.
 STATE_FILE="$STATE_HOME/tqq-niri-rice/current-wallpaper"
 if [[ ! -s "$STATE_FILE" ]]; then
-    first_wallpaper="$(find "$DATA_HOME/tqq-niri-rice/wallpapers" -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \\) -print -quit)"
+    first_wallpaper="$(find "$DATA_HOME/tqq-niri-rice/wallpapers" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -print -quit)"
     if [[ -n "$first_wallpaper" ]]; then
         mkdir -p "$(dirname "$STATE_FILE")"
-        printf '%s\\n' "$first_wallpaper" > "$STATE_FILE"
+        printf '%s\n' "$first_wallpaper" > "$STATE_FILE"
     fi
 fi
 
