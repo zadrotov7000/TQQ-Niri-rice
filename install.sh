@@ -24,6 +24,7 @@ for script in \
     "$ROOT/scripts/check-dependencies" \
     "$ROOT/scripts/install-dependencies" \
     "$ROOT/scripts/install-icon-fonts" \
+    "$ROOT/scripts/setup-terminal-themes" \
     "$ROOT/scripts/restore-niri-default" \
     "$ROOT/scripts/apply-windowfx" \
     "$ROOT/scripts/build-wallpaper-gallery" \
@@ -185,6 +186,12 @@ for source_config in "$ROOT"/quickshell/*; do
 done
 
 progress_mark 52 "Installing Quickshell apps"
+
+# Theme terminals when installed; never install terminal packages or replace
+# personal kitty.conf / Ghostty configuration. Backups are written by helper.
+if ! bash "$ROOT/scripts/setup-terminal-themes" --auto; then
+    echo "Warning: optional terminal theming skipped; TQQ desktop setup continues." >&2
+fi
 
 # Build and install the native Rust wallpaper gallery.
 if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
