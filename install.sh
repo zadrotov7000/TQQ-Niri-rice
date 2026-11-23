@@ -61,6 +61,25 @@ bash "$ROOT/scripts/build-squishy-shaders" \
     "$ROOT/quickshell/tqq-squishy" \
     "$BACKUP/squishy-shaders"
 
+# Install the Quickshell applications into their standard config directory.
+# Existing TQQ app configs are backed up before project files are updated.
+QUICKSHELL_CONFIG="$CONFIG_HOME/quickshell"
+mkdir -p "$QUICKSHELL_CONFIG" "$BACKUP/config/quickshell"
+for source_config in "$ROOT"/quickshell/*; do
+    [[ -d "$source_config" ]] || continue
+    config_name="$(basename "$source_config")"
+    target_config="$QUICKSHELL_CONFIG/$config_name"
+    if [[ -e "$target_config" ]]; then
+        cp -a "$target_config" "$BACKUP/config/quickshell/$config_name"
+    fi
+    mkdir -p "$target_config"
+    cp -a "$source_config/." "$target_config/"
+done
+
+# ShaderEffect loads these compiled files relative to the installed Squishy config.
+install -m 0644 "$BACKUP/squishy-shaders/squishy.vert.qsb" "$QUICKSHELL_CONFIG/tqq-squishy/squishy.vert.qsb"
+install -m 0644 "$BACKUP/squishy-shaders/squishy.frag.qsb" "$QUICKSHELL_CONFIG/tqq-squishy/squishy.frag.qsb"
+
 # Build and install the native Rust wallpaper gallery.
 if [[ -e "$LOCAL_BIN/tqq-wallpaper-gallery" ]]; then
     mkdir -p "$BACKUP/local-bin"
