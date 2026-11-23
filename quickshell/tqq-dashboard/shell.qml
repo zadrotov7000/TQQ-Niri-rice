@@ -389,9 +389,45 @@ PanelWindow {
                         RowLayout {
                             Layout.alignment: Qt.AlignHCenter
                             spacing: 8
-                            Button { text: "‹"; onClicked: Quickshell.execDetached(["playerctl", "previous"]); background: Rectangle { color: root.surface; radius: 8 }; contentItem: Text { text: parent.text; color: root.fg; horizontalAlignment: Text.AlignHCenter } }
-                            Button { text: "Ⅱ"; onClicked: Quickshell.execDetached(["playerctl", "play-pause"]); background: Rectangle { color: root.accent; radius: 8 }; contentItem: Text { text: parent.text; color: root.onAccent; horizontalAlignment: Text.AlignHCenter } }
-                            Button { text: "›"; onClicked: Quickshell.execDetached(["playerctl", "next"]); background: Rectangle { color: root.surface; radius: 8 }; contentItem: Text { text: parent.text; color: root.fg; horizontalAlignment: Text.AlignHCenter } }
+                            Button {
+                                text: "‹"
+                                onClicked: Quickshell.execDetached(["playerctl", "previous"])
+                                background: Rectangle {
+                                    color: root.surface
+                                    radius: 8
+                                }
+                                contentItem: Text {
+                                    text: "‹"
+                                    color: root.fg
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+                            }
+                            Button {
+                                text: "Ⅱ"
+                                onClicked: Quickshell.execDetached(["playerctl", "play-pause"])
+                                background: Rectangle {
+                                    color: root.accent
+                                    radius: 8
+                                }
+                                contentItem: Text {
+                                    text: "Ⅱ"
+                                    color: root.onAccent
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+                            }
+                            Button {
+                                text: "›"
+                                onClicked: Quickshell.execDetached(["playerctl", "next"])
+                                background: Rectangle {
+                                    color: root.surface
+                                    radius: 8
+                                }
+                                contentItem: Text {
+                                    text: "›"
+                                    color: root.fg
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+                            }
                         }
                         Text { Layout.fillWidth: true; text: root.mediaInfo; color: root.muted; font.pixelSize: 11; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight }
                         Item { Layout.fillHeight: true }
