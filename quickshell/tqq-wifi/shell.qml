@@ -257,7 +257,7 @@ PanelWindow {
                     root.message = text.trim();
             }
         }
-        onExited: function(exitCode) {
+        onExited: function(exitCode, exitStatus) {
             root.scanning = false;
             if (exitCode !== 0 && root.networks.length === 0 && root.message.indexOf("Scanning") === 0)
                 root.message = "Couldn't scan networks. Check that NetworkManager is running.";
@@ -507,6 +507,7 @@ PanelWindow {
                 boundsBehavior: Flickable.StopAtBounds
 
                 delegate: Rectangle {
+                    id: networkCard
                     required property var modelData
                     width: ListView.view.width
                     height: 68
@@ -575,7 +576,7 @@ PanelWindow {
                                         height: 5 + index * 3
                                         radius: 2
                                         anchors.bottom: parent.bottom
-                                        color: parent.parent.signalValue >= (index + 1) * 25
+                                        color: networkCard.signalValue >= (index + 1) * 25
                                             ? root.accent : Qt.alpha(root.muted, 0.28)
                                     }
                                 }
