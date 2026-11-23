@@ -93,7 +93,7 @@ def main() -> int:
     # Remove a standalone terminal-only shortcut left by the focused updater,
     # before rebuilding the managed TQQ bind block on a full install.
     text = re.sub(
-        r"(?ms)^[ \\t]*// BEGIN TQQ TERMINAL BIND\\n.*?^[ \\t]*// END TQQ TERMINAL BIND[ \\t]*(?:\\n|$)",
+        r"(?ms)^[ \t]*// BEGIN TQQ TERMINAL BIND\n.*?^[ \t]*// END TQQ TERMINAL BIND[ \t]*(?:\n|$)",
         "",
         text,
     )
