@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+shell_name="$(basename "${SHELL:-bash}")"
+case "$shell_name" in
+    bash) shell_rc="$HOME/.bashrc" ;;
+    zsh) shell_rc="$HOME/.zshrc" ;;
+    *) echo "TQQ Fastfetch autostart supports Bash and Zsh only."; exit 0 ;;
+esac
+
+if command -v fastfetch >/dev/null 2>&1; then enabled=1; else enabled=0; fi
+backup_dir="${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice/backups"
+mkdir -p "$backup_dir"
+
+python3 - "$shell_rc" "$enabled" "$backup_dir" <<'PY'
+from pathlib import Path
+from datetime import datetime
+import re
+import sys
+
+rc = Path(sys.argv[1])
+enabled = sys.argv[2] == "1"
+backups = Path(sys.argv[3])
+before = rc.read_text(encoding="utf-8") if rc.exists() else ""
+
+legacy = re.compile(r"(?ms)^# TQQ_FETCH_AUTOSTART:[^\n]*\n.*?^fi[ \t]*(?:\n|$)")
+modern = re.compile(r"(?ms)^# BEGIN TQQ FASTFETCH\n.*?^# END TQQ FASTFETCH[ \t]*(?:\n|$)")
+if "# TQQ_FETCH_AUTOSTART:" in before and not legacy.search(before):
+    raise SystemExit("Incomplete legacy fetch block; shell config not modified.")
+if "# BEGIN TQQ FASTFETCH" in before and not modern.search(before):
+    raise SystemExit("Incomplete Fastfetch block; shell config not modified.")
+
+clean = modern.sub("", legacy.sub("", before))
+active = [
+    line for line in clean.splitlines()
+    if line.strip() and not line.lstrip().startswith("#")
+]
+# Never add a second TQQ invocation if the user already launches Fastfetch.
+has_user_startup = any(
+    re.search(r"(?<![A-Za-z0-9_-])fastfetch([ \t]|$)", line)
+    and not re.search(r"(command\s+-v|which)\s+fastfetch\b", line)
+    for line in active
+)
+if enabled and not has_user_startup:
+    block = (
+        "# BEGIN TQQ FASTFETCH\n"
+        "if [[ $- == *i* ]] && command -v fastfetch >/dev/null 2>&1; then\n"
+        "    fastfetch\n"
+        "fi\n"
+        "# END TQQ FASTFETCH\n"
+    )
+    clean = clean.rstrip("\n") + "\n\n" + block if clean.strip() else block
+
+if before == clean:
+    print("Fastfetch startup already configured.")
+else:
+    if rc.exists():
+        backup = backups / ("fastfetch-shell-" + datetime.now().strftime("%Y%m%d-%H%M%S-%f") + "-" + rc.name)
+        backup.write_bytes(rc.read_bytes())
+        print("Shell backup: " + str(backup))
+    rc.write_text(clean, encoding="utf-8")
+    print("Updated shell startup: " + str(rc))
+PY
