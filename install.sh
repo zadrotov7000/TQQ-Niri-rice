@@ -76,7 +76,7 @@ backup_config_dir() {
     fi
 }
 
-for config_name in matugen waybar swaync fuzzel fetch; do
+for config_name in matugen waybar swaync fuzzel fetch quickshell; do
     backup_config_dir "$config_name"
     mkdir -p "$CONFIG_HOME/$config_name"
     cp -a "$ROOT/config/$config_name/." "$CONFIG_HOME/$config_name/"
@@ -103,7 +103,7 @@ fi
 
 cp -an "$ROOT/wallpapers/." "$DATA_HOME/tqq-niri-rice/wallpapers/"
 
-for script_name in select-wallpaper power-menu configure-fetch-autostart check-dependencies install-dependencies install-sddm-theme wifi-menu.py configure-swaync.py; do
+for script_name in select-wallpaper power-menu tqq-dashboard configure-fetch-autostart check-dependencies install-dependencies install-sddm-theme wifi-menu.py configure-swaync.py; do
     if [[ -e "$LOCAL_BIN/$script_name" ]]; then
         mkdir -p "$BACKUP/local-bin"
         cp -a "$LOCAL_BIN/$script_name" "$BACKUP/local-bin/$script_name"
