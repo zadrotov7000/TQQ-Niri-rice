@@ -25,6 +25,9 @@ for script in \
     "$ROOT/scripts/install-dependencies" \
     "$ROOT/scripts/install-icon-fonts" \
     "$ROOT/scripts/setup-terminal-themes" \
+    "$ROOT/scripts/setup-default-terminal" \
+    "$ROOT/scripts/apply-terminal-bind" \
+    "$ROOT/scripts/tqq-terminal" \
     "$ROOT/scripts/restore-niri-default" \
     "$ROOT/scripts/apply-windowfx" \
     "$ROOT/scripts/build-wallpaper-gallery" \
@@ -192,6 +195,12 @@ progress_mark 52 "Installing Quickshell apps"
 # personal kitty.conf / Ghostty configuration. Backups are written by helper.
 if ! bash "$ROOT/scripts/setup-terminal-themes" --auto; then
     echo "Warning: optional terminal theming skipped; TQQ desktop setup continues." >&2
+fi
+
+# Select Kitty or Ghostty for the Win+Enter launcher. The helper asks which
+# one to use if both exist, and keeps a previously selected preference.
+if ! bash "$ROOT/scripts/setup-default-terminal" --auto; then
+    echo "Warning: install Kitty or Ghostty to activate Win+Enter." >&2
 fi
 
 # Install Fastfetch's four boxed info groups without replacing user data.
