@@ -88,6 +88,14 @@ def main() -> int:
         text,
     )
 
+    # Remove the old simple Win+Space -> Fuzzel shortcut from earlier TQQ installs.
+    # Keep other user-defined Win+Space actions untouched.
+    text = re.sub(
+        r'(?m)^[ \\t]*(?:Super|Mod)\\+Space(?:[ \\t]+[^\\n{}]*)?[ \\t]*\\{[ \\t]*spawn[ \\t]+"fuzzel";[ \\t]*\\}[ \\t]*(?:\\n|$)',
+        "",
+        text,
+    )
+
     # Migrate known leftovers from earlier Itsuki/Miku-based configs.
     # Keep useful visual settings, but remove stale labels and the duplicate Kitty rule.
     text = re.sub(
