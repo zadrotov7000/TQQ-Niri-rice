@@ -30,7 +30,7 @@
   },
   "clock": {
     "format": "󰥔  {:%H:%M}   󰃭  {:%d %b}",
-    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\\n<tt>{:%H:%M:%S}</tt>"
+    "tooltip-format": "<big>{:%A, %d %B %Y}</big>\\n<tt>{:%H:%M:%S}</tt>",\n    "on-click": "tqq-dashboard"
   },
   "cpu": {
     "format": "󰍛  {usage}%",
