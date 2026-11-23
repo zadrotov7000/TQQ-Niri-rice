@@ -246,7 +246,7 @@ def main() -> int:
     config_path.write_text(text)
     print(
         "Preserved user Niri settings; migrated legacy rice labels, removed the duplicate Kitty rule, "
-        f"and added TQQ wallpaper ({wallpaper_key}), Wi-Fi ({wifi_key}), dashboard ({dashboard_key}), lock, launcher, and available Waybar startup."
+        f"and added TQQ wallpaper ({wallpaper_key}), Wi-Fi ({wifi_key}), dashboard ({dashboard_key}), lock ({lock_key}), launcher, and available Waybar startup."
     )
     return 0
 
