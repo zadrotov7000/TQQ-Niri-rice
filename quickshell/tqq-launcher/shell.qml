@@ -105,6 +105,12 @@ PanelWindow {
         opacity: 0
         clip: true
 
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onClicked: function(mouse) { mouse.accepted = true }
+        }
+
         Item {
             id: content
             anchors.fill: parent
