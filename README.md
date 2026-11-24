@@ -10,7 +10,7 @@ A customizable Niri desktop rice inspired by *The Quintessential Quintuplets*, c
 - **Application launcher:** the Waybar magnifying-glass button opens the Quickshell application search. Results use application icons from their desktop entries and the active icon theme; entries with missing icons fall back to a letter. The panel expands from a compact box under the launcher icon. The installer assigns `Mod+D` when free and chooses a documented fallback if it is already used.
 - **Wi-Fi panel:** `Mod+N` (or the installer's free fallback) opens a Quickshell network panel. It scans NetworkManager, shows signal strength and security, prompts for a password when needed, and connects through NetworkManager.
 - **Lock screen:** the secure Quickshell `WlSessionLock` and PAM screen places the clock/date at upper left, local weather at lower left, a navigable calendar at right, and a centered profile avatar with the password field beneath it. The background uses a strongly blurred wallpaper, and the avatar can be changed through Control Center or `tqq-avatar`. The preferred shortcut is `Mod+Alt+L`. The compositor holds the lock even if Quickshell exits unexpectedly.
-- **Radial window switcher:** `Alt+Tab` opens a circular window selector. Repeated `Alt+Tab` moves forward; `Alt+Shift+Tab` moves backward. The highlighted window is focused when the switcher times out, and Escape cancels.
+- **Radial window switcher:** hold `Alt` and press `Tab` to open a ring of application icons. Additional Tab presses move forward, and Shift+Tab moves backward. Release Alt to focus the highlighted window and close the ring. Escape cancels; Enter or clicking an icon also confirms. The center shows the selected application's name and window title.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens above the desktop. **Mod+B toggles** the gallery: first press opens, second closes, without spawning extra copies. Escape closes it too. Browse with Left/Right or the mouse wheel, click a side card to move, and press Enter to apply.
 - **Wallpaper transition:** the repository uses `awww` when available. Wallpaper changes use a circular center-out reveal; `swaybg` remains the fallback. Wallpaper changes regenerate Matugen colors and do not reload the Niri config.
 - **Wallpaper persistence:** the selected image is restored when Niri starts.
@@ -219,7 +219,7 @@ Close open panels with Escape, then reopen. No Niri or Rust rebuild is needed.
 | Application launcher | Waybar magnifying glass, or `Mod+D` |
 | Wi-Fi panel | `Mod+N` (free fallback if occupied) |
 | Lock screen | `Mod+Alt+L` (installer fallback if occupied) |
-| Radial window switcher | `Alt+Tab` / `Alt+Shift+Tab` |
+| Radial window switcher | Hold `Alt`, press `Tab` / `Shift+Tab`, release Alt to confirm |
 | Workspaces | `Mod+1` through `Mod+9`; move the focused column with `Mod+Ctrl+1` through `Mod+Ctrl+9` |
 | Screenshot | `Print`: select area; `Ctrl+Print`: full screen; `Alt+Print`: window; free fallback `Mod+Shift+S` |
 | Volume | Laptop volume keys (`XF86AudioRaiseVolume`, `XF86AudioLowerVolume`, `XF86AudioMute`) through `wpctl` |
