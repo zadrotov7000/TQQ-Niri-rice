@@ -1,13 +1,15 @@
-# TQQ Niri rice
+# TQQ Niri Rice
 
-A lightweight Niri desktop setup for Linux, themed around *The Quintessential Quintuplets*. TQQ uses Quickshell for its interactive desktop panels and keeps optional visual features separate so they can be enabled only when needed.
+A customizable Niri desktop rice inspired by *The Quintessential Quintuplets*, combining animated Quickshell panels, wallpaper-driven Matugen colors, Island-style Waybar and a native Rust/GTK4 wallpaper gallery. Optional window effects and terminal themes let you customize the desktop without replacing your entire setup.
+
+**Stack:** Niri · Quickshell / QML · Rust / GTK4 · Waybar · Matugen · Dunst
 
 ## Included
 
 - **Control Center:** the animated Quickshell dashboard with calendar, clock, weather, media, network, system information, volume and brightness controls. Its Niri shortcut (usually Mod+Shift+Space) and the Waybar clock **toggle** the panel: press again to close with the existing animation; Escape and the X button also close it. The power menu is in its top-right corner beside the close button.
 - **Application launcher:** the Waybar magnifying-glass button opens the Quickshell application search. Results use application icons from their desktop entries and the active icon theme; entries with missing icons fall back to a letter. The panel expands from a compact box under the launcher icon. The installer assigns `Mod+D` when free and chooses a documented fallback if it is already used.
 - **Wi-Fi panel:** `Mod+N` (or the installer's free fallback) opens a Quickshell network panel. It scans NetworkManager, shows signal strength and security, prompts for a password when needed, and connects through NetworkManager.
-- **Lock screen:** the secure Quickshell `WlSessionLock` and PAM screen places the clock/date at upper left, local weather at lower left, a navigable calendar at right, and a centered profile avatar with the password field beneath it. Avatar selection is temporarily managed with `tqq-avatar` while the Control Center avatar editor is being fixed. The compositor holds the lock even if Quickshell exits unexpectedly.
+- **Lock screen:** the secure Quickshell `WlSessionLock` and PAM screen places the clock/date at upper left, local weather at lower left, a navigable calendar at right, and a centered profile avatar with the password field beneath it. The background uses a strongly blurred wallpaper, and the avatar can be changed through Control Center or `tqq-avatar`. The preferred shortcut is `Mod+Alt+L`. The compositor holds the lock even if Quickshell exits unexpectedly.
 - **Radial window switcher:** `Alt+Tab` opens a circular window selector. Repeated `Alt+Tab` moves forward; `Alt+Shift+Tab` moves backward. The highlighted window is focused when the switcher times out, and Escape cancels.
 - **Wallpaper gallery:** a transparent Rust/GTK4 Layer Shell surface opens above the desktop. **Mod+B toggles** the gallery: first press opens, second closes, without spawning extra copies. Escape closes it too. Browse with Left/Right or the mouse wheel, click a side card to move, and press Enter to apply.
 - **Wallpaper transition:** the repository uses `awww` when available. Wallpaper changes use a circular center-out reveal; `swaybg` remains the fallback. Wallpaper changes regenerate Matugen colors and do not reload the Niri config.
@@ -33,7 +35,7 @@ Before changing the Niri config or replacing installed TQQ helper scripts, the i
 
 ## Dependencies
 
-The desktop requires Niri, Fastfetch, Quickshell (including its PAM service module), Dunst (`dunst` and `dunstctl`), Waybar, Nerd Font symbols (installed by `scripts/install-icon-fonts`), the NetworkManager and Blueman tray applets, Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, and common process tools (`pgrep`, `pkill`). For wallpaper display, install `awww` and its daemon or `swaybg`.
+The desktop requires Niri, Fastfetch, Quickshell (including its PAM service module), QtQuick.Effects (on Debian: `qml6-module-qtquick-effects`), Dunst (`dunst` and `dunstctl`), Waybar, Nerd Font symbols (installed by `scripts/install-icon-fonts`), the NetworkManager and Blueman tray applets, Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, and common process tools (`pgrep`, `pkill`). For wallpaper display, install `awww` and its daemon or `swaybg`.
 
 `scripts/check-dependencies` reports missing commands and package hints. `scripts/install-dependencies` includes package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Quickshell is installed from Debian Backports on Debian 13. Niri and `awww` may need to be installed separately depending on the distribution. Run `./scripts/install-dependencies` after updating the repository to repair missing status icons without rebuilding the Rust wallpaper gallery.
 
@@ -133,7 +135,7 @@ The updater backs up `~/.config/niri/config.kdl`, changes only the `Mod+Return` 
 
 ## Lock screen layout and avatar
 
-The lock screen uses the existing Quickshell Wayland session-lock protocol and PAM authentication. Its four regions are arranged as follows: **clock/date on the upper left**, **weather on the lower left** (from the same `tqq-region weather` source as Control Center), **calendar on the right**, and a **central user avatar, account name and password field**. The calendar supports changing months; weather refreshes every 15 minutes while locked, with a fallback message when unavailable.
+The lock screen uses the existing Quickshell Wayland session-lock protocol and PAM authentication. Its wallpaper background uses QtQuick.Effects for strong blur. The preferred shortcut is `Mod+Alt+L` (Win+Alt+L). Its four regions are arranged as follows: **clock/date on the upper left**, **weather on the lower left** (from the same `tqq-region weather` source as Control Center), **calendar on the right**, and a **central user avatar, account name and password field**. The calendar supports changing months; weather refreshes every 15 minutes while locked, with a fallback message when unavailable.
 
 **Control Center:** the stable dashboard now has a compact **LOCK AVATAR / CHOOSE IMAGE** card at the lower right. It launches the external image picker through `tqq-avatar pick` (requires Zenity or KDialog), without adding another QML dialog. Install Zenity on Debian with `sudo apt install zenity`. The preview refreshes after you select a new image.
 
@@ -216,7 +218,7 @@ Close open panels with Escape, then reopen. No Niri or Rust rebuild is needed.
 | Dashboard / Control Center | `Mod+Shift+Space` (free fallback if occupied) |
 | Application launcher | Waybar magnifying glass, or `Mod+D` |
 | Wi-Fi panel | `Mod+N` (free fallback if occupied) |
-| Lock screen | First free key from `Mod+L`, `Mod+Shift+L`, `Mod+Ctrl+L`, `Mod+Alt+L`, `Mod+Ctrl+Shift+L`, `Mod+Alt+Shift+L` |
+| Lock screen | `Mod+Alt+L` (installer fallback if occupied) |
 | Radial window switcher | `Alt+Tab` / `Alt+Shift+Tab` |
 | Workspaces | `Mod+1` through `Mod+9`; move the focused column with `Mod+Ctrl+1` through `Mod+Ctrl+9` |
 | Screenshot | `Print`: select area; `Ctrl+Print`: full screen; `Alt+Print`: window; free fallback `Mod+Shift+S` |
