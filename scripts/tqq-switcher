@@ -15,7 +15,7 @@ elif command -v quickshell >/dev/null 2>&1; then
     ipc_command="$(command -v quickshell)"
 fi
 
-if [[ -n "$ipc_command" ]] && "$ipc_command" ipc call tqq-switcher "$action" >/dev/null 2>&1; then
+if [[ -n "$ipc_command" ]] && "$ipc_command" --config tqq-switcher ipc call tqq-switcher "$action" >/dev/null 2>&1; then
     exit 0
 fi
 
