@@ -21,16 +21,16 @@ flock -n 8 || { notify "Rice refresh is already running."; exit 1; }
 
 if ! command -v matugen >/dev/null 2>&1; then
     notify "Matugen is missing; colors were not updated."
-    return 1
+    exit 1
 fi
 if [[ ! -r "$matugen_config" ]]; then
     notify "Matugen config not found: $matugen_config"
-    return 1
+    exit 1
 fi
 matugen_log="$state_home/matugen.log"
 if ! matugen -c "$matugen_config" image "$image" -m dark --source-color-index 0 >"$matugen_log" 2>&1; then
     notify "Matugen failed. Details: $matugen_log"
-    return 1
+    exit 1
 fi
 
 if [[ ! -s "$config_home/waybar/colors.css" \
@@ -41,11 +41,10 @@ if [[ ! -s "$config_home/waybar/colors.css" \
         "$config_home/dunst/dunstrc" \
         "$config_home/tqq-niri-rice/colors.json"; then
     notify "Matugen did not replace the starter colors. Check $matugen_log and $matugen_config."
-    return 1
+    exit 1
 fi
 
 if [[ ${1:-} == --startup ]]; then
-    local attempt
     for attempt in {1..30}; do
         pgrep -x waybar >/dev/null 2>&1 && break
         sleep 0.1
