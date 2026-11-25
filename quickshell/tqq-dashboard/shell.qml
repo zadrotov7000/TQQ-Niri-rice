@@ -38,6 +38,8 @@ PanelWindow {
     property int profileAvatarRevision: 0
     property real panelOffset: -1000
     property bool closing: false
+    property string refreshStatus: ""
+    property string pendingRegion: ""
 
     property color bg: "#111014"
     property color surface: "#211e25"
@@ -281,6 +283,97 @@ PanelWindow {
         onActivated: root.closePanel()
     }
 
+    component TqqButton: Button {
+        id: styledButton
+        implicitHeight: 36
+        hoverEnabled: true
+        contentItem: Text {
+            text: styledButton.text
+            color: styledButton.enabled ? root.fg : root.muted
+            font.pixelSize: 12
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+        background: Rectangle {
+            radius: 9
+            color: styledButton.down ? Qt.alpha(root.accent, 0.28)
+                : styledButton.hovered ? Qt.alpha(root.accent, 0.14) : root.surfaceHigh
+            border.width: 1
+            border.color: styledButton.activeFocus || styledButton.hovered
+                ? root.accent : Qt.alpha(root.accent, 0.20)
+            scale: styledButton.down ? 0.96 : 1
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on border.color { ColorAnimation { duration: 120 } }
+            Behavior on scale { NumberAnimation { duration: 110; easing.type: Easing.OutCubic } }
+        }
+    }
+
+    component TqqDialog: Dialog {
+        id: styledDialog
+        modal: true
+        focus: true
+        anchors.centerIn: parent
+        padding: 20
+        spacing: 14
+        width: 350
+        background: Rectangle {
+            radius: 19
+            color: root.surface
+            border.width: 1
+            border.color: Qt.alpha(root.accent, 0.55)
+        }
+        header: Text {
+            text: styledDialog.title
+            color: root.accent
+            font.pixelSize: 16
+            font.bold: true
+            padding: 20
+            bottomPadding: 0
+            wrapMode: Text.WordWrap
+        }
+        footer: DialogButtonBox {
+            delegate: TqqButton {}
+            padding: 14
+            spacing: 8
+            background: Item {}
+        }
+        enter: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 190; easing.type: Easing.OutCubic }
+                NumberAnimation { property: "scale"; from: 0.92; to: 1; duration: 230; easing.type: Easing.OutCubic }
+            }
+        }
+        exit: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 130 }
+                NumberAnimation { property: "scale"; from: 1; to: 0.96; duration: 130 }
+            }
+        }
+    }
+
+    Process {
+        id: riceRefresh
+        command: ["tqq-refresh-rice"]
+        onExited: function(exitCode, exitStatus) {
+            root.refreshStatus = exitCode === 0 ? "Theme refreshed" : "Refresh failed";
+            if (exitCode === 0) {
+                paletteProcess.running = false;
+                paletteProcess.running = true;
+            }
+        }
+    }
+
+    Process {
+        id: regionSave
+        command: ["tqq-region", "set", root.pendingRegion]
+        onExited: function(exitCode, exitStatus) {
+            if (exitCode === 0) {
+                regionProcess.running = false;
+                regionProcess.running = true;
+            }
+        }
+    }
+
     Popup {
         id: powerPopup
         x: panel.x + panel.width - width - 22
@@ -290,6 +383,19 @@ PanelWindow {
         modal: false
         focus: true
         closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+        transformOrigin: Popup.TopRight
+        enter: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 160 }
+                NumberAnimation { property: "scale"; from: 0.88; to: 1; duration: 220; easing.type: Easing.OutCubic }
+            }
+        }
+        exit: Transition {
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 120 }
+                NumberAnimation { property: "scale"; from: 1; to: 0.94; duration: 120 }
+            }
+        }
         background: Rectangle {
             radius: 17
             color: root.surface
@@ -307,7 +413,7 @@ PanelWindow {
                 Layout.leftMargin: 7
                 Layout.bottomMargin: 3
             }
-            Button {
+            TqqButton {
                 text: "Lock screen"
                 Layout.fillWidth: true
                 onClicked: {
@@ -315,10 +421,8 @@ PanelWindow {
                     root.closePanel();
                     Quickshell.execDetached(["tqq-lock-screen"]);
                 }
-                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
-                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
             }
-            Button {
+            TqqButton {
                 text: "Log out"
                 Layout.fillWidth: true
                 onClicked: {
@@ -326,10 +430,8 @@ PanelWindow {
                     root.closePanel();
                     Quickshell.execDetached(["niri", "msg", "action", "quit"]);
                 }
-                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
-                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
             }
-            Button {
+            TqqButton {
                 text: "Suspend"
                 Layout.fillWidth: true
                 onClicked: {
@@ -337,33 +439,27 @@ PanelWindow {
                     root.closePanel();
                     Quickshell.execDetached(["sh", "-lc", "tqq-lock-screen & sleep 1; systemctl suspend"]);
                 }
-                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
-                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
             }
-            Button {
+            TqqButton {
                 text: "Restart…"
                 Layout.fillWidth: true
                 onClicked: {
                     powerPopup.close();
                     rebootDialog.open();
                 }
-                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
-                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
             }
-            Button {
+            TqqButton {
                 text: "Power off…"
                 Layout.fillWidth: true
                 onClicked: {
                     powerPopup.close();
                     poweroffDialog.open();
                 }
-                background: Rectangle { radius: 9; color: parent.hovered ? root.surfaceHigh : "transparent" }
-                contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 12; leftPadding: 10; verticalAlignment: Text.AlignVCenter }
             }
         }
     }
 
-    Dialog {
+    TqqDialog {
         id: rebootDialog
         title: "Restart this computer?"
         modal: true
@@ -373,7 +469,7 @@ PanelWindow {
         contentItem: Text { text: "Your open applications will be closed."; color: root.fg; wrapMode: Text.WordWrap }
     }
 
-    Dialog {
+    TqqDialog {
         id: poweroffDialog
         title: "Power off this computer?"
         modal: true
@@ -383,18 +479,23 @@ PanelWindow {
         contentItem: Text { text: "Your open applications will be closed."; color: root.fg; wrapMode: Text.WordWrap }
     }
 
-    Dialog {
+    TqqDialog {
         id: regionDialog
         title: "Weather location"
         modal: true
         anchors.centerIn: parent
         standardButtons: Dialog.Save | Dialog.Cancel
+        onOpened: {
+            regionField.text = "";
+            regionField.forceActiveFocus();
+        }
         onAccepted: {
             const city = regionField.text.trim();
             if (city.length > 0) {
-                Quickshell.execDetached(["tqq-region", "set", city]);
-                root.weatherRegion = city;
-                root.loadWeather();
+                if (!regionSave.running) {
+                    root.pendingRegion = city;
+                    regionSave.running = true;
+                }
             }
         }
         contentItem: ColumnLayout {
@@ -409,7 +510,38 @@ PanelWindow {
                 id: regionField
                 placeholderText: "City, e.g. Copenhagen"
                 Layout.fillWidth: true
+                Layout.preferredHeight: 42
+                color: root.fg
+                placeholderTextColor: root.muted
+                selectionColor: root.accent
+                selectedTextColor: root.accentForeground
+                selectByMouse: true
+                leftPadding: 12
+                onAccepted: regionDialog.accept()
+                background: Rectangle {
+                    radius: 10
+                    color: root.bg
+                    border.width: 1
+                    border.color: regionField.activeFocus ? root.accent : Qt.alpha(root.accent, 0.25)
+                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                }
             }
+        }
+    }
+
+    TqqDialog {
+        id: refreshDialog
+        title: "Refresh rice?"
+        standardButtons: Dialog.Cancel | Dialog.Ok
+        onAccepted: {
+            if (riceRefresh.running) return;
+            root.refreshStatus = "Refreshing theme…";
+            riceRefresh.running = true;
+        }
+        contentItem: Text {
+            text: "Apply colors from the current wallpaper and reload desktop components. Personal settings and wallpapers are kept."
+            color: root.fg
+            wrapMode: Text.WordWrap
         }
     }
 
@@ -471,11 +603,9 @@ PanelWindow {
                     Layout.preferredWidth: 92
                     Text { anchors.centerIn: parent; text: "◖ " + root.volumeText; color: root.fg; font.pixelSize: 11 }
                 }
-                Button {
+                TqqButton {
                     text: "⏻"
                     onClicked: powerPopup.open()
-                    background: Rectangle { radius: 9; color: root.surfaceHigh }
-                    contentItem: Text { text: parent.text; color: root.fg; font.pixelSize: 17; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter }
                 }
                 Button {
                     text: "×"
@@ -627,11 +757,11 @@ PanelWindow {
                         RowLayout {
                             Layout.fillWidth: true
                             Text { text: root.weatherRegion.toUpperCase(); color: root.muted; font.pixelSize: 10; font.bold: true; elide: Text.ElideRight; Layout.fillWidth: true }
-                            Button {
+                            TqqButton {
                                 text: "···"
+                                Layout.preferredWidth: 32
+                                Layout.preferredHeight: 28
                                 onClicked: regionDialog.open()
-                                background: Rectangle { color: root.surfaceHigh; radius: 7 }
-                                contentItem: Text { text: parent.text; color: root.fg; horizontalAlignment: Text.AlignHCenter }
                             }
                         }
                         Item { Layout.fillHeight: true }
@@ -827,6 +957,13 @@ PanelWindow {
             RowLayout {
                 Layout.fillWidth: true
                 Text { text: "CONTROL CENTER"; color: root.muted; font.pixelSize: 9; font.letterSpacing: 1 }
+                TqqButton {
+                    text: riceRefresh.running ? "Refreshing…" : "↻  Refresh rice"
+                    enabled: !riceRefresh.running
+                    Layout.preferredWidth: 112
+                    onClicked: refreshDialog.open()
+                }
+                Text { text: root.refreshStatus; color: root.muted; font.pixelSize: 9; elide: Text.ElideRight; Layout.maximumWidth: 110 }
                 Item { Layout.fillWidth: true }
 
                 // Right-side avatar picker card. No extra dialog or QML module.

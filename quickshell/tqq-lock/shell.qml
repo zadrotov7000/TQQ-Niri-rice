@@ -15,7 +15,8 @@ Scope {
     property string dateText: Qt.formatDateTime(new Date(), "dddd, d MMMM")
     property string statusText: "ENTER YOUR PASSWORD"
     property string pendingPassword: ""
-    property bool unlockVisible: true
+    property bool unlockVisible: false
+    property bool unlocking: false
     property bool authenticating: false
     property bool failed: false
 
@@ -46,7 +47,7 @@ Scope {
     }
 
     function authenticate(password) {
-        if (authenticating || !password || password.length === 0)
+        if (authenticating || unlocking || !password || password.length === 0)
             return;
         pendingPassword = password;
         statusText = "Verifying…";
@@ -133,8 +134,8 @@ Scope {
             root.authenticating = false;
             if (result === PamResult.Success) {
                 root.statusText = "Unlocked";
-                sessionLock.locked = false;
-                Qt.callLater(function() { Qt.quit(); });
+                root.unlocking = true;
+                unlockTimer.start();
             } else {
                 root.pendingPassword = "";
                 root.failed = true;
@@ -152,6 +153,16 @@ Scope {
         }
     }
 
+    // Keep the secure session lock engaged until the success animation finishes.
+    Timer {
+        id: unlockTimer
+        interval: 260
+        onTriggered: {
+            sessionLock.locked = false;
+            Qt.callLater(function() { Qt.quit(); });
+        }
+    }
+
     // WlSessionLock has one default surface Component. Services above belong
     // to Scope, never to the WlSessionLock default property.
     WlSessionLock {
@@ -160,6 +171,9 @@ Scope {
         WlSessionLockSurface {
         id: lockSurface
         color: "#08070b"
+        property bool entered: false
+        property real reveal: entered && !root.unlocking ? 1 : 0
+        Behavior on reveal { NumberAnimation { duration: root.unlocking ? 230 : 360; easing.type: Easing.OutCubic } }
 
         Image {
             id: wallpaper
@@ -174,15 +188,16 @@ Scope {
             anchors.fill: parent
             source: wallpaper
             blurEnabled: true
-            blur: 1.0
+            blur: lockSurface.reveal
             blurMax: 64
             blurMultiplier: 1.5
-            brightness: -0.30
-            saturation: 0.82
+            brightness: -0.30 * lockSurface.reveal
+            saturation: 1 - 0.18 * lockSurface.reveal
         }
 
         Rectangle {
             anchors.fill: parent
+            opacity: lockSurface.reveal
             gradient: Gradient {
                 GradientStop { position: 0.0; color: "#50070910" }
                 GradientStop { position: 0.55; color: "#99070910" }
@@ -193,6 +208,8 @@ Scope {
         // Upper-left: clock and date.
         Rectangle {
             id: clockPanel
+            opacity: lockSurface.reveal
+            scale: 0.96 + 0.04 * lockSurface.reveal
             width: Math.min(360, parent.width * 0.27)
             height: 196
             x: Math.max(42, parent.width * 0.046)
@@ -231,6 +248,8 @@ Scope {
         // Lower-left: the same weather source as Control Center.
         Rectangle {
             id: weatherPanel
+            opacity: lockSurface.reveal
+            scale: 0.96 + 0.04 * lockSurface.reveal
             width: clockPanel.width
             height: 205
             x: clockPanel.x
@@ -284,6 +303,12 @@ Scope {
         // Center: user image and the PAM-backed password entry.
         Rectangle {
             id: profileCard
+            property real loginReveal: root.unlockVisible && !root.unlocking ? 1 : 0
+            Behavior on loginReveal { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            opacity: lockSurface.reveal * loginReveal
+            scale: 0.94 + 0.06 * loginReveal
+            visible: opacity > 0
+            enabled: root.unlockVisible && !root.unlocking
             width: Math.min(340, Math.max(270, parent.width * 0.26))
             height: 452
             anchors.centerIn: parent
@@ -413,6 +438,8 @@ Scope {
         // Right: fully local calendar, with month navigation.
         Rectangle {
             id: calendarPanel
+            opacity: lockSurface.reveal
+            scale: 0.96 + 0.04 * lockSurface.reveal
             width: Math.min(330, parent.width * 0.25)
             height: 430
             anchors.right: parent.right
@@ -504,16 +531,31 @@ Scope {
             }
         }
 
+        Item {
+            id: lockKeys
+            anchors.fill: parent
+            focus: true
+            Keys.onPressed: function(event) {
+                if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && !root.unlocking) {
+                    event.accepted = true;
+                    root.unlockVisible = true;
+                    Qt.callLater(function() { passwordField.forceActiveFocus(); });
+                }
+            }
+        }
+
         Component.onCompleted: Qt.callLater(function() {
-            root.unlockVisible = true;
-            passwordField.forceActiveFocus();
+            lockSurface.entered = true;
+            lockKeys.forceActiveFocus();
         })
 
         Shortcut {
             sequence: "Escape"
             context: Qt.ApplicationShortcut
             onActivated: {
-                if (!root.authenticating) {
+                if (!root.authenticating && !root.unlocking) {
+                    root.unlockVisible = false;
+                    lockKeys.forceActiveFocus();
                     passwordField.text = "";
                     root.failed = false;
                     root.statusText = "ENTER YOUR PASSWORD";

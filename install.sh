@@ -32,6 +32,7 @@ for script in \
     "$ROOT/scripts/apply-windowfx" \
     "$ROOT/scripts/build-wallpaper-gallery" \
     "$ROOT/scripts/select-wallpaper" \
+    "$ROOT/scripts/tqq-refresh-rice" \
     "$ROOT/scripts/tqq-dashboard" \
     "$ROOT/scripts/tqq-launcher" \
     "$ROOT/scripts/tqq-wifi" \
@@ -221,7 +222,7 @@ progress_mark 79 "Copying wallpapers"
 
 # Install only the launchers and helpers used by the current Quickshell setup.
 for script_name in \
-    select-wallpaper tqq-dashboard tqq-launcher tqq-wifi tqq-switcher \
+    select-wallpaper tqq-refresh-rice tqq-dashboard tqq-launcher tqq-wifi tqq-switcher \
     tqq-region tqq-lock-screen tqq-avatar configure-fastfetch-autostart \
     check-dependencies install-dependencies install-icon-fonts restore-niri-default; do
     source_file="$ROOT/scripts/$script_name"
@@ -314,8 +315,11 @@ fi
 progress_mark 95 "Configuring desktop services"
 
 if [[ -s "$STATE_FILE" ]]; then
-    if ! progress_run 99 "Applying wallpaper and colors" "$LOCAL_BIN/select-wallpaper" --restore; then
-        echo "Warning: saved wallpaper could not be applied. Check awww/swaybg and Matugen." >&2
+    if ! progress_run 98 "Applying wallpaper" "$LOCAL_BIN/select-wallpaper" --restore; then
+        echo "Warning: saved wallpaper could not be applied. Check awww/swaybg." >&2
+    fi
+    if ! progress_run 99 "Applying desktop colors" "$LOCAL_BIN/tqq-refresh-rice" --startup; then
+        echo "Warning: palette could not be applied. Check Matugen." >&2
     fi
 fi
 

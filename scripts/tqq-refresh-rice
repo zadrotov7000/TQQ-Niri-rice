@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+state_home="${XDG_STATE_HOME:-$HOME/.local/state}/tqq-niri-rice"
+state_file="$state_home/current-wallpaper"
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+matugen_config="$config_home/matugen/config.toml"
+
+notify() {
+    command -v notify-send >/dev/null 2>&1 && notify-send "TQQ Niri rice" "$1" || true
+}
+
+[[ -r "$state_file" ]] || { notify "No wallpaper has been selected."; exit 1; }
+IFS= read -r image < "$state_file" || true
+[[ -n "$image" && -r "$image" ]] || { notify "Current wallpaper cannot be read."; exit 1; }
+mkdir -p "$state_home"
+exec 8>"$state_home/refresh-rice.lock"
+flock -n 8 || { notify "Rice refresh is already running."; exit 1; }
+
+if ! command -v matugen >/dev/null 2>&1; then
+    notify "Matugen is missing; colors were not updated."
+    return 1
+fi
+if [[ ! -r "$matugen_config" ]]; then
+    notify "Matugen config not found: $matugen_config"
+    return 1
+fi
+matugen_log="$state_home/matugen.log"
+if ! matugen -c "$matugen_config" image "$image" -m dark --source-color-index 0 >"$matugen_log" 2>&1; then
+    notify "Matugen failed. Details: $matugen_log"
+    return 1
+fi
+
+if [[ ! -s "$config_home/waybar/colors.css" \
+    || ! -s "$config_home/dunst/dunstrc" \
+    || ! -s "$config_home/tqq-niri-rice/colors.json" ]] \
+    || grep -q 'Starter palette' \
+        "$config_home/waybar/colors.css" \
+        "$config_home/dunst/dunstrc" \
+        "$config_home/tqq-niri-rice/colors.json"; then
+    notify "Matugen did not replace the starter colors. Check $matugen_log and $matugen_config."
+    return 1
+fi
+
+if [[ ${1:-} == --startup ]]; then
+    local attempt
+    for attempt in {1..30}; do
+        pgrep -x waybar >/dev/null 2>&1 && break
+        sleep 0.1
+    done
+fi
+# Update the Niri border include from the same Matugen colors.
+# One Rust process per manual palette refresh; no permanently running daemon.
+if [[ -x "$HOME/.local/bin/tqq-windowfx" ]]; then
+    if ! "$HOME/.local/bin/tqq-windowfx" "$config_home/waybar/colors.css" "$config_home/niri/tqq-windowfx.kdl"; then
+        notify "Window borders could not be recolored. Check Matugen palette."
+    fi
+fi
+pkill -SIGUSR2 -x waybar >/dev/null 2>&1 || true
+
+# Reload wallpaper-derived terminal themes without restarting shell sessions.
+# Kitty accepts SIGUSR1; Ghostty supports systemd user reload / SIGUSR2.
+# Only reload terminals with TQQ theme files installed.
+if [[ -f "$config_home/kitty/tqq.conf" ]]; then
+    pkill -USR1 -u "$(id -u)" -x kitty >/dev/null 2>&1 || true
+fi
+if [[ -f "$config_home/ghostty/tqq.conf" ]]; then
+    if ! (command -v systemctl >/dev/null 2>&1 &&
+          systemctl --user reload app-com.mitchellh.ghostty.service >/dev/null 2>&1); then
+        pkill -USR2 -u "$(id -u)" -x ghostty >/dev/null 2>&1 || true
+    fi
+fi
+
+# Dunst reads its updated Matugen theme without blocking installation.
+if command -v dunstctl >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
+    timeout 2s dunstctl reload >/dev/null 2>&1 || true
+fi
+notify "Desktop palette refreshed."

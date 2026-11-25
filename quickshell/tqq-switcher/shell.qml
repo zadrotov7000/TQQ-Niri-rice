@@ -61,7 +61,6 @@ PanelWindow {
 
     Component.onCompleted: {
         paletteProcess.running = true;
-        openAnimation.start();
         keyboard.forceActiveFocus();
         loadWindows();
     }
@@ -73,7 +72,7 @@ PanelWindow {
             property: "reveal"
             from: 0
             to: 1
-            duration: 390
+            duration: 300
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
@@ -81,7 +80,7 @@ PanelWindow {
             property: "backdropOpacity"
             from: 0
             to: 0.72
-            duration: 280
+            duration: 220
             easing.type: Easing.OutCubic
         }
     }
@@ -133,6 +132,7 @@ PanelWindow {
                     root.loading = false;
                     if (root.windows.length === 0) root.closeWithoutSwitch();
                     else if (root.commitPending) root.commitSelection();
+                    else openAnimation.start();
                 } catch (error) {
                     console.warn("TQQ switcher: could not parse Niri windows:", error);
                     root.loading = false;
@@ -212,7 +212,7 @@ PanelWindow {
         property real nodeSize: Math.min(band * 0.74,
             2 * orbit * Math.sin(Math.PI / Math.max(2, visibleCount)) * 0.76)
         opacity: root.reveal
-        scale: 0.86 + 0.14 * root.reveal
+        scale: 0.68 + 0.32 * root.reveal
 
         // A true annulus: the middle is open, icons sit inside the thick band.
         Rectangle {
@@ -247,11 +247,11 @@ PanelWindow {
                 property int windowIndex: (wheel.startIndex + index) % Math.max(1, root.windows.length)
                 property var entry: root.windows[windowIndex]
                 property bool chosen: windowIndex === root.selectedIndex
-                property real angle: index * Math.PI * 2 / Math.max(1, wheel.visibleCount) - Math.PI / 2
+                property real angle: index * Math.PI * 2 / Math.max(1, wheel.visibleCount) - Math.PI / 2 - (1 - root.reveal) * 0.30
                 width: wheel.nodeSize
                 height: width
-                x: wheel.width / 2 + Math.cos(angle) * wheel.orbit - width / 2
-                y: wheel.height / 2 + Math.sin(angle) * wheel.orbit - height / 2
+                x: wheel.width / 2 + Math.cos(angle) * wheel.orbit * (0.76 + 0.24 * root.reveal) - width / 2
+                y: wheel.height / 2 + Math.sin(angle) * wheel.orbit * (0.76 + 0.24 * root.reveal) - height / 2
                 radius: width / 2
                 color: chosen ? Qt.alpha(root.accent, 0.28) : Qt.alpha(root.surface, 0.82)
                 border.width: chosen ? 2 : 1
