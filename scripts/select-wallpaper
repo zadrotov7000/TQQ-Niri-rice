@@ -13,48 +13,124 @@ notify() {
     command -v notify-send >/dev/null 2>&1 && notify-send "TQQ Niri rice" "$1" || true
 }
 
-set_wallpaper() {
-    local image="$1"
-    [[ -r "$image" ]] || { notify "Can't read wallpaper: $image"; return 1; }
-
-    if command -v awww >/dev/null 2>&1; then
-        if ! awww query >/dev/null 2>&1 && command -v awww-daemon >/dev/null 2>&1; then
-            nohup awww-daemon >/dev/null 2>&1 </dev/null &
-            local attempt
-            for attempt in {1..30}; do
-                awww query >/dev/null 2>&1 && break
-                sleep 0.2
-            done
+# Match only the old rice's exact swaybg invocation (including legacy installs).
+stop_previous_swaybg() {
+    local previous="$1" keep="$2" pid
+    local -a args
+    [[ -n "$previous" ]] || return 0
+    while IFS= read -r pid; do
+        [[ "$pid" != "$keep" && -r "/proc/$pid/cmdline" ]] || continue
+        args=()
+        mapfile -d '' -t args < "/proc/$pid/cmdline" 2>/dev/null || continue
+        if [[ "${#args[@]}" == 5 && "${args[0]##*/}" == swaybg &&
+              "${args[1]}" == -i && "${args[2]}" == "$previous" &&
+              "${args[3]}" == -m && "${args[4]}" == fill ]]; then
+            kill -TERM "$pid" 2>/dev/null || true
         fi
-        if awww query >/dev/null 2>&1 && awww img --transition-type center --transition-duration 0.95 --transition-fps 30 -- "$image"; then
-            :
-        elif command -v swaybg >/dev/null 2>&1; then
-            pkill -x swaybg >/dev/null 2>&1 || true
-            nohup swaybg -i "$image" -m fill >/dev/null 2>&1 </dev/null &
-        else
-            notify "awww is unavailable and swaybg is not installed."
+    done < <(pgrep -u "$UID" -x swaybg || true)
+}
+
+set_wallpaper() (
+    local image="$1" mode="${2:-change}" previous="" backend="" candidate query="" started=0 attempt new_pid
+    [[ -f "$image" && -r "$image" ]] || { notify "Can't read wallpaper: $image"; return 1; }
+    image="$(realpath -- "$image")"
+    mkdir -p "$state_home" "$config_home/tqq-niri-rice"
+    # Separate from the picker toggle and palette locks.
+    exec 7>"$state_home/wallpaper-apply.lock"
+    flock 7
+    if [[ -r "$state_file" ]]; then
+        IFS= read -r previous < "$state_file" || true
+    fi
+
+    for candidate in awww swww; do
+        if command -v "$candidate" >/dev/null 2>&1 && query="$("$candidate" query 2>/dev/null)" && [[ -n "$query" ]]; then
+            backend="$candidate"
+            break
+        fi
+    done
+    if [[ -z "$backend" ]]; then
+        for candidate in awww swww; do
+            if command -v "$candidate" >/dev/null 2>&1 && command -v "$candidate-daemon" >/dev/null 2>&1; then
+                backend="$candidate"
+                nohup "$backend-daemon" >>"$state_home/wallpaper.log" 2>&1 </dev/null 7>&- &
+                started=1
+                for attempt in {1..50}; do
+                    if query="$("$backend" query 2>/dev/null)" && [[ -n "$query" ]]; then break; fi
+                    sleep 0.1
+                done
+                break
+            fi
+        done
+    fi
+
+    if [[ -n "$backend" ]]; then
+        if ! query="$("$backend" query 2>>"$state_home/wallpaper.log")" || [[ -z "$query" ]]; then
+            notify "Wallpaper daemon is not ready. See wallpaper.log."
             return 1
         fi
+        # Seed the previous picture if the animated daemon is new or has no image.
+        if [[ "$mode" != restore && "$previous" != "$image" && -f "$previous" &&
+              ( "$started" == 1 || "${query,,}" != *image:* ) ]]; then
+            if ! "$backend" img --transition-type none -- "$previous" >>"$state_home/wallpaper.log" 2>&1; then
+                notify "Could not seed the previous wallpaper. See wallpaper.log."
+                return 1
+            fi
+            sleep 0.2
+        fi
+        if [[ "$mode" == restore || -z "$previous" || "$previous" == "$image" ]]; then
+            if ! "$backend" img --transition-type none -- "$image" >>"$state_home/wallpaper.log" 2>&1; then
+                notify "Wallpaper could not be loaded. See wallpaper.log."
+                return 1
+            fi
+            sleep 0.2
+        else
+            # Keep the existing daemon alive and reveal the new image from its center.
+            if ! "$backend" img --filter Bilinear --transition-type center --transition-duration 0.95 --transition-fps 60 -- "$image" >>"$state_home/wallpaper.log" 2>&1; then
+                notify "Wallpaper transition failed. See wallpaper.log."
+                return 1
+            fi
+            # Give the replacement time to display before retiring a legacy swaybg.
+            sleep 1
+        fi
+        stop_previous_swaybg "$previous" ""
     elif command -v swaybg >/dev/null 2>&1; then
-        pkill -x swaybg >/dev/null 2>&1 || true
-        nohup swaybg -i "$image" -m fill >/dev/null 2>&1 </dev/null &
+        # Static fallback: start the new surface before retiring the old one.
+        # swaybg cannot animate; keep it for systems without an animated daemon.
+        nohup swaybg -i "$image" -m fill >>"$state_home/wallpaper.log" 2>&1 </dev/null 7>&- &
+        new_pid=$!
+        sleep 0.5
+        if ! kill -0 "$new_pid" 2>/dev/null; then
+            notify "Wallpaper could not be loaded. See wallpaper.log."
+            return 1
+        fi
+        stop_previous_swaybg "$previous" "$new_pid"
+        if [[ "$mode" != restore ]]; then
+            notify "Static wallpaper applied. Install awww or swww for transitions."
+        fi
     else
-        notify "Install awww or swaybg to display wallpapers."
+        notify "Install awww, swww or swaybg to display wallpapers."
         return 1
     fi
 
-    mkdir -p "$state_home" "$config_home/tqq-niri-rice"
-    printf '%s\n' "$image" > "$state_file"
+    # Only publish the new path after the wallpaper backend accepted it.
+    printf '%s\n' "$image" > "$state_file.tmp"
+    mv -f -- "$state_file.tmp" "$state_file"
 
+    if [[ "$mode" != restore ]]; then
+        # Palette-only refresh: no wallpaper reset, no compositor restart.
+        if ! "$HOME/.local/bin/tqq-refresh-rice" --wallpaper; then
+            notify "Wallpaper changed, but colors could not be updated. See matugen.log."
+            return 0
+        fi
+    fi
     notify "Wallpaper changed."
-
-}
+)
 
 case "${1:-pick}" in
     --restore|restore)
         if [[ -r "$state_file" ]]; then
             IFS= read -r saved_image < "$state_file" || true
-            [[ -n "${saved_image:-}" ]] && set_wallpaper "$saved_image"
+            [[ -n "${saved_image:-}" ]] && set_wallpaper "$saved_image" restore
         fi
         exit 0
         ;;

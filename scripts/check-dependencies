@@ -13,8 +13,9 @@ if ! pkg-config --exists gtk4-layer-shell-0; then
     missing+=("GTK4 Layer Shell development files (gtk4-layer-shell-0 pkg-config module)")
 fi
 if { ! command -v awww >/dev/null 2>&1 || ! command -v awww-daemon >/dev/null 2>&1; } \
+    && { ! command -v swww >/dev/null 2>&1 || ! command -v swww-daemon >/dev/null 2>&1; } \
     && ! command -v swaybg >/dev/null 2>&1; then
-    missing+=("awww or swaybg")
+    missing+=("awww or swww or swaybg")
 fi
 
 # Font Awesome is the default Waybar glyph font; Nerd Font is optional fallback.
@@ -22,6 +23,11 @@ if command -v fc-list >/dev/null 2>&1; then
     if ! fc-list -f '%{family}\n' | grep -E 'FontAwesome|Font Awesome' >/dev/null; then
         missing+=("FontAwesome icons (install fonts-font-awesome)")
     fi
+fi
+
+if { ! command -v awww >/dev/null 2>&1 || ! command -v awww-daemon >/dev/null 2>&1; } \
+    && { ! command -v swww >/dev/null 2>&1 || ! command -v swww-daemon >/dev/null 2>&1; }; then
+    echo "Optional: install awww or swww for animated wallpaper changes (swaybg is static)."
 fi
 
 if ((${#missing[@]} == 0)); then

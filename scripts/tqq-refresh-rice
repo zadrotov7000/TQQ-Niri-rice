@@ -12,12 +12,16 @@ notify() {
     command -v notify-send >/dev/null 2>&1 && notify-send "TQQ Niri rice" "$1" || true
 }
 
+mkdir -p "$state_home"
+exec 8>"$state_home/refresh-rice.lock"
+if [[ ${1:-} == --wallpaper ]]; then
+    flock 8
+else
+    flock -n 8 || { notify "Rice refresh is already running."; exit 1; }
+fi
 [[ -r "$state_file" ]] || { notify "No wallpaper has been selected."; exit 1; }
 IFS= read -r image < "$state_file" || true
 [[ -n "$image" && -r "$image" ]] || { notify "Current wallpaper cannot be read."; exit 1; }
-mkdir -p "$state_home"
-exec 8>"$state_home/refresh-rice.lock"
-flock -n 8 || { notify "Rice refresh is already running."; exit 1; }
 
 if ! command -v matugen >/dev/null 2>&1; then
     notify "Matugen is missing; colors were not updated."
@@ -51,7 +55,7 @@ if [[ ${1:-} == --startup ]]; then
     done
 fi
 # Update the Niri border include from the same Matugen colors.
-# One Rust process per manual palette refresh; no permanently running daemon.
+# One Rust process per palette refresh; no permanently running daemon.
 if [[ -x "$HOME/.local/bin/tqq-windowfx" ]]; then
     if ! "$HOME/.local/bin/tqq-windowfx" "$config_home/waybar/colors.css" "$config_home/niri/tqq-windowfx.kdl"; then
         notify "Window borders could not be recolored. Check Matugen palette."
@@ -76,4 +80,4 @@ fi
 if command -v dunstctl >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
     timeout 2s dunstctl reload >/dev/null 2>&1 || true
 fi
-notify "Desktop palette refreshed."
+if [[ ${1:-} != --wallpaper ]]; then notify "Desktop palette refreshed."; fi
