@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -u
 
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
 required=(niri fastfetch flock dunst dunstctl waybar nm-applet blueman-applet fc-list fc-cache matugen quickshell playerctl wpctl pavucontrol nmcli blueman-manager brightnessctl curl python3 cargo rustc pkg-config pgrep pkill)
 missing=()
 for command_name in "${required[@]}"; do
@@ -13,9 +15,8 @@ if ! pkg-config --exists gtk4-layer-shell-0; then
     missing+=("GTK4 Layer Shell development files (gtk4-layer-shell-0 pkg-config module)")
 fi
 if { ! command -v awww >/dev/null 2>&1 || ! command -v awww-daemon >/dev/null 2>&1; } \
-    && { ! command -v swww >/dev/null 2>&1 || ! command -v swww-daemon >/dev/null 2>&1; } \
-    && ! command -v swaybg >/dev/null 2>&1; then
-    missing+=("awww or swww or swaybg")
+    && { ! command -v swww >/dev/null 2>&1 || ! command -v swww-daemon >/dev/null 2>&1; }; then
+    missing+=("awww or swww (animated wallpaper backend)")
 fi
 
 # Font Awesome is the default Waybar glyph font; Nerd Font is optional fallback.
@@ -23,11 +24,6 @@ if command -v fc-list >/dev/null 2>&1; then
     if ! fc-list -f '%{family}\n' | grep -E 'FontAwesome|Font Awesome' >/dev/null; then
         missing+=("FontAwesome icons (install fonts-font-awesome)")
     fi
-fi
-
-if { ! command -v awww >/dev/null 2>&1 || ! command -v awww-daemon >/dev/null 2>&1; } \
-    && { ! command -v swww >/dev/null 2>&1 || ! command -v swww-daemon >/dev/null 2>&1; }; then
-    echo "Optional: install awww or swww for animated wallpaper changes (swaybg is static)."
 fi
 
 if ((${#missing[@]} == 0)); then
@@ -41,7 +37,7 @@ if [[ -r /etc/os-release ]]; then
     case "${ID:-}" in
         debian|ubuntu|linuxmint|pop)
             echo "Debian-family packages: quickshell (from trixie-backports), fastfetch playerctl pavucontrol network-manager blueman brightnessctl lm-sensors, dunst cargo rustc pkg-config libgtk-4-dev libgtk4-layer-shell-dev pipewire-bin wireplumber swaybg waybar network-manager-applet adwaita-icon-theme fontconfig fonts-font-awesome fonts-jetbrains-mono"
-            echo "Matugen and awww may need their upstream release/package for your Debian version."
+            echo "The installer builds a pinned swww release using existing Rust if no animated backend is installed."
             ;;
         arch|endeavouros|manjaro)
             echo "Arch packages: quickshell fastfetch playerctl pavucontrol networkmanager blueman brightnessctl lm_sensors dunst waybar ttf-nerd-fonts-symbols rust cargo pkgconf gtk4 gtk4-layer-shell matugen awww pipewire wireplumber"
@@ -53,7 +49,7 @@ if [[ -r /etc/os-release ]]; then
             echo "openSUSE packages: fastfetch, NetworkManager-applet, blueman, pavucontrol, dunst, Waybar, network applet, Nerd Font symbols, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, awww and WirePlumber."
             ;;
         *)
-            echo "Install equivalent packages for your distribution: Dunst, Waybar, network applet, Nerd Font symbols, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, PipeWire/WirePlumber and awww or swaybg."
+            echo "Install equivalent packages for your distribution: Dunst, Waybar, network applet, Nerd Font symbols, Rust/Cargo, GTK4 and GTK4 Layer Shell development files, Matugen, PipeWire/WirePlumber and awww or swww."
             ;;
     esac
 fi

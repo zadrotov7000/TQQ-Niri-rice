@@ -3,7 +3,12 @@ set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 CHECK="$ROOT/scripts/check-dependencies"
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+needs_wallpaper_backend() {
+    ! { command -v awww >/dev/null 2>&1 && command -v awww-daemon >/dev/null 2>&1; } &&
+    ! { command -v swww >/dev/null 2>&1 && command -v swww-daemon >/dev/null 2>&1; }
+}
 
 # Verify Nerd Font glyphs and tray applets too, not only basic executables.
 if "$CHECK"; then
@@ -97,6 +102,9 @@ case "${ID:-}" in
                 packages+=(cargo build-essential)
             fi
         fi
+        if needs_wallpaper_backend; then
+            packages+=(git build-essential liblz4-dev libwayland-dev wayland-protocols)
+        fi
         run_privileged apt-get install -y "${packages[@]}"
         if ! command -v quickshell >/dev/null 2>&1; then
             run_privileged apt-get install -y -t trixie-backports quickshell
@@ -110,6 +118,9 @@ case "${ID:-}" in
         fi
         if ! command -v matugen >/dev/null 2>&1; then
             packages+=(matugen)
+        fi
+        if needs_wallpaper_backend; then
+            packages+=(git gcc make lz4 wayland wayland-protocols)
         fi
         run_privileged pacman -S --needed "${packages[@]}"
         if ! command -v matugen >/dev/null 2>&1; then
@@ -132,6 +143,9 @@ case "${ID:-}" in
                 packages+=(cargo gcc make)
             fi
         fi
+        if needs_wallpaper_backend; then
+            packages+=(git gcc make lz4-devel wayland-devel wayland-protocols-devel)
+        fi
         run_privileged dnf install "${packages[@]}"
         install_matugen
         ;;
@@ -149,6 +163,9 @@ case "${ID:-}" in
                 packages+=(cargo gcc make)
             fi
         fi
+        if needs_wallpaper_backend; then
+            packages+=(git gcc make liblz4-devel wayland-devel wayland-protocols-devel)
+        fi
         run_privileged zypper install "${packages[@]}"
         install_matugen
         ;;
@@ -157,6 +174,11 @@ case "${ID:-}" in
         exit 1
         ;;
 esac
+
+# Install the pinned animated wallpaper backend as the desktop user.
+if needs_wallpaper_backend; then
+    bash "$ROOT/scripts/install-wallpaper-backend"
+fi
 
 # Install Nerd Font icons used by Waybar status glyphs.
 bash "$ROOT/scripts/install-icon-fonts"

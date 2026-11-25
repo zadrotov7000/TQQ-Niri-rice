@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+
+# Never replace an existing working animated wallpaper backend.
+for backend in awww swww; do
+    if command -v "$backend" >/dev/null 2>&1 &&
+        command -v "$backend-daemon" >/dev/null 2>&1; then
+        echo "Animated wallpaper backend already installed: $backend"
+        exit 0
+    fi
+done
+
+if (( EUID == 0 )); then
+    echo "Run this script as your desktop user, not root." >&2
+    exit 1
+fi
+for cmd in git rustc cargo pkg-config flock; do
+    command -v "$cmd" >/dev/null 2>&1 || { echo "Missing build tool: $cmd" >&2; exit 1; }
+done
+if ! pkg-config --exists wayland-client wayland-protocols liblz4; then
+    echo "Install the Wayland and LZ4 development packages using scripts/install-dependencies." >&2
+    exit 1
+fi
+rust_version="$(rustc --version | awk '{print $2}')"
+version_at_least() {
+    [[ "$(printf '%s\n' "$1" "$rust_version" | sort -V | head -n1)" == "$1" ]]
+}
+
+# 0.11.2 was tested on Debian with Rust >= 1.89.
+# Debian 13's stock Rust 1.85 can use the pinned 0.10.3 release.
+if version_at_least 1.89.0; then
+    tag=v0.11.2
+    revision=a2864804e48533f4c70c63930d8cb24b394288ec
+elif version_at_least 1.85.0; then
+    tag=v0.10.3
+    revision=44d3cdf82669c2bd7ea31cee3c158a838df1b5e4
+else
+    echo "swww requires Rust 1.85 or newer. Existing Rust will not be replaced." >&2
+    exit 1
+fi
+
+# Keep source, target and temporary files out of /tmp and /var.
+build_root="$HOME/.cache/tqq-niri-rice/swww-build"
+mkdir -p "$build_root" "$HOME/.local/bin"
+exec 9>"$build_root/install.lock"
+flock 9
+# A concurrent installer may have completed while we waited.
+for backend in awww swww; do
+    if command -v "$backend" >/dev/null 2>&1 &&
+        command -v "$backend-daemon" >/dev/null 2>&1; then
+        exit 0
+    fi
+done
+work="$(mktemp -d "$build_root/build.XXXXXXXX")"
+trap 'rm -rf -- "$work"' EXIT
+mkdir -p "$work/tmp"
+export TMPDIR="$work/tmp"
+export CARGO_TARGET_DIR="$build_root/target-$tag"
+export CARGO_BUILD_JOBS=1
+# Avoid expensive whole-program LTO on low-memory laptops.
+export CARGO_PROFILE_RELEASE_LTO=false
+
+echo "Building swww $tag with existing Rust $rust_version (one build job)..."
+git clone --depth 1 --branch "$tag" https://github.com/LGFae/swww.git "$work/source"
+if [[ "$(git -C "$work/source" rev-parse HEAD)" != "$revision" ]]; then
+    echo "Unexpected upstream commit; refusing to build." >&2
+    exit 1
+fi
+cargo build --manifest-path "$work/source/Cargo.toml" --release --locked -j 1
+# Check both binaries before installing either of them.
+"$CARGO_TARGET_DIR/release/swww" --version
+test -x "$CARGO_TARGET_DIR/release/swww-daemon"
+install -m 0755 "$CARGO_TARGET_DIR/release/swww" "$HOME/.local/bin/swww"
+install -m 0755 "$CARGO_TARGET_DIR/release/swww-daemon" "$HOME/.local/bin/swww-daemon"
+echo "Animated wallpaper backend installed in $HOME/.local/bin."

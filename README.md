@@ -35,9 +35,22 @@ Before changing the Niri config or replacing installed TQQ helper scripts, the i
 
 ## Dependencies
 
-The desktop requires Niri, Fastfetch, Quickshell (including its PAM service module), QtQuick.Effects (on Debian: `qml6-module-qtquick-effects`), Dunst (`dunst` and `dunstctl`), Waybar, Nerd Font symbols (installed by `scripts/install-icon-fonts`), the NetworkManager and Blueman tray applets, Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, and common process tools (`pgrep`, `pkill`). For wallpaper display, install `awww` and its daemon or `swaybg`.
+The desktop requires Niri, Fastfetch, Quickshell (including its PAM service module), QtQuick.Effects (on Debian: `qml6-module-qtquick-effects`), Dunst (`dunst` and `dunstctl`), Waybar, Nerd Font symbols (installed by `scripts/install-icon-fonts`), the NetworkManager and Blueman tray applets, Matugen, NetworkManager (`nmcli`), PipeWire/WirePlumber (`wpctl`), `playerctl`, `pavucontrol`, `blueman-manager`, `brightnessctl`, Python 3, Rust/Cargo, GTK4 and GTK4 Layer Shell development files for the native wallpaper gallery, and common process tools (`pgrep`, `pkill`). Animated wallpaper changes require `awww` / `awww-daemon` or `swww` / `swww-daemon`. The installer automatically installs swww if neither pair is available. `swaybg` remains a static fallback when dependencies are explicitly skipped.
 
-`scripts/check-dependencies` reports missing commands and package hints. `scripts/install-dependencies` includes package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Quickshell is installed from Debian Backports on Debian 13. Niri and `awww` may need to be installed separately depending on the distribution. Run `./scripts/install-dependencies` after updating the repository to repair missing status icons without rebuilding the Rust wallpaper gallery.
+`scripts/check-dependencies` reports missing commands and package hints. `scripts/install-dependencies` includes package recipes for Debian/Ubuntu, Arch, Fedora, and openSUSE. Quickshell is installed from Debian Backports on Debian 13. Niri may need to be installed separately depending on the distribution. The wallpaper backend uses an existing Rust toolchain and builds pinned swww 0.11.2 (Rust 1.89+) or 0.10.3 (Rust 1.85+), one build job at a time, under `~/.cache/tqq-niri-rice/swww-build/`. No Pacstall Rust package is needed. Existing awww/swww installations are reused. Run `./scripts/install-dependencies` after updating the repository to repair missing status icons without rebuilding the Rust wallpaper gallery.
+
+## Animated wallpaper setup on an existing TQQ installation
+
+```bash
+cd ~/TQQ-Niri-rice
+git pull --ff-only
+./scripts/install-dependencies
+mkdir -p ~/.local/bin
+install -m 0755 scripts/{select-wallpaper,tqq-refresh-rice} ~/.local/bin/
+~/.local/bin/select-wallpaper --restore
+```
+
+Win+B opens the existing gallery. Confirming another wallpaper reveals it from the center (0.95 s, target 60 FPS) and refreshes Matugen automatically. The wallpaper daemon stays running; the compositor is not restarted. The separate Control Center refresh remains available. If building the backend fails, check the reported build error; swaybg cannot animate. The build cache can be deleted after a successful installation without affecting the installed binaries.
 
 ## Restore full Niri defaults after an older minimal TQQ install
 

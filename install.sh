@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 LOCAL_BIN="$HOME/.local/bin"
+export PATH="$LOCAL_BIN:$HOME/.cargo/bin:$PATH"
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
 STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 BACKUP="$STATE_HOME/tqq-niri-rice/backups/$(date +%Y%m%d-%H%M%S)"
@@ -23,6 +24,7 @@ for script in \
     "$ROOT/install.sh" \
     "$ROOT/scripts/check-dependencies" \
     "$ROOT/scripts/install-dependencies" \
+    "$ROOT/scripts/install-wallpaper-backend" \
     "$ROOT/scripts/install-icon-fonts" \
     "$ROOT/scripts/setup-terminal-themes" \
     "$ROOT/scripts/setup-default-terminal" \
