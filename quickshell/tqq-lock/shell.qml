@@ -531,6 +531,18 @@ Scope {
             }
         }
 
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 42
+            text: "PRESS ENTER TO UNLOCK"
+            color: "#f9eaf2"
+            font.pixelSize: 13
+            font.letterSpacing: 2
+            opacity: root.unlockVisible ? 0 : lockSurface.reveal
+            Behavior on opacity { NumberAnimation { duration: 180 } }
+        }
+
         Item {
             id: lockKeys
             anchors.fill: parent
